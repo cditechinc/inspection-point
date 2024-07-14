@@ -6,12 +6,16 @@ import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from '../user/user.service';
+import { ClientService } from '../client/client.service';
+
+import * as bcrypt from 'bcrypt';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private userService: UserService
+    private userService: UserService,
+    private clientService: ClientService,
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -24,6 +28,31 @@ export class AuthController {
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     return this.authService.register(createUserDto);
+  }
+
+  @Post('client/login')
+  async loginClient(@Body() body: { email: string, password: string }, @Request() req) {
+    const client = await this.clientService.findOneByEmail(body.email);
+    if (!client || !(await bcrypt.compare(body.password, client.password))) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    const payload = { id: client.id, email: client.email };
+    const accessToken = this.authService.generateJwtToken(payload);
+    const sessionToken = await this.authService.createClientSession(client, ipAddress);
+
+    // Record the client's IP address
+    await this.authService.recordClientIP(client.id, ipAddress);
+
+    // Log the login action
+    await this.authService.logClientAction(client.id, 'login', { ipAddress });
+
+    return {
+      access_token: accessToken,
+      session_token: sessionToken,
+      client,
+    };
   }
 
   @UseGuards(JwtAuthGuard)

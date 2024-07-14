@@ -11,11 +11,14 @@ import { Repository } from 'typeorm';
 import { UserIP } from '../user/entities/user-ip.entity';
 import { UserSession } from '../user/entities/user-session.entity';
 import { Log } from '../user/entities/log.entity';
+import { ClientService } from '../client/client.service';
+import { Client } from '../client/entities/client.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
+    private clientService: ClientService,
     private jwtService: JwtService,
     @InjectRepository(UserIP)
     private userIPRepository: Repository<UserIP>,
@@ -63,6 +66,10 @@ export class AuthService {
     return user;
   }
 
+  generateJwtToken(payload: any): string {
+    return this.jwtService.sign(payload);
+  }
+
   generateTwoFactorAuthenticationSecret(user: User) {
     const secret = speakeasy.generateSecret({
       name: `InspectionPointApp (${user.email})`,
@@ -102,6 +109,19 @@ export class AuthService {
     return sessionToken;
   }
 
+  async createClientSession(client: Client, ipAddress: string): Promise<string> {
+    const sessionToken = this.jwtService.sign({ clientId: client.id, ipAddress });
+    const expiresAt = new Date(new Date().getTime() + 60 * 60 * 1000); // 1 hour expiration
+    const session = this.userSessionRepository.create({
+      user: { id: client.id } as User, // Assuming UserSession can accommodate clients
+      ip_address: ipAddress,
+      session_token: sessionToken,
+      expires_at: expiresAt,
+    });
+    await this.userSessionRepository.save(session);
+    return sessionToken;
+  }
+
   async validateSession(token: string, ipAddress: string): Promise<User> {
     const session = await this.userSessionRepository.findOne({
       where: { session_token: token },
@@ -118,8 +138,18 @@ export class AuthService {
     await this.userIPRepository.save(userIP);
   }
 
+  async recordClientIP(clientId: string, ipAddress: string) {
+    const userIP = this.userIPRepository.create({ user: { id: clientId } as User, ip_address: ipAddress });
+    await this.userIPRepository.save(userIP);
+  }
+
   async logAction(userId: string, action: string, details: any) {
     const log = this.logRepository.create({ user: { id: userId } as User, action, details });
+    await this.logRepository.save(log);
+  }
+
+  async logClientAction(clientId: string, action: string, details: any) {
+    const log = this.logRepository.create({ user: { id: clientId } as User, action, details });
     await this.logRepository.save(log);
   }
 }

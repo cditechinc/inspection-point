@@ -1,3 +1,4 @@
+// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -10,7 +11,6 @@ import { UserIP } from './user/entities/user-ip.entity';
 import { Log } from './user/entities/log.entity';
 import { ClientModule } from './client/client.module';
 import { Client } from './client/entities/client.entity';
-import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -33,6 +33,5 @@ import { AppController } from './app.controller';
     UserModule,
     ClientModule,
   ],
-  controllers: [AppController]
 })
 export class AppModule {}

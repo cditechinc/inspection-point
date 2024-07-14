@@ -7,8 +7,8 @@ import { UserIP } from './user/entities/user-ip.entity';
 import { UserSession } from './user/entities/user-session.entity';
 import { Log } from './user/entities/log.entity';
 import { InitialMigration1628879943693 } from './migrations/InitialMigration';
-// Example migrations (adjust these to your actual migrations)
-// import { InitialMigration } from './migration/InitialMigration';
+import { AddClientPassword1628889943693 } from './migrations/1628889943693-AddClientPassword';
+
 
 const dataSourceOptions: DataSourceOptions  = {
   type: 'postgres',
@@ -18,7 +18,7 @@ const dataSourceOptions: DataSourceOptions  = {
   password: process.env.DATABASE_PASSWORD || 'postgres',
   database: process.env.DATABASE_NAME || 'inspection',
   entities: [Client, User, UserIP, UserSession, Log],
-  migrations: [InitialMigration1628879943693],
+  migrations: [InitialMigration1628879943693, AddClientPassword1628889943693],
   synchronize: false,
   logging: true,
   extra: {
