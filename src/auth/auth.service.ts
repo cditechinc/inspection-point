@@ -1,3 +1,4 @@
+// auth.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
@@ -113,7 +114,7 @@ export class AuthService {
     const sessionToken = this.jwtService.sign({ clientId: client.id, ipAddress });
     const expiresAt = new Date(new Date().getTime() + 60 * 60 * 1000); // 1 hour expiration
     const session = this.userSessionRepository.create({
-      user: { id: client.id } as User, // Assuming UserSession can accommodate clients
+      user: { id: client.user.id } as User, // Ensure UserSession can accommodate clients
       ip_address: ipAddress,
       session_token: sessionToken,
       expires_at: expiresAt,
@@ -138,8 +139,8 @@ export class AuthService {
     await this.userIPRepository.save(userIP);
   }
 
-  async recordClientIP(clientId: string, ipAddress: string) {
-    const userIP = this.userIPRepository.create({ user: { id: clientId } as User, ip_address: ipAddress });
+  async recordClientIP(userId: string, ipAddress: string) {
+    const userIP = this.userIPRepository.create({ user: { id: userId } as User, ip_address: ipAddress });
     await this.userIPRepository.save(userIP);
   }
 
@@ -148,8 +149,8 @@ export class AuthService {
     await this.logRepository.save(log);
   }
 
-  async logClientAction(clientId: string, action: string, details: any) {
-    const log = this.logRepository.create({ user: { id: clientId } as User, action, details });
+  async logClientAction(userId: string, action: string, details: any) {
+    const log = this.logRepository.create({ user: { id: userId } as User, action, details });
     await this.logRepository.save(log);
   }
 }

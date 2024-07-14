@@ -33,7 +33,7 @@ export class AuthController {
   @Post('client/login')
   async loginClient(@Body() body: { email: string, password: string }, @Request() req) {
     const client = await this.clientService.findOneByEmail(body.email);
-    if (!client || !(await bcrypt.compare(body.password, client.password))) {
+    if (!client || !client.user || !(await bcrypt.compare(body.password, client.user.password_hash))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -43,10 +43,10 @@ export class AuthController {
     const sessionToken = await this.authService.createClientSession(client, ipAddress);
 
     // Record the client's IP address
-    await this.authService.recordClientIP(client.id, ipAddress);
+    await this.authService.recordClientIP(client.user.id, ipAddress);
 
     // Log the login action
-    await this.authService.logClientAction(client.id, 'login', { ipAddress });
+    await this.authService.logClientAction(client.user.id, 'login', { ipAddress });
 
     return {
       access_token: accessToken,

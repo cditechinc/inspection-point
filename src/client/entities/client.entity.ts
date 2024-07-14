@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+// client.entity.ts
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 
 @Entity('clients')
@@ -11,9 +12,6 @@ export class Client {
 
   @Column({ unique: true })
   email: string;
-
-  @Column()
-  password: string;
 
   @Column()
   phone: string;
@@ -44,4 +42,8 @@ export class Client {
 
   @OneToMany(() => User, user => user.client)
   users: User[];
+
+  @OneToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn()
+  user: User;
 }

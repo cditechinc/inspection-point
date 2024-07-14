@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param, Patch, Delete } from '@nestjs/common';
 import { ClientService } from './client.service';
-import { CreateClientDto } from './dto/create-client.dto';
+import { RegisterClientDto } from './dto/register-client.dto';
 import { Client } from './entities/client.entity';
 
 @Controller('clients')
@@ -8,8 +8,8 @@ export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
   @Post('register')
-  async create(@Body() createClientDto: CreateClientDto): Promise<Client> {
-    return this.clientService.create(createClientDto);
+  async create(@Body() registerClientDto: RegisterClientDto): Promise<Client> {
+    return this.clientService.create(registerClientDto);
   }
 
   @Get()

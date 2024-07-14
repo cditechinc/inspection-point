@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsEmail, IsOptional, IsString, IsDateString } from 'class-validator';
 
-export class CreateClientDto {
+export class RegisterClientDto {
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -8,6 +8,10 @@ export class CreateClientDto {
   @IsNotEmpty()
   @IsEmail()
   email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  password: string;
 
   @IsNotEmpty()
   @IsString()
@@ -19,21 +23,21 @@ export class CreateClientDto {
 
   @IsOptional()
   @IsString()
-  billing_address: string;
+  billing_address?: string;
 
   @IsOptional()
   @IsString()
-  payment_method: string;
+  payment_method?: string;
 
   @IsOptional()
   @IsString()
-  type: string;
+  type?: string;
 
   @IsOptional()
   @IsString()
-  status: string;
+  status?: string;
 
   @IsOptional()
   @IsDateString()
-  next_bill_date: string;
+  next_bill_date?: string;
 }
