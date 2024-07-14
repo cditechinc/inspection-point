@@ -10,6 +10,7 @@ import { UserIP } from './user/entities/user-ip.entity';
 import { Log } from './user/entities/log.entity';
 import { ClientModule } from './client/client.module';
 import { Client } from './client/entities/client.entity';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -32,5 +33,6 @@ import { Client } from './client/entities/client.entity';
     UserModule,
     ClientModule,
   ],
+  controllers: [AppController]
 })
 export class AppModule {}
