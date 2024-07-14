@@ -1,5 +1,4 @@
-// src/client/dto/create-client.dto.ts
-import { IsEmail, IsNotEmpty, IsString, IsPhoneNumber } from 'class-validator';
+import { IsNotEmpty, IsEmail, IsOptional, IsString, IsDateString } from 'class-validator';
 
 export class CreateClientDto {
   @IsNotEmpty()
@@ -11,6 +10,30 @@ export class CreateClientDto {
   email: string;
 
   @IsNotEmpty()
-  @IsPhoneNumber(null)
+  @IsString()
   phone: string;
+
+  @IsNotEmpty()
+  @IsString()
+  address: string;
+
+  @IsOptional()
+  @IsString()
+  billing_address: string;
+
+  @IsOptional()
+  @IsString()
+  payment_method: string;
+
+  @IsOptional()
+  @IsString()
+  type: string;
+
+  @IsOptional()
+  @IsString()
+  status: string;
+
+  @IsOptional()
+  @IsDateString()
+  next_bill_date: string;
 }

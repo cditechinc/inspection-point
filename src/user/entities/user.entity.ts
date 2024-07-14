@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne } from 'ty
 import { UserSession } from './user-session.entity';
 import { UserIP } from './user-ip.entity';
 import { Log } from './log.entity';
-import { Client } from 'src/client/entities/client.entity';
+import { Client } from '../../client/entities/client.entity';
 
 @Entity('users')
 export class User {

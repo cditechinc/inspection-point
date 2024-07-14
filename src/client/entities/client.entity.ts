@@ -1,4 +1,3 @@
-// src/client/entities/client.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 
@@ -15,6 +14,24 @@ export class Client {
 
   @Column()
   phone: string;
+
+  @Column()
+  address: string;
+
+  @Column()
+  billing_address: string;
+
+  @Column()
+  payment_method: string;
+
+  @Column()
+  type: string;
+
+  @Column()
+  status: string;
+
+  @Column({ type: 'date' })
+  next_bill_date: Date;
 
   @CreateDateColumn()
   created_at: Date;
