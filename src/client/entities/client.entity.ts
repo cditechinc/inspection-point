@@ -1,6 +1,6 @@
-// client.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
+import { Customer } from '../../customer/entities/customer.entity';
 
 @Entity('clients')
 export class Client {
@@ -13,25 +13,41 @@ export class Client {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   phone: string;
 
-  @Column()
+  @Column({ nullable: true })
   address: string;
 
-  @Column()
+  @Column({ nullable: true })
   billing_address: string;
 
-  @Column()
+  @Column({ nullable: true })
+  industry: string;
+
+  @Column({ nullable: true })
   payment_method: string;
 
-  @Column()
-  type: string;
+  @Column({
+    type: 'varchar',
+    default: 'Active',
+    enum: ['Active', 'Disabled', 'Fraud', 'Inactive'],
+  })
+  account_status: string;
 
-  @Column()
-  status: string;
+  @Column({ nullable: true })
+  custom_portal_url: string;
 
-  @Column({ type: 'date' })
+  @Column({ default: false })
+  tax_exempt: boolean;
+
+  @Column({ default: false })
+  protected: boolean;
+
+  @Column({ default: false })
+  email_verified: boolean;
+
+  @Column({ type: 'date', nullable: true })
   next_bill_date: Date;
 
   @CreateDateColumn()
@@ -42,6 +58,9 @@ export class Client {
 
   @OneToMany(() => User, user => user.client)
   users: User[];
+
+  @OneToMany(() => Customer, customer => customer.client)
+  customers: Customer[];
 
   @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn()

@@ -1,29 +1,50 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import * as AWS from 'aws-sdk';
-import { ConfigService } from '@nestjs/config';
+import { Injectable } from '@nestjs/common';
+import { S3 } from 'aws-sdk';
+import * as moment from 'moment';
 
 @Injectable()
 export class AwsService {
-  private s3: AWS.S3;
+  private s3 = new S3();
 
-  constructor(private configService: ConfigService) {
-    this.s3 = new AWS.S3({
-      region: this.configService.get<string>('AWS_REGION'),
-      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
-    });
+  async createClientFolders(clientId: string): Promise<void> {
+    const basePath = `clients/${clientId}`;
+    const folders = ['pdfs', 'images', 'videos'];
+    
+    for (const folder of folders) {
+      await this.s3
+        .putObject({
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: `${basePath}/${folder}/`,
+          Body: '',
+        })
+        .promise();
+    }
   }
 
-  async createS3Folder(clientId: string): Promise<void> {
-    const params = {
-      Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
-      Key: `${clientId}/`,
-    };
+  async uploadFile(clientId: string, fileType: 'pdf' | 'image', file: Buffer, originalName: string): Promise<string> {
+    const basePath = `clients/${clientId}`;
+    const folder = fileType === 'pdf' ? 'pdfs' : 'images';
+    const fileName = this.generateFileName(fileType, originalName);
+    const filePath = `${basePath}/${folder}/${fileName}`;
 
-    try {
-      await this.s3.putObject(params).promise();
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to create S3 folder');
-    }
+    await this.s3
+      .putObject({
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: filePath,
+        Body: file,
+      })
+      .promise();
+
+    return filePath;
+  }
+
+  private generateFileName(fileType: 'pdf' | 'image', originalName: string): string {
+    const date = moment().format('MM-DD-YY');
+    const randomInt = Math.floor(Math.random() * 1000);
+    const nameParts = originalName.split('.');
+    const extension = nameParts.pop();
+    const baseName = nameParts.join('-').replace(/\s+/g, '-');
+
+    return `${date}-${baseName}-${randomInt}.${extension}`;
   }
 }

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEmail, IsOptional, IsString, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsEmail, IsOptional, IsString, IsDateString, IsBoolean } from 'class-validator';
 
 export class RegisterClientDto {
   @IsNotEmpty()
@@ -23,21 +23,37 @@ export class RegisterClientDto {
 
   @IsOptional()
   @IsString()
-  billing_address?: string;
+  billing_address: string;
 
   @IsOptional()
   @IsString()
-  payment_method?: string;
+  industry: string;
 
   @IsOptional()
   @IsString()
-  type?: string;
+  payment_method: string;
 
   @IsOptional()
   @IsString()
-  status?: string;
+  account_status: string;
+
+  @IsOptional()
+  @IsString()
+  custom_portal_url: string;
 
   @IsOptional()
   @IsDateString()
-  next_bill_date?: string;
+  next_bill_date: string;
+
+  @IsOptional()
+  @IsBoolean()
+  tax_exempt: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  protected: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  email_verified: boolean;
 }

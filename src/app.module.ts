@@ -11,6 +11,8 @@ import { UserIP } from './user/entities/user-ip.entity';
 import { Log } from './user/entities/log.entity';
 import { ClientModule } from './client/client.module';
 import { Client } from './client/entities/client.entity';
+import { Customer } from './customer/entities/customer.entity';
+import { CustomerModule } from './customer/customer.module';
 
 @Module({
   imports: [
@@ -24,7 +26,7 @@ import { Client } from './client/entities/client.entity';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [User, Client, UserSession, UserIP, Log],
+        entities: [User, Client, Customer, UserSession, UserIP, Log],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -32,6 +34,7 @@ import { Client } from './client/entities/client.entity';
     AuthModule,
     UserModule,
     ClientModule,
+    CustomerModule
   ],
 })
 export class AppModule {}

@@ -38,7 +38,7 @@ export class ClientService {
 
     try {
       await this.clientsRepository.save(client);
-      await this.awsService.createS3Folder(client.id);
+      await this.awsService.createClientFolders(client.id);
       return client;
     } catch (error) {
       throw new InternalServerErrorException('Error creating client');

@@ -14,6 +14,7 @@ import { UserSession } from '../user/entities/user-session.entity';
 import { Log } from '../user/entities/log.entity';
 import { ClientService } from '../client/client.service';
 import { Client } from '../client/entities/client.entity';
+import { JwtPayload } from './interface/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -29,8 +30,17 @@ export class AuthService {
     private logRepository: Repository<Log>,
   ) {}
 
+  async verifyPayload(payload: JwtPayload): Promise<User> {
+    const { sub: userId } = payload;
+    const user = await this.userService.findById(userId, { relations: ['client'] });
+    if (!user) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    return user;
+  }
+
   async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.userService.findByEmail(email);
+    const user = await this.userService.findByEmail(email, { relations: ['client'] });
     if (user && await bcrypt.compare(pass, user.password_hash)) {
       const { password_hash, ...result } = user;
       return result;
@@ -38,10 +48,42 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any, ipAddress: string) {
-    const payload = { email: user.email, sub: user.id, role: user.role };
-    const accessToken = this.jwtService.sign(payload);
+  async signToken(userOrClient: User | Client): Promise<string> {
+    let payload: JwtPayload;
+
+    if (userOrClient instanceof User) {
+      payload = {
+        email: userOrClient.email,
+        sub: userOrClient.id,
+        role: userOrClient.role,
+        clientId: userOrClient.client?.id,
+        iat: Math.floor(Date.now() / 1000),
+        // exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiration
+      };
+    } else {
+      payload = {
+        email: userOrClient.user.email,
+        sub: userOrClient.user.id,
+        role: userOrClient.user.role,
+        clientId: userOrClient.id,
+        iat: Math.floor(Date.now() / 1000),
+        // exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiration
+      };
+    }
+
+    return this.jwtService.sign(payload);
+  }
+
+  async login(user: User, ipAddress: string, gpsLocation?: string) {
+    const accessToken = await this.signToken(user);
     const sessionToken = await this.createSession(user, ipAddress);
+
+    // Update the user's last login details
+    await this.userService.update(user.id, {
+      last_login: new Date(),
+      last_login_ip: ipAddress,
+      last_gps_location: gpsLocation,
+    });
 
     // Record the user's IP address
     await this.recordUserIP(user.id, ipAddress);
@@ -59,11 +101,14 @@ export class AuthService {
   async register(userDto: CreateUserDto): Promise<User> {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(userDto.password, salt);
-    const user = await this.userService.create({ ...userDto, password_hash: hashedPassword });
-    
+    const user = await this.userService.create({
+      ...userDto,
+      password_hash: hashedPassword,
+    });
+
     // Log the registration action
     await this.logAction(user.id, 'register', { email: userDto.email });
-    
+
     return user;
   }
 
@@ -77,7 +122,9 @@ export class AuthService {
     });
 
     user.two_factor_authentication_secret = secret.base32;
-    this.userService.update(user.id, { two_factor_authentication_secret: secret.base32 });
+    this.userService.update(user.id, {
+      two_factor_authentication_secret: secret.base32,
+    });
 
     return {
       secret: secret.base32,
@@ -89,7 +136,10 @@ export class AuthService {
     return qrcode.toFileStream(stream, otpauthUrl);
   }
 
-  isTwoFactorAuthenticationCodeValid(twoFactorAuthenticationCode: string, user: User) {
+  isTwoFactorAuthenticationCodeValid(
+    twoFactorAuthenticationCode: string,
+    user: User,
+  ) {
     return speakeasy.totp.verify({
       secret: user.two_factor_authentication_secret,
       encoding: 'base32',
@@ -110,8 +160,14 @@ export class AuthService {
     return sessionToken;
   }
 
-  async createClientSession(client: Client, ipAddress: string): Promise<string> {
-    const sessionToken = this.jwtService.sign({ clientId: client.id, ipAddress });
+  async createClientSession(
+    client: Client,
+    ipAddress: string,
+  ): Promise<string> {
+    const sessionToken = this.jwtService.sign({
+      clientId: client.id,
+      ipAddress,
+    });
     const expiresAt = new Date(new Date().getTime() + 60 * 60 * 1000); // 1 hour expiration
     const session = this.userSessionRepository.create({
       user: { id: client.user.id } as User, // Ensure UserSession can accommodate clients
@@ -128,29 +184,47 @@ export class AuthService {
       where: { session_token: token },
       relations: ['user'],
     });
-    if (!session || session.ip_address !== ipAddress || new Date() > session.expires_at) {
+    if (
+      !session ||
+      session.ip_address !== ipAddress ||
+      new Date() > session.expires_at
+    ) {
       throw new UnauthorizedException('Invalid session or IP address mismatch');
     }
     return session.user;
   }
 
   async recordUserIP(userId: string, ipAddress: string) {
-    const userIP = this.userIPRepository.create({ user: { id: userId } as User, ip_address: ipAddress });
+    const userIP = this.userIPRepository.create({
+      user: { id: userId } as User,
+      ip_address: ipAddress,
+    });
     await this.userIPRepository.save(userIP);
   }
 
   async recordClientIP(userId: string, ipAddress: string) {
-    const userIP = this.userIPRepository.create({ user: { id: userId } as User, ip_address: ipAddress });
+    const userIP = this.userIPRepository.create({
+      user: { id: userId } as User,
+      ip_address: ipAddress,
+    });
     await this.userIPRepository.save(userIP);
   }
 
   async logAction(userId: string, action: string, details: any) {
-    const log = this.logRepository.create({ user: { id: userId } as User, action, details });
+    const log = this.logRepository.create({
+      user: { id: userId } as User,
+      action,
+      details,
+    });
     await this.logRepository.save(log);
   }
 
   async logClientAction(userId: string, action: string, details: any) {
-    const log = this.logRepository.create({ user: { id: userId } as User, action, details });
+    const log = this.logRepository.create({
+      user: { id: userId } as User,
+      action,
+      details,
+    });
     await this.logRepository.save(log);
   }
 }

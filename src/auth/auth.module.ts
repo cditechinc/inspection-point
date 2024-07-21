@@ -16,6 +16,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { AuthController } from './auth.controller';
 import { ClientModule } from '../client/client.module';
 import { AwsModule } from './../aws/aws.module';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
@@ -32,7 +33,7 @@ import { AwsModule } from './../aws/aws.module';
     ClientModule,
     AwsModule,
   ],
-  providers: [AuthService, UserService, ClientService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, UserService, ClientService, LocalStrategy, JwtStrategy, RolesGuard],
   controllers: [AuthController],
 })
 export class AuthModule {}

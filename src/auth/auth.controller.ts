@@ -22,6 +22,7 @@ export class AuthController {
   @Post('login')
   async login(@Request() req) {
     const ipAddress = req.ip || req.connection.remoteAddress;
+    const gpsLocation = req.body.gpsLocation; // Assuming GPS location is passed in the body
     return this.authService.login(req.user, ipAddress);
   }
 
@@ -31,16 +32,22 @@ export class AuthController {
   }
 
   @Post('client/login')
-  async loginClient(@Body() body: { email: string, password: string }, @Request() req) {
+  async loginClient(@Body() body: { email: string, password: string, gpsLocation?: string }, @Request() req) {
     const client = await this.clientService.findOneByEmail(body.email);
     if (!client || !client.user || !(await bcrypt.compare(body.password, client.user.password_hash))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const ipAddress = req.ip || req.connection.remoteAddress;
-    const payload = { id: client.id, email: client.email };
-    const accessToken = this.authService.generateJwtToken(payload);
+    const accessToken = await this.authService.signToken(client);
     const sessionToken = await this.authService.createClientSession(client, ipAddress);
+
+    // Update the client's last login details
+    await this.userService.update(client.user.id, {
+      last_login: new Date(),
+      last_login_ip: ipAddress,
+      last_gps_location: body.gpsLocation,
+    });
 
     // Record the client's IP address
     await this.authService.recordClientIP(client.user.id, ipAddress);
@@ -74,27 +81,27 @@ export class AuthController {
     return { message: '2FA verified successfully' };
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('employee')
-  @Post('employee')
-  getEmployeeResource(@Request() req) {
-    return 'This is an employee resource';
-  }
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('employee')
+  // @Post('employee')
+  // getEmployeeResource(@Request() req) {
+  //   return 'This is an employee resource';
+  // }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('client')
-  @Post('client')
-  getClientResource(@Request() req) {
-    return 'This is a client resource';
-  }
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('client')
+  // @Post('client')
+  // getClientResource(@Request() req) {
+  //   return 'This is a client resource';
+  // }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @Post('admin/register')
-  async registerAdmin(@Body() createUserDto: CreateUserDto) {
-    if (createUserDto.role !== 'admin') {
-      throw new UnauthorizedException('Only admin role can be created through this route');
-    }
-    return this.authService.register(createUserDto);
-  }
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('admin')
+  // @Post('admin/register')
+  // async registerAdmin(@Body() createUserDto: CreateUserDto) {
+  //   if (createUserDto.role !== 'admin') {
+  //     throw new UnauthorizedException('Only admin role can be created through this route');
+  //   }
+  //   return this.authService.register(createUserDto);
+  // }
 }

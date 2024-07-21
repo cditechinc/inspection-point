@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { UserSession } from './user-session.entity';
 import { UserIP } from './user-ip.entity';
 import { Log } from './log.entity';
@@ -18,11 +18,22 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    enum: ['admin', 'client_admin', 'customer_admin', 'client', 'customer', 'employee'],
+  })
   role: string;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'created_by' })
+  createdBy: User;
 
   @Column({ nullable: true })
   created_by: string;
+
+  @ManyToOne(() => Client, client => client.users, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'client_id' })
+  client: Client;
 
   @Column({ nullable: true })
   phone: string;
@@ -39,11 +50,23 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   last_login: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
+  @Column({ nullable: true })
+  last_login_ip: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
-  updated_at: Date;
+  @Column({ type: 'point', nullable: true })
+  last_gps_location: string;
+
+  @Column({ nullable: true })
+  title: string;
+
+  @Column({ nullable: true })
+  profile_image: string;
+
+  @Column({ default: false })
+  two_factor_enabled: boolean;
+
+  @Column({ type: 'jsonb', nullable: true })
+  two_factor_details: any;
 
   @Column({ nullable: true })
   two_factor_authentication_secret: string;
@@ -51,11 +74,14 @@ export class User {
   @Column({ nullable: true })
   quickbooks_customer_id: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   quickbooks_sync_date: Date;
 
-  @ManyToOne(() => Client, client => client.users, { onDelete: 'CASCADE' })
-  client: Client;
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 
   @OneToMany(() => UserSession, session => session.user)
   sessions: UserSession[];
@@ -66,4 +92,3 @@ export class User {
   @OneToMany(() => Log, log => log.user)
   logs: Log[];
 }
-
