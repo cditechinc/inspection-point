@@ -5,12 +5,16 @@ import { CreatePhotoDto } from './../dto/create-photo.dto';
 import { UpdatePhotoDto } from './../dto/update-photo.dto';
 import * as multer from 'multer';
 import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
-@UseGuards(JwtAuthGuard)
+import { RolesGuard } from './../../auth/guards/roles.guard';
+import { Roles } from './../../auth/decorators/roles.decorator';
+import { Role } from './../../auth/role.enum';
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('photos')
 export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 
   @Post()
+  @Roles(Role.Client)
   @UseInterceptors(FileInterceptor('file'))
   create(
     @Body() createPhotoDto: CreatePhotoDto,
@@ -20,16 +24,19 @@ export class PhotosController {
   }
 
   @Get()
+  @Roles(Role.Client)
   findAll() {
     return this.photosService.findAll();
   }
 
   @Get(':id')
+  @Roles(Role.Client)
   findOne(@Param('id') id: string) {
     return this.photosService.findOne(id);
   }
 
   @Patch(':id')
+  @Roles(Role.Client)
   @UseInterceptors(FileInterceptor('file'))
   update(
     @Param('id') id: string,
@@ -40,6 +47,7 @@ export class PhotosController {
   }
 
   @Delete(':id')
+  @Roles(Role.Client)
   remove(@Param('id') id: string) {
     return this.photosService.remove(id);
   }

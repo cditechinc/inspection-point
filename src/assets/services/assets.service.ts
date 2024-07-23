@@ -2,13 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateAssetDto } from './../dto/create-asset.dto';
-import { UpdateAssetDto } from './../dto/update-asset.dto';
 import { Asset } from './../entities/asset.entity';
 import { AwsService } from './../../aws/aws.service';
 import { Client } from './../../client/entities/client.entity';
 import { User } from './../../user/entities/user.entity';
 import { Photo } from './../entities/photo.entity';
+import { AssetType } from './../entities/asset-type.entity';
 import * as multer from 'multer';
+import { UpdateAssetDto } from '../dto/update-asset.dto';
+import { Customer } from './../../customer/entities/customer.entity';
 
 @Injectable()
 export class AssetsService {
@@ -17,10 +19,12 @@ export class AssetsService {
     private assetsRepository: Repository<Asset>,
     @InjectRepository(Client)
     private clientsRepository: Repository<Client>,
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    @InjectRepository(Customer)
+    private customerRepository: Repository<Customer>,
     @InjectRepository(Photo)
     private photosRepository: Repository<Photo>,
+    @InjectRepository(AssetType)
+    private assetTypeRepository: Repository<AssetType>,
     private readonly awsService: AwsService,
   ) {}
 
@@ -30,13 +34,21 @@ export class AssetsService {
       throw new NotFoundException(`Client #${createAssetDto.clientId} not found`);
     }
 
-    const customer = await this.usersRepository.findOne({ where: { id: createAssetDto.customerId } });
+    const customer = await this.customerRepository.findOne({ where: { id: createAssetDto.customerId } });
     if (!customer) {
       throw new NotFoundException(`Customer #${createAssetDto.customerId} not found`);
     }
 
+    const assetType = createAssetDto.type 
+      ? await this.assetTypeRepository.findOne({ where: { id: createAssetDto.type } })
+      : undefined;
+    if (createAssetDto.type && !assetType) {
+      throw new NotFoundException(`AssetType #${createAssetDto.type} not found`);
+    }
+
     const asset = this.assetsRepository.create({
       name: createAssetDto.name,
+      type: assetType,
       location: createAssetDto.location,
       latitude: createAssetDto.latitude,
       longitude: createAssetDto.longitude,
@@ -54,8 +66,8 @@ export class AssetsService {
       rails: createAssetDto.rails,
       float: createAssetDto.floats ? createAssetDto.floats.toString() : undefined,
       pumps: createAssetDto.pumps ? createAssetDto.pumps.toString() : undefined,
-      client,
-      customer,
+      client: client,
+      customer: customer,
     });
 
     const savedAsset = await this.assetsRepository.save(asset);

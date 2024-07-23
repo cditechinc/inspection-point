@@ -1,7 +1,6 @@
 import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEnum, IsUUID } from 'class-validator';
 
 export class CreateAssetDto {
-
   @IsUUID()
   clientId: string;
 

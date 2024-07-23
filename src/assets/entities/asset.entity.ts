@@ -4,6 +4,7 @@ import { User } from '../../user/entities/user.entity';
 import { AssetType } from './asset-type.entity';
 import { Photo } from './photo.entity';
 import { AssetPump } from './asset-pump.entity';
+import { Customer } from './../../customer/entities/customer.entity';
 
 @Entity()
 export class Asset {
@@ -13,8 +14,8 @@ export class Asset {
   @ManyToOne(() => Client, client => client.assets, { onDelete: 'CASCADE' })
   client: Client;
 
-  @ManyToOne(() => User, user => user.assets, { onDelete: 'CASCADE' })
-  customer: User;
+  @ManyToOne(() => Customer, customer => customer.assets, { onDelete: 'CASCADE' })
+  customer: Customer;
 
   @Column()
   name: string;

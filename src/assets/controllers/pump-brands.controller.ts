@@ -5,12 +5,16 @@ import { CreatePumpBrandDto } from './../dto/create-pump-brand.dto';
 import { UpdatePumpBrandDto } from './../dto/update-pump-brand.dto';
 import * as multer from 'multer';
 import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
-@UseGuards(JwtAuthGuard)
+import { RolesGuard } from './../../auth/guards/roles.guard';
+import { Roles } from './../../auth/decorators/roles.decorator';
+import { Role } from './../../auth/role.enum';
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('pump-brands')
 export class PumpBrandsController {
   constructor(private readonly pumpBrandsService: PumpBrandsService) {}
 
   @Post()
+  @Roles(Role.Client)
   @UseInterceptors(FileInterceptor('file'))
   create(
     @Body() createPumpBrandDto: CreatePumpBrandDto,
@@ -20,16 +24,19 @@ export class PumpBrandsController {
   }
 
   @Get()
+  @Roles(Role.Client)
   findAll() {
     return this.pumpBrandsService.findAll();
   }
 
   @Get(':id')
+  @Roles(Role.Client)
   findOne(@Param('id') id: string) {
     return this.pumpBrandsService.findOne(id);
   }
 
   @Patch(':id')
+  @Roles(Role.Client)
   @UseInterceptors(FileInterceptor('file'))
   update(
     @Param('id') id: string,
@@ -40,6 +47,7 @@ export class PumpBrandsController {
   }
 
   @Delete(':id')
+  @Roles(Role.Client)
   remove(@Param('id') id: string) {
     return this.pumpBrandsService.remove(id);
   }

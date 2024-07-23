@@ -5,17 +5,14 @@ import { User } from './user/entities/user.entity';
 import { UserIP } from './user/entities/user-ip.entity';
 import { UserSession } from './user/entities/user-session.entity';
 import { Log } from './user/entities/log.entity';
-import { InitialMigration1628879943693 } from './migrations/InitialMigration';
-import { AddClientPassword1628889943693 } from './migrations/1628889943693-AddClientPassword';
-import { CreateCustomerTable1628879943693 } from './migrations/customers';
 import { Customer } from './customer/entities/customer.entity';
 import { Asset } from './assets/entities/asset.entity';
 import { Photo } from './assets/entities/photo.entity';
 import { Pump } from './assets/entities/pump.entity';
 import { PumpBrand } from './assets/entities/pump-brand.entity';
 import { AssetType } from './assets/entities/asset-type.entity';
-import { CreateAssetsModule20240722162333 } from './migrations/20240722162333-CreateAssetsModule';
 import { AssetPump } from './assets/entities/asset-pump.entity';
+import { CombinedMigration20240722162333 } from './migrations/CombinedMigration';
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -39,10 +36,7 @@ const dataSourceOptions: DataSourceOptions = {
     AssetPump,
   ],
   migrations: [
-    InitialMigration1628879943693,
-    AddClientPassword1628889943693,
-    CreateCustomerTable1628879943693,
-    CreateAssetsModule20240722162333,
+    CombinedMigration20240722162333,
   ],
   synchronize: false,
   logging: true,

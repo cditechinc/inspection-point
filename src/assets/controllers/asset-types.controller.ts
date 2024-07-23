@@ -13,7 +13,7 @@ export class AssetTypesController {
   constructor(private readonly assetTypesService: AssetTypesService) {}
 
   @Post()
-  @Roles(Role.Admin)
+  @Roles(Role.Client)
   create(@Body() createAssetTypeDto: CreateAssetTypeDto) {
     return this.assetTypesService.create(createAssetTypeDto);
   }

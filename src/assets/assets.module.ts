@@ -18,6 +18,7 @@ import { PumpBrandsController } from './controllers/pump-brands.controller';
 import { AssetTypesController } from './controllers/asset-types.controller';
 import { PhotosController } from './controllers/photos.controller';
 import { AwsModule } from './../aws/aws.module';
+import { Customer } from './../customer/entities/customer.entity';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AwsModule } from './../aws/aws.module';
       AssetType,
       Client,
       User,
+      Customer
     ]),
     AwsModule
   ],
