@@ -13,6 +13,7 @@ import { ClientModule } from './client/client.module';
 import { Client } from './client/entities/client.entity';
 import { Customer } from './customer/entities/customer.entity';
 import { CustomerModule } from './customer/customer.module';
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { CustomerModule } from './customer/customer.module';
     AuthModule,
     UserModule,
     ClientModule,
-    CustomerModule
+    CustomerModule,
+    AssetsModule
   ],
 })
 export class AppModule {}

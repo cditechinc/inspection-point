@@ -4,6 +4,8 @@ import { UserIP } from './user-ip.entity';
 import { Log } from './log.entity';
 import { Client } from '../../client/entities/client.entity';
 
+import { Asset } from './../../assets/entities/asset.entity';
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -82,6 +84,9 @@ export class User {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @OneToMany(() => Asset, asset => asset.customer)
+  assets: Asset[];
 
   @OneToMany(() => UserSession, session => session.user)
   sessions: UserSession[];

@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Customer } from '../../customer/entities/customer.entity';
+import { Asset } from './../../assets/entities/asset.entity';
 
 @Entity('clients')
 export class Client {
@@ -65,4 +66,7 @@ export class Client {
   @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn()
   user: User;
+
+  @OneToMany(() => Asset, asset => asset.client)
+  assets: Asset[];
 }

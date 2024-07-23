@@ -9,6 +9,13 @@ import { InitialMigration1628879943693 } from './migrations/InitialMigration';
 import { AddClientPassword1628889943693 } from './migrations/1628889943693-AddClientPassword';
 import { CreateCustomerTable1628879943693 } from './migrations/customers';
 import { Customer } from './customer/entities/customer.entity';
+import { Asset } from './assets/entities/asset.entity';
+import { Photo } from './assets/entities/photo.entity';
+import { Pump } from './assets/entities/pump.entity';
+import { PumpBrand } from './assets/entities/pump-brand.entity';
+import { AssetType } from './assets/entities/asset-type.entity';
+import { CreateAssetsModule20240722162333 } from './migrations/20240722162333-CreateAssetsModule';
+import { AssetPump } from './assets/entities/asset-pump.entity';
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -17,11 +24,25 @@ const dataSourceOptions: DataSourceOptions = {
   username: process.env.DATABASE_USER || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'postgres',
   database: process.env.DATABASE_NAME || 'inspection',
-  entities: [Client, Customer, User, UserIP, UserSession, Log],
+  entities: [
+    Client,
+    Customer,
+    User,
+    UserIP,
+    UserSession,
+    Log,
+    Asset,
+    Photo,
+    Pump,
+    PumpBrand,
+    AssetType,
+    AssetPump,
+  ],
   migrations: [
     InitialMigration1628879943693,
     AddClientPassword1628889943693,
     CreateCustomerTable1628879943693,
+    CreateAssetsModule20240722162333,
   ],
   synchronize: false,
   logging: true,
