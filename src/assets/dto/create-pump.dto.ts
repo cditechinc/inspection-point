@@ -1,29 +1,34 @@
-import { IsUUID, IsString, IsDecimal, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsUUID } from 'class-validator';
 
 export class CreatePumpDto {
+  @IsNotEmpty()
   @IsUUID()
   assetId: string;
 
-  @IsUUID()
-  brandId: string;
-
-  @IsDecimal()
-  avgAmps: number;
-
-  @IsDecimal()
-  maxAmps: number;
-
-  @IsDecimal()
-  hp: number;
-
-  @IsString()
-  serial: string;
-
-  @IsString()
   @IsOptional()
+  @IsUUID()
+  brandId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  avgAmps?: number;
+
+  @IsOptional()
+  @IsNumber()
+  maxAmps?: number;
+
+  @IsOptional()
+  @IsNumber()
+  hp?: number;
+
+  @IsOptional()
+  @IsString()
+  serial?: string;
+
+  @IsOptional()
+  @IsString()
   warranty?: string;
 
-  @IsString()
   @IsOptional()
-  installedDate?: string;
+  installedDate?: Date;
 }

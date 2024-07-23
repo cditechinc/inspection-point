@@ -1,43 +1,44 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PhotosService } from './../services/photos.service';
 import { CreatePhotoDto } from './../dto/create-photo.dto';
 import { UpdatePhotoDto } from './../dto/update-photo.dto';
-import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
-import { RolesGuard } from './../../auth/guards/roles.guard';
-import { Roles } from './../../auth/decorators/roles.decorator';
-import { Role } from './../../auth/role.enum';
+import * as multer from 'multer';
 
 @Controller('photos')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 
   @Post()
-  @Roles(Role.Client, Role.CustomerAdmin)
-  create(@Body() createPhotoDto: CreatePhotoDto) {
-    return this.photosService.create(createPhotoDto);
+  @UseInterceptors(FileInterceptor('file'))
+  create(
+    @Body() createPhotoDto: CreatePhotoDto,
+    @UploadedFile() file: multer.File,
+  ) {
+    return this.photosService.create(createPhotoDto, file);
   }
 
   @Get()
-  @Roles(Role.Client, Role.CustomerAdmin)
   findAll() {
     return this.photosService.findAll();
   }
 
   @Get(':id')
-  @Roles(Role.Client, Role.CustomerAdmin)
   findOne(@Param('id') id: string) {
     return this.photosService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(Role.Client, Role.CustomerAdmin)
-  update(@Param('id') id: string, @Body() updatePhotoDto: UpdatePhotoDto) {
-    return this.photosService.update(id, updatePhotoDto);
+  @UseInterceptors(FileInterceptor('file'))
+  update(
+    @Param('id') id: string,
+    @Body() updatePhotoDto: UpdatePhotoDto,
+    @UploadedFile() file: multer.File,
+  ) {
+    return this.photosService.update(id, updatePhotoDto, file);
   }
 
   @Delete(':id')
-  @Roles(Role.Client, Role.CustomerAdmin)
   remove(@Param('id') id: string) {
     return this.photosService.remove(id);
   }

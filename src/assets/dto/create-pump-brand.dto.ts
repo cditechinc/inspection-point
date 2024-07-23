@@ -1,30 +1,26 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreatePumpBrandDto {
+  @IsNotEmpty()
   @IsString()
   name: string;
 
+  @IsOptional()
   @IsString()
-  model: string;
+  model?: string;
 
+  @IsOptional()
   @IsString()
-  website: string;
+  website?: string;
 
+  @IsOptional()
   @IsString()
-  phone: string;
+  phone?: string;
 
+  @IsOptional()
   @IsString()
-  address: string;
+  address?: string;
 
-  @IsString()
-  city: string;
-
-  @IsString()
-  state: string;
-
-  @IsString()
-  zipcode: string;
-
-  @IsBoolean()
-  madeInUSA: boolean;
+  @IsOptional()
+  madeInUSA?: boolean;
 }

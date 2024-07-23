@@ -1,9 +1,19 @@
-import { IsUUID, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreatePhotoDto {
-  @IsUUID()
-  assetId: string;
+  @IsOptional()
+  @IsString()
+  assetId?: string;
 
+  @IsOptional()
+  @IsString()
+  pumpId?: string;
+
+  @IsOptional()
+  @IsString()
+  pumpBrandId?: string;
+
+  @IsNotEmpty()
   @IsString()
   url: string;
 }

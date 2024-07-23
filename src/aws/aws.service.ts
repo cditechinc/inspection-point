@@ -21,11 +21,18 @@ export class AwsService {
     }
   }
 
-  async uploadFile(clientId: string, fileType: 'pdf' | 'image', file: Buffer, originalName: string): Promise<string> {
+  async uploadFile(
+    clientId: string,
+    entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer',
+    fileType: 'pdf' | 'image',
+    file: Buffer,
+    originalName: string,
+  ): Promise<string> {
     const basePath = `clients/${clientId}`;
     const folder = fileType === 'pdf' ? 'pdfs' : 'images';
+    const entityFolder = this.getEntityFolder(entityType);
     const fileName = this.generateFileName(fileType, originalName);
-    const filePath = `${basePath}/${folder}/${fileName}`;
+    const filePath = `${basePath}/${folder}/${entityFolder}/${fileName}`;
 
     await this.s3
       .putObject({
@@ -46,5 +53,20 @@ export class AwsService {
     const baseName = nameParts.join('-').replace(/\s+/g, '-');
 
     return `${date}-${baseName}-${randomInt}.${extension}`;
+  }
+
+  private getEntityFolder(entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer'): string {
+    switch (entityType) {
+      case 'asset':
+        return 'assets';
+      case 'pump':
+        return 'pumps';
+      case 'pumpBrand':
+        return 'pump-brands';
+      case 'customer':
+        return 'customers';
+      default:
+        throw new Error('Invalid entity type');
+    }
   }
 }

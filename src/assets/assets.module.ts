@@ -17,6 +17,7 @@ import { PumpsController } from './controllers/pumps.controller';
 import { PumpBrandsController } from './controllers/pump-brands.controller';
 import { AssetTypesController } from './controllers/asset-types.controller';
 import { PhotosController } from './controllers/photos.controller';
+import { AwsModule } from './../aws/aws.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { PhotosController } from './controllers/photos.controller';
       Client,
       User,
     ]),
+    AwsModule
   ],
   controllers: [
     AssetsController,

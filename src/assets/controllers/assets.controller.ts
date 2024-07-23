@@ -1,43 +1,44 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { AssetsService } from './../services/assets.service';
 import { CreateAssetDto } from './../dto/create-asset.dto';
 import { UpdateAssetDto } from './../dto/update-asset.dto';
-import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
-import { RolesGuard } from './../../auth/guards/roles.guard';
-import { Roles } from './../../auth/decorators/roles.decorator';
-import { Role } from './../../auth/role.enum';
+import * as multer from 'multer';
 
 @Controller('assets')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class AssetsController {
   constructor(private readonly assetsService: AssetsService) {}
 
   @Post()
-  @Roles(Role.Client, Role.CustomerAdmin)
-  create(@Body() createAssetDto: CreateAssetDto) {
-    return this.assetsService.create(createAssetDto);
+  @UseInterceptors(FilesInterceptor('files'))
+  create(
+    @Body() createAssetDto: CreateAssetDto,
+    @UploadedFiles() files: multer.File[],
+  ) {
+    return this.assetsService.create(createAssetDto, files);
   }
 
   @Get()
-  @Roles(Role.Client, Role.CustomerAdmin)
   findAll() {
     return this.assetsService.findAll();
   }
 
   @Get(':id')
-  @Roles(Role.Client, Role.CustomerAdmin)
   findOne(@Param('id') id: string) {
     return this.assetsService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(Role.Client, Role.CustomerAdmin)
-  update(@Param('id') id: string, @Body() updateAssetDto: UpdateAssetDto) {
-    return this.assetsService.update(id, updateAssetDto);
+  @UseInterceptors(FilesInterceptor('files'))
+  update(
+    @Param('id') id: string,
+    @Body() updateAssetDto: UpdateAssetDto,
+    @UploadedFiles() files: multer.File[],
+  ) {
+    return this.assetsService.update(id, updateAssetDto, files);
   }
 
   @Delete(':id')
-  @Roles(Role.Client, Role.CustomerAdmin)
   remove(@Param('id') id: string) {
     return this.assetsService.remove(id);
   }

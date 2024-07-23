@@ -1,48 +1,86 @@
-import { IsString, IsUUID, IsOptional, IsDecimal, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEnum, IsUUID } from 'class-validator';
 
 export class CreateAssetDto {
+
   @IsUUID()
   clientId: string;
 
   @IsUUID()
   customerId: string;
 
+  @IsNotEmpty()
   @IsString()
   name: string;
 
+  @IsOptional()
   @IsUUID()
-  @IsOptional()
-  typeId?: string;
+  type?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   location?: string;
 
-  @IsDecimal()
   @IsOptional()
+  @IsNumber()
   latitude?: number;
 
-  @IsDecimal()
   @IsOptional()
+  @IsNumber()
   longitude?: number;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   description?: string;
 
+  @IsOptional()
   @IsEnum(['active', 'inactive', 'maintenance'])
-  @IsOptional()
-  status?: string;
+  status?: 'active' | 'inactive' | 'maintenance';
 
-  @IsString()
   @IsOptional()
+  @IsString()
   inspectionInterval?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   qrCode?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   nfcCode?: string;
+
+  @IsOptional()
+  @IsNumber()
+  pipeDiameter?: number;
+
+  @IsOptional()
+  @IsNumber()
+  pumps?: number;
+
+  @IsOptional()
+  @IsString()
+  smart?: string;
+
+  @IsOptional()
+  @IsString()
+  size?: string;
+
+  @IsOptional()
+  @IsNumber()
+  floats?: number;
+
+  @IsOptional()
+  @IsString()
+  duty?: string;
+
+  @IsOptional()
+  @IsString()
+  rails?: string;
+
+  @IsOptional()
+  @IsString()
+  material?: string;
+
+  @IsOptional()
+  @IsString()
+  deleteProtect?: string;
 }

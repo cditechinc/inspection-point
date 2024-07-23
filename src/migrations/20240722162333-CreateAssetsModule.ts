@@ -10,7 +10,7 @@ export class CreateAssetsModule20240722162333 implements MigrationInterface {
         "client_id" uuid,
         "customer_id" uuid,
         "name" character varying NOT NULL,
-        "type" character varying,
+        "type" uuid,
         "location" character varying,
         "latitude" decimal(9,6),
         "longitude" decimal(9,6),
@@ -19,10 +19,20 @@ export class CreateAssetsModule20240722162333 implements MigrationInterface {
         "inspection_interval" character varying,
         "qr_code" character varying,
         "nfc_code" character varying,
+        "pipe_dia" character varying,
+        "smart" character varying,
+        "size" character varying,
+        "material" character varying,
+        "delete_protect" character varying,
+        "duty" character varying,
+        "rails" character varying,
+        "float" character varying,
+        "pumps" character varying,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "FK_assets_client_id" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE CASCADE,
-        CONSTRAINT "FK_assets_customer_id" FOREIGN KEY ("customer_id") REFERENCES "users"("id") ON DELETE CASCADE
+        CONSTRAINT "FK_assets_customer_id" FOREIGN KEY ("customer_id") REFERENCES "users"("id") ON DELETE CASCADE,
+        CONSTRAINT "FK_assets_type" FOREIGN KEY ("type") REFERENCES "asset_types"("id")
       );
     `);
 
@@ -35,17 +45,33 @@ export class CreateAssetsModule20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "photos" (
-        "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-        "asset_id" uuid,
-        "url" character varying,
-        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT "FK_photos_asset_id" FOREIGN KEY ("asset_id") REFERENCES "assets"("id") ON DELETE CASCADE
-      );
+      CREATE INDEX "idx_assets_type" ON "assets" ("type");
     `);
 
     await queryRunner.query(`
+      CREATE TABLE "photos" (
+        "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        "url" character varying,
+        "asset_id" uuid,
+        "pump_id" uuid,
+        "pump_brand_id" uuid,
+        "client_id" uuid,
+        "customer_id" uuid,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "FK_photos_asset_id" FOREIGN KEY ("asset_id") REFERENCES "assets"("id") ON DELETE CASCADE,
+        CONSTRAINT "FK_photos_pump_id" FOREIGN KEY ("pump_id") REFERENCES "pumps"("id") ON DELETE CASCADE,
+        CONSTRAINT "FK_photos_pump_brand_id" FOREIGN KEY ("pump_brand_id") REFERENCES "pump_brands"("id") ON DELETE CASCADE,
+        CONSTRAINT "FK_photos_client_id" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE CASCADE,
+        CONSTRAINT "FK_photos_customer_id" FOREIGN KEY ("customer_id") REFERENCES "customers"("id") ON DELETE CASCADE
+      );
+    `);
+    
+    await queryRunner.query(`
       CREATE INDEX "idx_photos_asset_id" ON "photos" ("asset_id");
+      CREATE INDEX "idx_photos_pump_id" ON "photos" ("pump_id");
+      CREATE INDEX "idx_photos_pump_brand_id" ON "photos" ("pump_brand_id");
+      CREATE INDEX "idx_photos_client_id" ON "photos" ("client_id");
+      CREATE INDEX "idx_photos_customer_id" ON "photos" ("customer_id");
     `);
 
     await queryRunner.query(`

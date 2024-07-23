@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, Index } from 'typeorm';
 import { Pump } from './pump.entity';
+import { Photo } from './photo.entity';
 
 @Entity()
 @Index(['name'], { unique: true })
@@ -25,8 +26,14 @@ export class PumpBrand {
   @Column({ type: 'boolean', nullable: true })
   madeInUsa: boolean;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  logoUrl: string;
+
   @OneToMany(() => Pump, pump => pump.brand)
   pumps: Pump[];
+
+  @OneToMany(() => Photo, photo => photo.pumpBrand)
+  photos: Photo[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

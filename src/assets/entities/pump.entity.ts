@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Index, OneToMany } f
 import { Asset } from './asset.entity';
 import { PumpBrand } from './pump-brand.entity';
 import { AssetPump } from './asset-pump.entity';
+import { Photo } from './photo.entity';
 
 @Entity()
 export class Pump {
@@ -36,6 +37,9 @@ export class Pump {
 
   @OneToMany(() => AssetPump, assetPump => assetPump.pump)
   assetPumps: AssetPump[];
+
+  @OneToMany(() => Photo, photo => photo.pump)
+  photos: Photo[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

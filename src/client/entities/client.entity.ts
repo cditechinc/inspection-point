@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, Up
 import { User } from '../../user/entities/user.entity';
 import { Customer } from '../../customer/entities/customer.entity';
 import { Asset } from './../../assets/entities/asset.entity';
+import { Photo } from './../../assets/entities/photo.entity';
 
 @Entity('clients')
 export class Client {
@@ -69,4 +70,7 @@ export class Client {
 
   @OneToMany(() => Asset, asset => asset.client)
   assets: Asset[];
+
+  @OneToMany(() => Photo, photo => photo.client)
+  photos: Photo[];
 }

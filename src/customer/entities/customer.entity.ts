@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Client } from '../../client/entities/client.entity';
+import { Photo } from './../../assets/entities/photo.entity';
 
 @Entity('customers')
 export class Customer {
@@ -41,6 +42,9 @@ export class Customer {
 
   @ManyToOne(() => Client, client => client.customers, { onDelete: 'CASCADE' })
   client: Client;
+
+  @OneToMany(() => Photo, photo => photo.customer)
+  photos: Photo[];
 
   @CreateDateColumn()
   created_at: Date;
