@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, UseGuards } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { PumpsService } from './../services/pumps.service';
 import { CreatePumpDto } from './../dto/create-pump.dto';
 import { UpdatePumpDto } from './../dto/update-pump.dto';
 import * as multer from 'multer';
+import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('pumps')
 export class PumpsController {
   constructor(private readonly pumpsService: PumpsService) {}

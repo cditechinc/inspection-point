@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, UseGuards } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { AssetsService } from './../services/assets.service';
 import { CreateAssetDto } from './../dto/create-asset.dto';
 import { UpdateAssetDto } from './../dto/update-asset.dto';
 import * as multer from 'multer';
+import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from './../../auth/guards/roles.guard';
 
 @Controller('assets')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AssetsController {
   constructor(private readonly assetsService: AssetsService) {}
 
