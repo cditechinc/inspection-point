@@ -14,6 +14,12 @@ import { Client } from './client/entities/client.entity';
 import { Customer } from './customer/entities/customer.entity';
 import { CustomerModule } from './customer/customer.module';
 import { AssetsModule } from './assets/assets.module';
+import { Asset } from './assets/entities/asset.entity';
+import { Photo } from './assets/entities/photo.entity';
+import { Pump } from './assets/entities/pump.entity';
+import { PumpBrand } from './assets/entities/pump-brand.entity';
+import { AssetType } from './assets/entities/asset-type.entity';
+import { AssetPump } from './assets/entities/asset-pump.entity';
 
 @Module({
   imports: [
@@ -27,7 +33,20 @@ import { AssetsModule } from './assets/assets.module';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [User, Client, Customer, UserSession, UserIP, Log],
+        entities: [
+          User,
+          Client,
+          Customer,
+          UserSession,
+          UserIP,
+          Log,
+          Asset,
+          Photo,
+          Pump,
+          PumpBrand,
+          AssetType,
+          AssetPump,
+        ],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -36,7 +55,7 @@ import { AssetsModule } from './assets/assets.module';
     UserModule,
     ClientModule,
     CustomerModule,
-    AssetsModule
+    AssetsModule,
   ],
 })
 export class AppModule {}

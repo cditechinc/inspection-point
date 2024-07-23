@@ -6,9 +6,10 @@ import { ClientController } from './client.controller';
 import { Client } from './entities/client.entity';
 import { AwsService } from './../aws/aws.service';
 import { UserModule } from './../user/user.module';
+import { AssetsModule } from './../assets/assets.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Client]), UserModule],
+  imports: [TypeOrmModule.forFeature([Client]), UserModule, AssetsModule],
   controllers: [ClientController],
   providers: [ClientService, AwsService],
   exports: [ClientService, TypeOrmModule],
