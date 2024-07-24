@@ -411,7 +411,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "duty" character varying,
         "rails" character varying,
         "float" decimal(9,6),
-        "pumps" decimal(9,6),
+        "pumps" character varying,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "FK_assets_client_id" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE CASCADE,

@@ -36,9 +36,14 @@ export class PumpsService {
     }
 
     const pump = this.pumpsRepository.create({
-      ...createPumpDto,
       asset,
       brand,
+      avgAmps: createPumpDto.avgAmps,
+      maxAmps: createPumpDto.maxAmps,
+      hp: createPumpDto.hp,
+      serial: createPumpDto.serial,
+      warranty: createPumpDto.warranty,
+      installedDate: createPumpDto.installedDate,
     });
     const savedPump = await this.pumpsRepository.save(pump);
 
@@ -50,11 +55,11 @@ export class PumpsService {
   }
 
   async findAll(): Promise<Pump[]> {
-    return this.pumpsRepository.find({ relations: ['photos'] });
+    return this.pumpsRepository.find({ relations: ['photos', 'asset', 'brand'] });
   }
 
   async findOne(id: string): Promise<Pump> {
-    const pump = await this.pumpsRepository.findOne({ where: { id }, relations: ['photos'] });
+    const pump = await this.pumpsRepository.findOne({ where: { id }, relations: ['photos', 'asset', 'brand'] });
     if (!pump) {
       throw new NotFoundException(`Pump #${id} not found`);
     }
@@ -62,7 +67,10 @@ export class PumpsService {
   }
 
   async update(id: string, updatePumpDto: UpdatePumpDto, files: multer.File[]): Promise<Pump> {
-    const pump = await this.pumpsRepository.preload({ id, ...updatePumpDto });
+    const pump = await this.pumpsRepository.preload({
+      id,
+      ...updatePumpDto,
+    });
     if (!pump) {
       throw new NotFoundException(`Pump #${id} not found`);
     }
