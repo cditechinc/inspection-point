@@ -25,9 +25,21 @@ export class RegisterClientDto {
   @IsString()
   billing_address: string;
 
+  @IsNotEmpty()
+  @IsString()
+  company_name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  company_type: string;
+
   @IsOptional()
   @IsString()
   industry: string;
+
+  @IsOptional()
+  @IsString()
+  company_logo: string;
 
   @IsOptional()
   @IsString()

@@ -25,7 +25,16 @@ export class Client {
   billing_address: string;
 
   @Column({ nullable: true })
+  company_name: string;
+
+  @Column({ nullable: true })
+  company_type: string;
+
+  @Column({ nullable: true })
   industry: string;
+
+  @Column({ nullable: true })
+  company_logo: string;
 
   @Column({ nullable: true })
   payment_method: string;

@@ -52,7 +52,7 @@ export class Asset {
   nfcCode: string;
 
   @Column({ nullable: true })
-  pipeDia: string;
+  pipeDia: number;
 
   @Column({ nullable: true })
   smart: string;
@@ -73,10 +73,10 @@ export class Asset {
   rails: string;
 
   @Column({ nullable: true })
-  float: string;
+  float: number;
 
   @Column({ nullable: true })
-  pumps: string;
+  pumps: number;
 
   @OneToMany(() => Photo, photo => photo.asset)
   photos: Photo[];

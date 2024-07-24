@@ -49,7 +49,7 @@ export class CreateAssetDto {
 
   @IsOptional()
   @IsNumber()
-  pipeDiameter?: number;
+  pipeDia?: number;
 
   @IsOptional()
   @IsNumber()
@@ -65,7 +65,7 @@ export class CreateAssetDto {
 
   @IsOptional()
   @IsNumber()
-  floats?: number;
+  float?: number;
 
   @IsOptional()
   @IsString()
