@@ -34,9 +34,9 @@ export class Photo {
   @ManyToOne(() => PumpBrand, pumpBrand => pumpBrand.photos, { onDelete: 'CASCADE' })
   pumpBrand: PumpBrand;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   @Index()
-  clientId?: string;
+  clientId: string;
 
   @ManyToOne(() => Client, client => client.photos, { onDelete: 'CASCADE' })
   client: Client;

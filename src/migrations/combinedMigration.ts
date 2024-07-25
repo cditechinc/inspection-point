@@ -181,11 +181,11 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE "photos" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-        "url" character varying,
+        "url" character varying NOT NULL,
         "asset_id" uuid,
         "pump_id" uuid,
         "pump_brand_id" uuid,
-        "client_id" uuid,
+        "client_id" uuid NOT NULL,
         "customer_id" uuid,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "FK_photos_asset_id" FOREIGN KEY ("asset_id") REFERENCES "assets"("id") ON DELETE CASCADE,

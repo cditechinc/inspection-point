@@ -22,6 +22,9 @@ export class PhotosService {
       throw new BadRequestException('Client ID must be provided');
     }
 
+    console.log('CreatePhotoDto:', createPhotoDto);
+
+
     const url = await this.awsService.uploadFile(createPhotoDto.clientId, entityType, 'image', file.buffer, file.originalname);
 
     const photo = this.photosRepository.create({ ...createPhotoDto, url });

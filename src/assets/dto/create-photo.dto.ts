@@ -3,11 +3,10 @@ import {
   IsString,
   IsOptional,
   IsUUID,
-  ValidateIf,
-  ValidationArguments,
+  Validate,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  Validate,
+  ValidationArguments,
 } from 'class-validator';
 
 @ValidatorConstraint({ name: 'oneId', async: false })
@@ -38,10 +37,6 @@ export class CreatePhotoDto {
   @IsOptional()
   @IsUUID()
   customerId?: string;
-
-  @IsNotEmpty()
-  @IsString()
-  url: string;
 
   @IsNotEmpty()
   @IsString()

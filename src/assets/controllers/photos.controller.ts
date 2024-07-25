@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PhotosService } from './../services/photos.service';
 import { CreatePhotoDto } from './../dto/create-photo.dto';
@@ -23,6 +34,8 @@ export class PhotosController {
     @UploadedFile() file: multer.File,
   ) {
     createPhotoDto.clientId = clientId; // Ensure the clientId is included in the DTO
+    console.log('CreatePhotoDto:', createPhotoDto);
+
     return this.photosService.create(createPhotoDto, file);
   }
 
