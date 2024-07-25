@@ -9,6 +9,10 @@ export class CreatePumpDto {
   @IsUUID()
   brandId?: string;
 
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
   @IsOptional()
   @IsNumber()
   avgAmps?: number;

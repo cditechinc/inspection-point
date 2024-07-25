@@ -38,6 +38,7 @@ export class PumpsService {
     const pump = this.pumpsRepository.create({
       asset,
       brand,
+      name: createPumpDto.name,
       avgAmps: createPumpDto.avgAmps,
       maxAmps: createPumpDto.maxAmps,
       hp: createPumpDto.hp,

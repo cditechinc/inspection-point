@@ -9,6 +9,9 @@ export class Pump {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ type: 'varchar', length: 255 })
+  name: string;
+
   @ManyToOne(() => Asset, asset => asset.pumps, { onDelete: 'CASCADE' })
   @Index()
   asset: Asset;

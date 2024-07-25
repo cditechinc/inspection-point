@@ -155,6 +155,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE "pumps" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        "name" character varying NOT NULL,
         "asset_id" uuid,
         "brand_id" uuid,
         "avg_amps" decimal(5,2),
