@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePhotoDto } from './../dto/create-photo.dto';
@@ -17,8 +17,12 @@ export class PhotosService {
 
   async create(createPhotoDto: CreatePhotoDto, file: multer.File): Promise<Photo> {
     const entityType = this.getEntityType(createPhotoDto);
-    const clientId = createPhotoDto.assetId || createPhotoDto.pumpId || createPhotoDto.pumpBrandId;
-    const url = await this.awsService.uploadFile(clientId, entityType, 'image', file.buffer, file.originalname);
+
+    if (!createPhotoDto.clientId) {
+      throw new BadRequestException('Client ID must be provided');
+    }
+
+    const url = await this.awsService.uploadFile(createPhotoDto.clientId, entityType, 'image', file.buffer, file.originalname);
 
     const photo = this.photosRepository.create({ ...createPhotoDto, url });
     return this.photosRepository.save(photo);
@@ -44,7 +48,7 @@ export class PhotosService {
 
     if (file) {
       const entityType = this.getEntityType(updatePhotoDto);
-      const clientId = photo.assetId || photo.pumpId || photo.pumpBrandId;
+      const clientId = updatePhotoDto.clientId || photo.clientId;
       const url = await this.awsService.uploadFile(clientId, entityType, 'image', file.buffer, file.originalname);
       photo.url = url;
     }
@@ -61,6 +65,7 @@ export class PhotosService {
     if (dto.assetId) return 'asset';
     if (dto.pumpId) return 'pump';
     if (dto.pumpBrandId) return 'pumpBrand';
-    throw new Error('Invalid entity type');
+    if (dto.customerId) return 'customer';
+    throw new BadRequestException('Invalid entity type: At least one of assetId, pumpId, pumpBrandId, or customerId must be provided');
   }
 }

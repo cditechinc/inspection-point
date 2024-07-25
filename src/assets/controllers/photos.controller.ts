@@ -8,18 +8,21 @@ import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from './../../auth/guards/roles.guard';
 import { Roles } from './../../auth/decorators/roles.decorator';
 import { Role } from './../../auth/role.enum';
+
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('photos')
 export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 
-  @Post()
+  @Post('upload/:clientId')
   @Roles(Role.Client)
   @UseInterceptors(FileInterceptor('file'))
   create(
+    @Param('clientId') clientId: string,
     @Body() createPhotoDto: CreatePhotoDto,
     @UploadedFile() file: multer.File,
   ) {
+    createPhotoDto.clientId = clientId; // Ensure the clientId is included in the DTO
     return this.photosService.create(createPhotoDto, file);
   }
 
