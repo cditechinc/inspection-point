@@ -12,7 +12,7 @@ import { Pump } from './assets/entities/pump.entity';
 import { PumpBrand } from './assets/entities/pump-brand.entity';
 import { AssetType } from './assets/entities/asset-type.entity';
 import { AssetPump } from './assets/entities/asset-pump.entity';
-import { CombinedMigration20240722162333 } from './migrations/CombinedMigration';
+import { CombinedMigration20240722162333 } from './migrations/combinedMigration';
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
