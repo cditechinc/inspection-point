@@ -4,7 +4,7 @@ import { PumpBrand } from './pump-brand.entity';
 import { AssetPump } from './asset-pump.entity';
 import { Photo } from './photo.entity';
 
-@Entity()
+@Entity('pumps')
 export class Pump {
   @PrimaryGeneratedColumn('uuid')
   id: string;

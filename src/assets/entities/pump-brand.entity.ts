@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany, Index } from 'typeor
 import { Pump } from './pump.entity';
 import { Photo } from './photo.entity';
 
-@Entity()
+@Entity('pump_brands')
 @Index(['name'], { unique: true })
 export class PumpBrand {
   @PrimaryGeneratedColumn('uuid')

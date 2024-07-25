@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
 
-@Entity()
+@Entity('asset_types')
 export class AssetType {
   @PrimaryGeneratedColumn('uuid')
   id: string;

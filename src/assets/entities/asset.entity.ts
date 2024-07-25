@@ -6,7 +6,7 @@ import { Photo } from './photo.entity';
 import { AssetPump } from './asset-pump.entity';
 import { Customer } from './../../customer/entities/customer.entity';
 
-@Entity()
+@Entity('assets')
 export class Asset {
   @PrimaryGeneratedColumn('uuid')
   id: string;
