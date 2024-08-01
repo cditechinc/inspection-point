@@ -61,6 +61,10 @@ export class ClientService {
     return this.clientsRepository.findOne({ where: { email }, relations: ['user'] });
   }
 
+  async findOneByState(state: string): Promise<Client> {
+    return this.clientsRepository.findOne({ where: { quickbooksState: state } });
+  }
+
   async update(id: string, updateClientDto: Partial<Client>): Promise<Client> {
     const client = await this.findOne(id);
     if (!client) {

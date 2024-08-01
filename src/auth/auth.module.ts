@@ -1,5 +1,5 @@
 // src/auth/auth.module.ts
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -17,6 +17,8 @@ import { AuthController } from './auth.controller';
 import { ClientModule } from '../client/client.module';
 import { AwsModule } from './../aws/aws.module';
 import { RolesGuard } from './guards/roles.guard';
+import { QuickBooksStrategy } from './strategies/quickbooks.strategy';
+import { QuickBooksOAuthService } from './quickbooks-oauth.service';
 
 @Module({
   imports: [
@@ -30,10 +32,20 @@ import { RolesGuard } from './guards/roles.guard';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([User, UserSession, UserIP, Log]),
-    ClientModule,
+    forwardRef(() => ClientModule),
     AwsModule,
   ],
-  providers: [AuthService, UserService, ClientService, LocalStrategy, JwtStrategy, RolesGuard],
+  providers: [
+    AuthService,
+    UserService,
+    ClientService,
+    LocalStrategy,
+    JwtStrategy,
+    RolesGuard,
+    QuickBooksStrategy,
+    QuickBooksOAuthService,
+  ],
   controllers: [AuthController],
+  exports: [AuthService, UserService, RolesGuard, JwtModule, QuickBooksOAuthService],
 })
 export class AuthModule {}

@@ -4,8 +4,11 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
   name = 'CombinedMigration20240722162333';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+
     await queryRunner.query(`
-      CREATE TABLE "clients" (
+      CREATE TABLE IF NOT EXISTS "clients" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "name" character varying NOT NULL UNIQUE,
         "email" character varying NOT NULL UNIQUE,
@@ -27,13 +30,14 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "quickbooksRefreshToken" character varying,
         "quickbooksRealmId" character varying,
         "quickbooksTokenExpiresIn" TIMESTAMP,
+        "quickbooksState" character varying,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "customers" (
+      CREATE TABLE IF NOT EXISTS "customers" (
         "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         "name" VARCHAR(255) NOT NULL,
         "email" VARCHAR(255) NOT NULL,
@@ -46,6 +50,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "gate_code" VARCHAR(255),
         "previous_phone_number" VARCHAR(50),
         "service_contact" VARCHAR(255),
+        "quickbooksCustomerId" character varying,
         "client_id" uuid REFERENCES "clients"("id") ON DELETE CASCADE,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -53,7 +58,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "users" (
+      CREATE TABLE IF NOT EXISTS "users" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "username" character varying NOT NULL UNIQUE,
         "password_hash" character varying NOT NULL,
@@ -85,7 +90,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "asset_types" (
+      CREATE TABLE IF NOT EXISTS "asset_types" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "name" character varying NOT NULL,
         "description" text,
@@ -95,10 +100,10 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "assets" (
+      CREATE TABLE IF NOT EXISTS "assets" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-        "client_id" uuid,
-        "customer_id" uuid,
+        "client_id" uuid,  
+        "customer_id" uuid, 
         "name" character varying NOT NULL,
         "type" uuid,
         "location" character varying,
@@ -127,19 +132,20 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_assets_client_id" ON "assets" ("client_id");
+      CREATE INDEX IF NOT EXISTS "idx_assets_client_id" ON "assets" ("client_id");
     `);
+    
+    await queryRunner.query(`
+      CREATE INDEX IF NOT EXISTS "idx_assets_customer_id" ON "assets" ("customer_id");
+    `);
+    
+    await queryRunner.query(`
+      CREATE INDEX IF NOT EXISTS "idx_assets_type" ON "assets" ("type");
+    `);
+    
 
     await queryRunner.query(`
-      CREATE INDEX "idx_assets_customer_id" ON "assets" ("customer_id");
-    `);
-
-    await queryRunner.query(`
-      CREATE INDEX "idx_assets_type" ON "assets" ("type");
-    `);
-
-    await queryRunner.query(`
-      CREATE TABLE "pump_brands" (
+      CREATE TABLE IF NOT EXISTS "pump_brands" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "name" character varying NOT NULL UNIQUE,
         "model" character varying,
@@ -153,7 +159,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "pumps" (
+      CREATE TABLE IF NOT EXISTS "pumps" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "name" character varying NOT NULL,
         "asset_id" uuid,
@@ -172,15 +178,15 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_pumps_asset_id" ON "pumps" ("asset_id");
+      CREATE INDEX IF NOT EXISTS "idx_pumps_asset_id" ON "pumps" ("asset_id");
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_pumps_brand_id" ON "pumps" ("brand_id");
+      CREATE INDEX IF NOT EXISTS "idx_pumps_brand_id" ON "pumps" ("brand_id");
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "photos" (
+      CREATE TABLE IF NOT EXISTS "photos" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "url" character varying NOT NULL,
         "asset_id" uuid,
@@ -196,29 +202,29 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         CONSTRAINT "FK_photos_customer_id" FOREIGN KEY ("customer_id") REFERENCES "customers"("id") ON DELETE CASCADE
       );
     `);
-    
+
     await queryRunner.query(`
-      CREATE INDEX "idx_photos_asset_id" ON "photos" ("asset_id");
+      CREATE INDEX IF NOT EXISTS "idx_photos_asset_id" ON "photos" ("asset_id");
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_photos_pump_id" ON "photos" ("pump_id");
+      CREATE INDEX IF NOT EXISTS "idx_photos_pump_id" ON "photos" ("pump_id");
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_photos_pump_brand_id" ON "photos" ("pump_brand_id");
+      CREATE INDEX IF NOT EXISTS "idx_photos_pump_brand_id" ON "photos" ("pump_brand_id");
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_photos_client_id" ON "photos" ("client_id");
+      CREATE INDEX IF NOT EXISTS "idx_photos_client_id" ON "photos" ("client_id");
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_photos_customer_id" ON "photos" ("customer_id");
+      CREATE INDEX IF NOT EXISTS "idx_photos_customer_id" ON "photos" ("customer_id");
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "asset_pumps" (
+      CREATE TABLE IF NOT EXISTS "asset_pumps" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "asset_id" uuid,
         "pump_id" uuid,
@@ -230,15 +236,15 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_asset_pumps_asset_id" ON "asset_pumps" ("asset_id");
+      CREATE INDEX IF NOT EXISTS "idx_asset_pumps_asset_id" ON "asset_pumps" ("asset_id");
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "idx_asset_pumps_pump_id" ON "asset_pumps" ("pump_id");
+      CREATE INDEX IF NOT EXISTS "idx_asset_pumps_pump_id" ON "asset_pumps" ("pump_id");
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "logs" (
+      CREATE TABLE IF NOT EXISTS "logs" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "action" character varying NOT NULL,
         "timestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -249,7 +255,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "user_ips" (
+      CREATE TABLE IF NOT EXISTS "user_ips" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "ip_address" inet NOT NULL,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -259,7 +265,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "user_sessions" (
+      CREATE TABLE IF NOT EXISTS "user_sessions" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "ip_address" inet NOT NULL,
         "session_token" character varying NOT NULL,
@@ -269,38 +275,42 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         CONSTRAINT "FK_user_sessions_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE
       );
     `);
+
+    
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX "idx_asset_pumps_pump_id";`);
-    await queryRunner.query(`DROP INDEX "idx_asset_pumps_asset_id";`);
-    await queryRunner.query(`DROP TABLE "asset_pumps";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_asset_pumps_pump_id";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_asset_pumps_asset_id";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "asset_pumps";`);
 
-    await queryRunner.query(`DROP INDEX "idx_photos_asset_id";`);
-    await queryRunner.query(`DROP INDEX "idx_photos_pump_id";`);
-    await queryRunner.query(`DROP INDEX "idx_photos_pump_brand_id";`);
-    await queryRunner.query(`DROP INDEX "idx_photos_client_id";`);
-    await queryRunner.query(`DROP INDEX "idx_photos_customer_id";`);
-    await queryRunner.query(`DROP TABLE "photos";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_photos_asset_id";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_photos_pump_id";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_photos_pump_brand_id";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_photos_client_id";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_photos_customer_id";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "photos";`);
 
-    await queryRunner.query(`DROP INDEX "idx_pumps_brand_id";`);
-    await queryRunner.query(`DROP INDEX "idx_pumps_asset_id";`);
-    await queryRunner.query(`DROP TABLE "pumps";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_pumps_brand_id";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_pumps_asset_id";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "pumps";`);
 
-    await queryRunner.query(`DROP TABLE "pump_brands";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "pump_brands";`);
 
-    await queryRunner.query(`DROP INDEX "idx_assets_customer_id";`);
-    await queryRunner.query(`DROP INDEX "idx_assets_client_id";`);
-    await queryRunner.query(`DROP INDEX "idx_assets_type";`);
-    await queryRunner.query(`DROP TABLE "assets";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_assets_customer_id";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_assets_client_id";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_assets_type";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "assets";`);
 
-    await queryRunner.query(`DROP TABLE "asset_types";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "asset_types";`);
 
-    await queryRunner.query(`DROP TABLE "user_sessions";`);
-    await queryRunner.query(`DROP TABLE "user_ips";`);
-    await queryRunner.query(`DROP TABLE "logs";`);
-    await queryRunner.query(`DROP TABLE "users";`);
-    await queryRunner.query(`DROP TABLE "customers";`);
-    await queryRunner.query(`DROP TABLE "clients";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "user_sessions";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "user_ips";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "logs";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "users";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "customers";`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "clients";`);
+
+    
   }
 }

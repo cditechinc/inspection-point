@@ -4,6 +4,7 @@ import { Customer } from '../../customer/entities/customer.entity';
 import { Asset } from './../../assets/entities/asset.entity';
 import { Photo } from './../../assets/entities/photo.entity';
 
+
 @Entity('clients')
 export class Client {
   @PrimaryGeneratedColumn('uuid')
@@ -61,6 +62,21 @@ export class Client {
   @Column({ type: 'date', nullable: true })
   next_bill_date: Date;
 
+  @Column({ nullable: true })
+  quickbooksAccessToken: string;
+
+  @Column({ nullable: true })
+  quickbooksRefreshToken: string;
+
+  @Column({ nullable: true })
+  quickbooksRealmId: string;
+
+  @Column({ nullable: true })
+  quickbooksTokenExpiresIn: Date;
+  
+  @Column({ nullable: true })
+  quickbooksState: string;
+  
   @CreateDateColumn()
   created_at: Date;
 
@@ -82,4 +98,6 @@ export class Client {
 
   @OneToMany(() => Photo, photo => photo.client)
   photos: Photo[];
+
+  
 }

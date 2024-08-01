@@ -6,6 +6,8 @@ import { UpdatePhotoDto } from './../dto/update-photo.dto';
 import { Photo } from './../entities/photo.entity';
 import { AwsService } from './../../aws/aws.service';
 import * as multer from 'multer';
+import { Client } from './../../client/entities/client.entity';
+import { Asset } from '../entities/asset.entity';
 
 @Injectable()
 export class PhotosService {
@@ -18,18 +20,27 @@ export class PhotosService {
   async create(createPhotoDto: CreatePhotoDto, file: multer.File): Promise<Photo> {
     const entityType = this.getEntityType(createPhotoDto);
 
-    if (!createPhotoDto.clientId) {
-      throw new BadRequestException('Client ID must be provided');
+    // Validate existence of client
+    const clientExists = await this.photosRepository.manager.findOne(Client, { where: { id: createPhotoDto.clientId } });
+    if (!clientExists) {
+        throw new BadRequestException('Invalid client ID');
+    }
+
+    // Validate existence of asset (if provided)
+    if (createPhotoDto.assetId) {
+        const assetExists = await this.photosRepository.manager.findOne(Asset, { where: { id: createPhotoDto.assetId } });
+        if (!assetExists) {
+            throw new BadRequestException('Invalid asset ID');
+        }
     }
 
     console.log('CreatePhotoDto:', createPhotoDto);
-
 
     const url = await this.awsService.uploadFile(createPhotoDto.clientId, entityType, 'image', file.buffer, file.originalname);
 
     const photo = this.photosRepository.create({ ...createPhotoDto, url });
     return this.photosRepository.save(photo);
-  }
+}
 
   async findAll(): Promise<Photo[]> {
     return this.photosRepository.find();

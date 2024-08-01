@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Index } from 'typeor
 import { Asset } from './asset.entity';
 import { Pump } from './pump.entity';
 
-@Entity()
+@Entity('asset_pumps')
 export class AssetPump {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -41,6 +41,9 @@ export class Customer {
   @Column()
   service_contact: string;
 
+  @Column({ nullable: true })
+  quickbooksCustomerId: string;
+
   @ManyToOne(() => Client, client => client.customers, { onDelete: 'CASCADE' })
   client: Client;
 

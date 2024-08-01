@@ -1,5 +1,5 @@
 // auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
@@ -20,6 +20,7 @@ import { JwtPayload } from './interface/jwt-payload.interface';
 export class AuthService {
   constructor(
     private userService: UserService,
+    @Inject(forwardRef(() => ClientService))
     private clientService: ClientService,
     private jwtService: JwtService,
     @InjectRepository(UserIP)
@@ -227,4 +228,19 @@ export class AuthService {
     });
     await this.logRepository.save(log);
   }
+
+  async saveQuickBooksTokens(clientId: string, accessToken: string, refreshToken: string, realmId: string): Promise<void> {
+    const client = await this.clientService.findOne(clientId);
+    if (!client) {
+      throw new Error('Client not found');
+    }
+
+    await this.clientService.update(clientId, {
+      quickbooksAccessToken: accessToken,
+      quickbooksRefreshToken: refreshToken,
+      quickbooksRealmId: realmId,
+      quickbooksTokenExpiresIn: new Date(Date.now() + 3600 * 1000), // Assuming token expires in 1 hour
+    });
+  }
+  
 }
