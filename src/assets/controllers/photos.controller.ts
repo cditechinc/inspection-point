@@ -9,8 +9,10 @@ import {
   UseInterceptors,
   UploadedFile,
   UseGuards,
+  UploadedFiles,
+  ParseArrayPipe,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { PhotosService } from './../services/photos.service';
 import { CreatePhotoDto } from './../dto/create-photo.dto';
 import { UpdatePhotoDto } from './../dto/update-photo.dto';
@@ -25,18 +27,19 @@ import { Role } from './../../auth/role.enum';
 export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 
+  // change this controller to the following create service function
   @Post('upload/:clientId')
   @Roles(Role.Client)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('files'))
   create(
     @Param('clientId') clientId: string,
     @Body() createPhotoDto: CreatePhotoDto,
-    @UploadedFile() file: multer.File,
+    @UploadedFiles() files: multer.File[],
   ) {
     createPhotoDto.clientId = clientId; // Ensure the clientId is included in the DTO
     console.log('CreatePhotoDto:', createPhotoDto);
 
-    return this.photosService.create(createPhotoDto, file);
+    return this.photosService.create(createPhotoDto, files);
   }
 
   @Get()

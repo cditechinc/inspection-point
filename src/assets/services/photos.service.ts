@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePhotoDto } from './../dto/create-photo.dto';
@@ -17,30 +21,72 @@ export class PhotosService {
     private readonly awsService: AwsService,
   ) {}
 
-  async create(createPhotoDto: CreatePhotoDto, file: multer.File): Promise<Photo> {
+  async create(createPhotoDto: CreatePhotoDto, files: multer.File[]): Promise<Photo[]> {
+    const photos: Photo[] = [];
+
     const entityType = this.getEntityType(createPhotoDto);
 
     // Validate existence of client
-    const clientExists = await this.photosRepository.manager.findOne(Client, { where: { id: createPhotoDto.clientId } });
+    const clientExists = await this.photosRepository.manager.findOne(Client, {
+      where: { id: createPhotoDto.clientId },
+    });
     if (!clientExists) {
-        throw new BadRequestException('Invalid client ID');
+      throw new BadRequestException('Invalid client ID');
     }
 
     // Validate existence of asset (if provided)
     if (createPhotoDto.assetId) {
-        const assetExists = await this.photosRepository.manager.findOne(Asset, { where: { id: createPhotoDto.assetId } });
-        if (!assetExists) {
-            throw new BadRequestException('Invalid asset ID');
-        }
+      const assetExists = await this.photosRepository.manager.findOne(Asset, {
+        where: { id: createPhotoDto.assetId },
+      });
+      if (!assetExists) {
+        throw new BadRequestException('Invalid asset ID');
+      }
     }
 
-    console.log('CreatePhotoDto:', createPhotoDto);
+    console.log('Request Body:', createPhotoDto);
+    console.log('Uploaded Files:', files);
 
-    const url = await this.awsService.uploadFile(createPhotoDto.clientId, entityType, 'image', file.buffer, file.originalname);
+    for (const file of files) {
+      const url = await this.awsService.uploadFile(
+        createPhotoDto.clientId,
+        entityType,
+        'image',
+        file.buffer,
+        file.originalname,
+      );
 
-    const photo = this.photosRepository.create({ ...createPhotoDto, url });
-    return this.photosRepository.save(photo);
-}
+      const photo = this.photosRepository.create({ ...createPhotoDto, url });
+      photos.push(await this.photosRepository.save(photo));
+    }
+
+    return photos;
+  }
+
+  //   async create(createPhotoDto: CreatePhotoDto, file: multer.File): Promise<Photo> {
+  //     const entityType = this.getEntityType(createPhotoDto);
+
+  //     // Validate existence of client
+  //     const clientExists = await this.photosRepository.manager.findOne(Client, { where: { id: createPhotoDto.clientId } });
+  //     if (!clientExists) {
+  //         throw new BadRequestException('Invalid client ID');
+  //     }
+
+  //     // Validate existence of asset (if provided)
+  //     if (createPhotoDto.assetId) {
+  //         const assetExists = await this.photosRepository.manager.findOne(Asset, { where: { id: createPhotoDto.assetId } });
+  //         if (!assetExists) {
+  //             throw new BadRequestException('Invalid asset ID');
+  //         }
+  //     }
+
+  //     console.log('CreatePhotoDto:', createPhotoDto);
+
+  //     const url = await this.awsService.uploadFile(createPhotoDto.clientId, entityType, 'image', file.buffer, file.originalname);
+
+  //     const photo = this.photosRepository.create({ ...createPhotoDto, url });
+  //     return this.photosRepository.save(photo);
+  // }
 
   async findAll(): Promise<Photo[]> {
     return this.photosRepository.find();
@@ -54,8 +100,15 @@ export class PhotosService {
     return photo;
   }
 
-  async update(id: string, updatePhotoDto: UpdatePhotoDto, file: multer.File): Promise<Photo> {
-    const photo = await this.photosRepository.preload({ id, ...updatePhotoDto });
+  async update(
+    id: string,
+    updatePhotoDto: UpdatePhotoDto,
+    file: multer.File,
+  ): Promise<Photo> {
+    const photo = await this.photosRepository.preload({
+      id,
+      ...updatePhotoDto,
+    });
     if (!photo) {
       throw new NotFoundException(`Photo #${id} not found`);
     }
@@ -63,7 +116,13 @@ export class PhotosService {
     if (file) {
       const entityType = this.getEntityType(updatePhotoDto);
       const clientId = updatePhotoDto.clientId || photo.clientId;
-      const url = await this.awsService.uploadFile(clientId, entityType, 'image', file.buffer, file.originalname);
+      const url = await this.awsService.uploadFile(
+        clientId,
+        entityType,
+        'image',
+        file.buffer,
+        file.originalname,
+      );
       photo.url = url;
     }
 
@@ -75,11 +134,15 @@ export class PhotosService {
     await this.photosRepository.remove(photo);
   }
 
-  private getEntityType(dto: CreatePhotoDto | UpdatePhotoDto): 'asset' | 'pump' | 'pumpBrand' | 'customer' {
+  private getEntityType(
+    dto: CreatePhotoDto | UpdatePhotoDto,
+  ): 'asset' | 'pump' | 'pumpBrand' | 'customer' {
     if (dto.assetId) return 'asset';
     if (dto.pumpId) return 'pump';
     if (dto.pumpBrandId) return 'pumpBrand';
     if (dto.customerId) return 'customer';
-    throw new BadRequestException('Invalid entity type: At least one of assetId, pumpId, pumpBrandId, or customerId must be provided');
+    throw new BadRequestException(
+      'Invalid entity type: At least one of assetId, pumpId, pumpBrandId, or customerId must be provided',
+    );
   }
 }
