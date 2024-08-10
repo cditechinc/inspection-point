@@ -1,4 +1,4 @@
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { Check, DataSource, DataSourceOptions } from 'typeorm';
 
 import { Client } from './client/entities/client.entity';
 import { User } from './user/entities/user.entity';
@@ -13,6 +13,11 @@ import { PumpBrand } from './assets/entities/pump-brand.entity';
 import { AssetType } from './assets/entities/asset-type.entity';
 import { AssetPump } from './assets/entities/asset-pump.entity';
 import { CombinedMigration20240722162333 } from './migrations/combinedMigration';
+import { InspectionModuleMigration20240804123456 } from './migrations/inspectionModule';
+import { Inspection } from './inspection/entities/inspection.entity';
+import { Checklist } from './inspection/entities/checklist.entity';
+import { ChecklistItem } from './inspection/entities/checklist-item.entity';
+import { InspectionScore } from './inspection/entities/inspection-score.entity';
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -34,9 +39,14 @@ const dataSourceOptions: DataSourceOptions = {
     PumpBrand,
     AssetType,
     AssetPump,
+    Inspection,
+    Checklist,
+    ChecklistItem,
+    InspectionScore,
   ],
   migrations: [
     CombinedMigration20240722162333,
+    InspectionModuleMigration20240804123456,
   ],
   synchronize: false,
   logging: true,

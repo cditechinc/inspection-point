@@ -20,6 +20,11 @@ import { Pump } from './assets/entities/pump.entity';
 import { PumpBrand } from './assets/entities/pump-brand.entity';
 import { AssetType } from './assets/entities/asset-type.entity';
 import { AssetPump } from './assets/entities/asset-pump.entity';
+import { Inspection } from './inspection/entities/inspection.entity';
+import { Checklist } from './inspection/entities/checklist.entity';
+import { ChecklistItem } from './inspection/entities/checklist-item.entity';
+import { InspectionScore } from './inspection/entities/inspection-score.entity';
+import { InspectionModule } from './inspection/inspection.module';
 
 @Module({
   imports: [
@@ -46,6 +51,10 @@ import { AssetPump } from './assets/entities/asset-pump.entity';
           PumpBrand,
           AssetType,
           AssetPump,
+          Inspection,
+          Checklist,
+          ChecklistItem,
+          InspectionScore
         ],
         synchronize: true,
       }),
@@ -56,6 +65,7 @@ import { AssetPump } from './assets/entities/asset-pump.entity';
     ClientModule,
     CustomerModule,
     AssetsModule,
+    InspectionModule,
   ],
 })
 export class AppModule {}

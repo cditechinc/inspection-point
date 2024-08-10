@@ -5,6 +5,7 @@ import { AssetType } from './asset-type.entity';
 import { Photo } from './photo.entity';
 import { AssetPump } from './asset-pump.entity';
 import { Customer } from './../../customer/entities/customer.entity';
+import { Inspection } from './../../inspection/entities/inspection.entity';
 
 @Entity('assets')
 export class Asset {
@@ -83,6 +84,9 @@ export class Asset {
 
   @OneToMany(() => AssetPump, assetPump => assetPump.asset)
   assetPumps: AssetPump[];
+
+  @OneToMany(() => Inspection, (inspection) => inspection.asset)
+  inspections: Inspection[];
 
   @CreateDateColumn()
   createdAt: Date;

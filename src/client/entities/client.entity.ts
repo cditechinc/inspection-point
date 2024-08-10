@@ -3,6 +3,7 @@ import { User } from '../../user/entities/user.entity';
 import { Customer } from '../../customer/entities/customer.entity';
 import { Asset } from './../../assets/entities/asset.entity';
 import { Photo } from './../../assets/entities/photo.entity';
+import { Inspection } from './../../inspection/entities/inspection.entity';
 
 
 @Entity('clients')
@@ -99,5 +100,6 @@ export class Client {
   @OneToMany(() => Photo, photo => photo.client)
   photos: Photo[];
 
-  
+  @OneToMany(() => Inspection, (inspection) => inspection.client)
+  inspections: Inspection[];
 }

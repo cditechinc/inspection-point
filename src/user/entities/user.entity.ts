@@ -5,6 +5,7 @@ import { Log } from './log.entity';
 import { Client } from '../../client/entities/client.entity';
 
 import { Asset } from './../../assets/entities/asset.entity';
+import { Inspection } from './../../inspection/entities/inspection.entity';
 
 @Entity('users')
 export class User {
@@ -96,4 +97,11 @@ export class User {
 
   @OneToMany(() => Log, log => log.user)
   logs: Log[];
+
+  @OneToMany(() => Inspection, (inspection) => inspection.customer)
+  customerInspections: Inspection[];
+
+  @OneToMany(() => Inspection, (inspection) => inspection.assignedTo)
+  assignedInspections: Inspection[];
+
 }
