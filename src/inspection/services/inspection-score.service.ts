@@ -14,22 +14,21 @@ export class InspectionScoreService {
   async create(inspectionScoreDto: InspectionScoreDTO): Promise<InspectionScore> {
     const inspectionScore: DeepPartial<InspectionScore> = {
       inspection: { id: inspectionScoreDto.inspectionId },  // Assuming inspection is a relation
-      structure_score: inspectionScoreDto.structure_score,
-      panel_score: inspectionScoreDto.panel_score,
-      pipes_score: inspectionScoreDto.pipes_score,
-      alarm_score: inspectionScoreDto.alarm_score,
-      alarm_light_score: inspectionScoreDto.alarm_light_score,
-      wires_score: inspectionScoreDto.wires_score,
-      breakers_score: inspectionScoreDto.breakers_score,
-      contactors_score: inspectionScoreDto.contactors_score,
-      thermals_score: inspectionScoreDto.thermals_score,
-      float_scores: inspectionScoreDto.float_scores,
+      structureScore: inspectionScoreDto.structureScore,
+      panelScore: inspectionScoreDto.panelScore,
+      pipesScore: inspectionScoreDto.pipesScore,
+      alarmScore: inspectionScoreDto.alarmScore,
+      alarmLightScore: inspectionScoreDto.alarmLightScore,
+      wiresScore: inspectionScoreDto.wiresScore,
+      breakersScore: inspectionScoreDto.breakersScore,
+      contactorsScore: inspectionScoreDto.contactorsScore,
+      thermalsScore: inspectionScoreDto.thermalsScore,
+      floatScores: inspectionScoreDto.floatScores,
     };
 
     const createdInspectionScore = this.inspectionScoreRepository.create(inspectionScore);
     return this.inspectionScoreRepository.save(createdInspectionScore);
   }
-  
 
   async findAll(): Promise<InspectionScore[]> {
     return this.inspectionScoreRepository.find({ relations: ['inspection'] });
@@ -50,16 +49,16 @@ export class InspectionScoreService {
     const inspectionScore = await this.findOne(id);
 
     const updatedData: DeepPartial<InspectionScore> = {
-      structure_score: updateInspectionScoreDto.structure_score,
-      panel_score: updateInspectionScoreDto.panel_score,
-      pipes_score: updateInspectionScoreDto.pipes_score,
-      alarm_score: updateInspectionScoreDto.alarm_score,
-      alarm_light_score: updateInspectionScoreDto.alarm_light_score,
-      wires_score: updateInspectionScoreDto.wires_score,
-      breakers_score: updateInspectionScoreDto.breakers_score,
-      contactors_score: updateInspectionScoreDto.contactors_score,
-      thermals_score: updateInspectionScoreDto.thermals_score,
-      float_scores: updateInspectionScoreDto.float_scores,
+      structureScore: updateInspectionScoreDto.structureScore,
+      panelScore: updateInspectionScoreDto.panelScore,
+      pipesScore: updateInspectionScoreDto.pipesScore,
+      alarmScore: updateInspectionScoreDto.alarmScore,
+      alarmLightScore: updateInspectionScoreDto.alarmLightScore,
+      wiresScore: updateInspectionScoreDto.wiresScore,
+      breakersScore: updateInspectionScoreDto.breakersScore,
+      contactorsScore: updateInspectionScoreDto.contactorsScore,
+      thermalsScore: updateInspectionScoreDto.thermalsScore,
+      floatScores: updateInspectionScoreDto.floatScores,
     };
 
     this.inspectionScoreRepository.merge(inspectionScore, updatedData);

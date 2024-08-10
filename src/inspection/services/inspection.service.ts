@@ -24,34 +24,41 @@ export class InspectionService {
   ) {}
 
   async create(createInspectionDto: CreateInspectionDTO): Promise<Inspection> {
+
+    console.log('Received DTO:', createInspectionDto);
     // Retrieve the assigned user, if provided
     let assignedToUser: User | null = null;
     if (createInspectionDto.assignedTo) {
       assignedToUser = await this.userRepository.findOne({
         where: { id: createInspectionDto.assignedTo },
       });
-
+  
       if (!assignedToUser) {
         throw new NotFoundException(
           `User with ID ${createInspectionDto.assignedTo} not found`,
         );
       }
     }
-
+  
     // Create the inspection
     const inspection = this.inspectionRepository.create({
       ...createInspectionDto,
       assignedTo: assignedToUser,
     });
 
+    console.log('Creating Inspection:', inspection); 
+  
     // Handle related entities (Checklists and Scores)
     if (createInspectionDto.checklists) {
-      const checklists = createInspectionDto.checklists.map((checklist) =>
-        this.checklistRepository.create(checklist),
-      );
+      const checklists = createInspectionDto.checklists.map((checklist) => {
+        if (!checklist.overallScore) {
+          throw new Error(`Checklist overallScore is required`);
+        }
+        return this.checklistRepository.create(checklist);
+      });
       inspection.checklists = await this.checklistRepository.save(checklists);
     }
-
+  
     if (createInspectionDto.score) {
       const inspectionScore = this.inspectionScoreRepository.create({
         ...createInspectionDto.score,
@@ -61,9 +68,10 @@ export class InspectionService {
         await this.inspectionScoreRepository.save(inspectionScore),
       ];
     }
-
+  
     return this.inspectionRepository.save(inspection);
   }
+  
 
   async findAll(): Promise<Inspection[]> {
     return this.inspectionRepository.find({

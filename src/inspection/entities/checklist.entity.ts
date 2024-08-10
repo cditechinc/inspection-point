@@ -26,8 +26,8 @@ import {
     @Column('varchar', { length: 255 })
     name: string;
   
-    @Column('varchar', { length: 10 })
-    overall_score: string;
+    @Column('varchar', { length: 10, nullable: false, name: 'overall_score' })
+    overallScore: string;
   
     @CreateDateColumn()
     created_at: Date;

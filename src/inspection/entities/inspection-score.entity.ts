@@ -18,39 +18,39 @@ import {
     @JoinColumn({ name: 'inspection_id' })
     inspection: Inspection;
   
-    @Column('varchar', { length: 10 })
-    structure_score: string;
+    @Column('varchar', { length: 10, name: 'structure_score' })
+    structureScore: string;
   
-    @Column('varchar', { length: 10 })
-    panel_score: string;
+    @Column('varchar', { length: 10, name: 'panel_score' })
+    panelScore: string;
   
-    @Column('varchar', { length: 10 })
-    pipes_score: string;
+    @Column('varchar', { length: 10, name: 'pipes_score' })
+    pipesScore: string;
   
-    @Column('varchar', { length: 10 })
-    alarm_score: string;
+    @Column('varchar', { length: 10, name: 'alarm_score' })
+    alarmScore: string;
   
-    @Column('varchar', { length: 10 })
-    alarm_light_score: string;
+    @Column('varchar', { length: 10, name: 'alarm_light_score' })
+    alarmLightScore: string;
   
-    @Column('varchar', { length: 10 })
-    wires_score: string;
+    @Column('varchar', { length: 10, name: 'wires_score' })
+    wiresScore: string;
   
-    @Column('varchar', { length: 10 })
-    breakers_score: string;
+    @Column('varchar', { length: 10, name: 'breakers_score' })
+    breakersScore: string;
   
-    @Column('varchar', { length: 10 })
-    contactors_score: string;
+    @Column('varchar', { length: 10, name: 'contactors_score' })
+    contactorsScore: string;
   
-    @Column('varchar', { length: 10 })
-    thermals_score: string;
+    @Column('varchar', { length: 10, name: 'thermals_score' })
+    thermalsScore: string;
   
-    @Column('jsonb')
-    float_scores: object;
+    @Column('jsonb', { name: 'float_scores' })
+    floatScores: object;
   
-    @CreateDateColumn()
-    created_at: Date;
+    @CreateDateColumn({ name: 'created_at' })
+    createdAt: Date;
   
-    @UpdateDateColumn()
-    updated_at: Date;
+    @UpdateDateColumn({ name: 'updated_at' })
+    updatedAt: Date;
   }

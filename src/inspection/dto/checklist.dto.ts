@@ -10,6 +10,7 @@ export class ChecklistDTO {
   @IsNotEmpty()
   name: string;
 
+  @IsNotEmpty()
   @IsString()
   overallScore: string;
 
@@ -25,7 +26,7 @@ export class UpdateChecklistDTO {
   name?: string;
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   overallScore?: string;
 }
 

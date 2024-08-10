@@ -18,6 +18,7 @@ import { Inspection } from './inspection/entities/inspection.entity';
 import { Checklist } from './inspection/entities/checklist.entity';
 import { ChecklistItem } from './inspection/entities/checklist-item.entity';
 import { InspectionScore } from './inspection/entities/inspection-score.entity';
+import { AddNotNullToOverallScore1723316461538 } from './migrations/1723316461538-AddNotNullToOverallScore';
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -47,6 +48,7 @@ const dataSourceOptions: DataSourceOptions = {
   migrations: [
     CombinedMigration20240722162333,
     InspectionModuleMigration20240804123456,
+    AddNotNullToOverallScore1723316461538,
   ],
   synchronize: false,
   logging: true,

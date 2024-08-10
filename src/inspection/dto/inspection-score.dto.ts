@@ -5,74 +5,74 @@ export class InspectionScoreDTO {
   inspectionId: string;
 
   @IsString()
-  structure_score: string;
+  structureScore: string;
 
   @IsString()
-  panel_score: string;
+  panelScore: string;
 
   @IsString()
-  pipes_score: string;
+  pipesScore: string;
 
   @IsString()
-  alarm_score: string;
+  alarmScore: string;
 
   @IsString()
-  alarm_light_score: string;
+  alarmLightScore: string;
 
   @IsString()
-  wires_score: string;
+  wiresScore: string;
 
   @IsString()
-  breakers_score: string;
+  breakersScore: string;
 
   @IsString()
-  contactors_score: string;
+  contactorsScore: string;
 
   @IsString()
-  thermals_score: string;
+  thermalsScore: string;
 
   @IsJSON()
-  float_scores: object;
+  floatScores: object;
 }
 
 export class UpdateInspectionScoreDTO {
   @IsString()
   @IsOptional()
-  structure_score?: string;
+  structureScore?: string;
 
   @IsString()
   @IsOptional()
-  panel_score?: string;
+  panelScore?: string;
 
   @IsString()
   @IsOptional()
-  pipes_score?: string;
+  pipesScore?: string;
 
   @IsString()
   @IsOptional()
-  alarm_score?: string;
+  alarmScore?: string;
 
   @IsString()
   @IsOptional()
-  alarm_light_score?: string;
+  alarmLightScore?: string;
 
   @IsString()
   @IsOptional()
-  wires_score?: string;
+  wiresScore?: string;
 
   @IsString()
   @IsOptional()
-  breakers_score?: string;
+  breakersScore?: string;
 
   @IsString()
   @IsOptional()
-  contactors_score?: string;
+  contactorsScore?: string;
 
   @IsString()
   @IsOptional()
-  thermals_score?: string;
+  thermalsScore?: string;
 
   @IsJSON()
   @IsOptional()
-  float_scores?: object;
+  floatScores?: object;
 }
