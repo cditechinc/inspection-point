@@ -22,10 +22,10 @@ import {
     constructor(private readonly checklistService: ChecklistService) {}
   
     @Roles(Role.Client)
-    @Post()
-    create(@Body() createChecklistDto: ChecklistDTO) {
-      return this.checklistService.create(createChecklistDto);
-    }
+  @Post()
+  create(@Body() createChecklistDto: ChecklistDTO) {
+    return this.checklistService.createChecklist(createChecklistDto);
+  }
   
     @Roles(Role.Client)
     @Get()

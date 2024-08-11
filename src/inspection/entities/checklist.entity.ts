@@ -20,8 +20,8 @@ import {
     @JoinColumn({ name: 'inspection_id' })
     inspection: Inspection;
   
-    // @OneToMany(() => ChecklistItem, (checklistItem) => checklistItem.checklist)
-    // items: ChecklistItem[];
+    @OneToMany(() => ChecklistItem, (checklistItem) => checklistItem.checklist, { cascade: true })
+    items: ChecklistItem[];
   
     @Column('varchar', { length: 255 })
     name: string;

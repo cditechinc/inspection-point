@@ -4,13 +4,20 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Checklist } from './checklist.entity';
 
 
 @Entity('checklist_items')
 export class ChecklistItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @ManyToOne(() => Checklist, (checklist) => checklist.items, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'checklist_id' })
+  checklist: Checklist;
 
   @Column('text')
   description: string;

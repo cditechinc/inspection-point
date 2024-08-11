@@ -1,4 +1,11 @@
-import { IsUUID, IsString, IsNotEmpty, IsOptional, ValidateNested, IsArray } from 'class-validator';
+import {
+  IsUUID,
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  ValidateNested,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ChecklistItemDTO } from './checklist-item.dto';
 
@@ -16,8 +23,8 @@ export class ChecklistDTO {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ChecklistItemDTO)
-  items: ChecklistItemDTO[];
+  @Type(() => String)
+  checklistItemIds: string[];
 }
 
 export class UpdateChecklistDTO {
