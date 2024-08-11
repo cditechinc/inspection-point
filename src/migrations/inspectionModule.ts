@@ -58,7 +58,6 @@ export class InspectionModuleMigration20240804123456 implements MigrationInterfa
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "checklist_items" (
         "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-        "checklist_id" uuid REFERENCES "checklists"("id") ON DELETE CASCADE,
         "description" text,
         "is_completed" boolean DEFAULT FALSE,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -66,10 +65,7 @@ export class InspectionModuleMigration20240804123456 implements MigrationInterfa
       );
     `);
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_checklist_items_checklist_id" ON "checklist_items" ("checklist_id");
-    `);
-
+  
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "inspection_scores" (
         "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),

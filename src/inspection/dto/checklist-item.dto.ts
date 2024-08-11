@@ -1,8 +1,6 @@
 import { IsUUID, IsString, IsNotEmpty, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateChecklistItemDTO {
-  @IsUUID()
-  checklistId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -25,7 +23,6 @@ export class UpdateChecklistItemDTO {
 
 export class ChecklistItemDTO {
   id: string;
-  checklistId: string;
   description: string;
   isCompleted: boolean;
   createdAt: Date;
