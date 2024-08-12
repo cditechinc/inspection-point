@@ -15,22 +15,25 @@ export class ChecklistService {
   ) {}
 
   async createChecklist(createChecklistDto: ChecklistDTO): Promise<Checklist> {
+    const { checklistItemIds, ...checklistData } = createChecklistDto;
+  
+    // Fetch the checklist items by their IDs
     const checklistItems = await this.checklistItemRepository.findBy({
-      id: In(createChecklistDto.checklistItemIds),
+      id: In(checklistItemIds),
     });
-
-    if (checklistItems.length !== createChecklistDto.checklistItemIds.length) {
+  
+    if (checklistItems.length !== checklistItemIds.length) {
       throw new NotFoundException('Some ChecklistItems were not found');
     }
-
+  
     const checklist = this.checklistRepository.create({
-      name: createChecklistDto.name,
-      overallScore: createChecklistDto.overallScore,
-      items: checklistItems, // Associate the items with the checklist
+      ...checklistData,
+      items: checklistItems,
     });
-
+  
     return this.checklistRepository.save(checklist);
   }
+  
 
   async findAll(): Promise<Checklist[]> {
     return this.checklistRepository.find({ relations: ['items', 'inspection'] });

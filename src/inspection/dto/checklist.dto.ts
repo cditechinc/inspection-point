@@ -24,6 +24,7 @@ export class ChecklistDTO {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => String)
+  @IsUUID(undefined, { each: true })
   checklistItemIds: string[];
 }
 
