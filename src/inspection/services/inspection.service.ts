@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Inspection } from './../entities/inspection.entity';
 import {
   CreateInspectionDTO,
@@ -9,6 +9,7 @@ import {
 import { Checklist } from './../entities/checklist.entity';
 import { InspectionScore } from './../entities/inspection-score.entity';
 import { User } from './../../user/entities/user.entity';
+import { ChecklistItem } from '../entities/checklist-item.entity';
 
 @Injectable()
 export class InspectionService {
@@ -17,6 +18,8 @@ export class InspectionService {
     private readonly inspectionRepository: Repository<Inspection>,
     @InjectRepository(Checklist)
     private readonly checklistRepository: Repository<Checklist>,
+    @InjectRepository(ChecklistItem)
+    private readonly checklistItemRepository: Repository<ChecklistItem>,
     @InjectRepository(InspectionScore)
     private readonly inspectionScoreRepository: Repository<InspectionScore>,
     @InjectRepository(User)
@@ -50,13 +53,27 @@ export class InspectionService {
   
     // Handle related entities (Checklists and Scores)
     if (createInspectionDto.checklists) {
-      const checklists = createInspectionDto.checklists.map((checklist) => {
-        if (!checklist.overallScore) {
-          throw new Error(`Checklist overallScore is required`);
-        }
-        return this.checklistRepository.create(checklist);
-      });
-      inspection.checklists = await this.checklistRepository.save(checklists);
+      const checklists = await Promise.all(
+        createInspectionDto.checklists.map(async (checklistDto) => {
+          // Fetch the checklist items by their IDs
+          const checklistItems = await this.checklistItemRepository.findBy({
+            id: In(checklistDto.checklistItemIds),
+          });
+
+          if (checklistItems.length !== checklistDto.checklistItemIds.length) {
+            throw new NotFoundException('Some ChecklistItems were not found');
+          }
+
+          // Create the checklist entity
+          const checklist = this.checklistRepository.create({
+            ...checklistDto,
+            items: checklistItems,
+          });
+
+          return this.checklistRepository.save(checklist);
+        })
+      );
+      inspection.checklists = checklists;
     }
   
     if (createInspectionDto.score) {
