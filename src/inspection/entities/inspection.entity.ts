@@ -13,6 +13,7 @@ import {
 } from 'typeorm';
 import { Checklist } from './checklist.entity';
 import { InspectionScore } from './inspection-score.entity';
+import { Customer } from './../../customer/entities/customer.entity';
 
 @Entity('inspections')
 export class Inspection {
@@ -25,11 +26,11 @@ export class Inspection {
   @JoinColumn({ name: 'client_id' })
   client: Client;
 
-  @ManyToOne(() => User, (user) => user.customerInspections, {
+  @ManyToOne(() => Customer, (customer) => customer.inspections, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'customer_id' })
-  customer: User;
+  customer: Customer;
 
   @ManyToOne(() => Asset, (asset) => asset.inspections, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'asset_id' })

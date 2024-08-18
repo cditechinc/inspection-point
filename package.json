@@ -48,6 +48,7 @@
     "passport-local": "^1.0.0",
     "passport-oauth2": "^1.8.0",
     "path-scurry": "^2.0.0",
+    "pdfkit": "^0.15.0",
     "pg": "^8.12.0",
     "qrcode": "^1.5.3",
     "reflect-metadata": "^0.2.2",

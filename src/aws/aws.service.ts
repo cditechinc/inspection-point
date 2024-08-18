@@ -23,7 +23,7 @@ export class AwsService {
 
   async uploadFile(
     clientId: string,
-    entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer',
+    entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer' | 'inspection',
     fileType: 'pdf' | 'image',
     file: Buffer,
     originalName: string,
@@ -32,7 +32,9 @@ export class AwsService {
     const folder = fileType === 'pdf' ? 'pdfs' : 'images';
     const entityFolder = this.getEntityFolder(entityType);
     const fileName = this.generateFileName(fileType, originalName);
-    const filePath = `${basePath}/${folder}/${entityFolder}/${fileName}`;
+    const filePath = entityType === 'inspection' 
+    ? `${basePath}/${folder}/inspections/${fileName}` // Upload to pdfs/inspections folder
+    : `${basePath}/${folder}/${entityFolder}/${fileName}`;
 
     await this.s3
       .putObject({
@@ -55,7 +57,7 @@ export class AwsService {
     return `${date}-${baseName}-${randomInt}.${extension}`;
   }
 
-  private getEntityFolder(entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer'): string {
+  private getEntityFolder(entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer' | 'inspection'): string {
     switch (entityType) {
       case 'asset':
         return 'assets';
@@ -65,8 +67,26 @@ export class AwsService {
         return 'pump-brands';
       case 'customer':
         return 'customers';
+      case 'inspection':
+        return 'inspections'; // Return 'inspections' for inspection reports
       default:
         throw new Error('Invalid entity type');
     }
+  }
+
+  async deleteFile(bucket: string, key: string): Promise<void> {
+    const params = {
+      Bucket: bucket,
+      Key: key,
+    };
+
+    return new Promise<void>((resolve, reject) => {
+      this.s3.deleteObject(params, (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      });
+    });
   }
 }

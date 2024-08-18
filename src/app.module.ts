@@ -1,4 +1,3 @@
-// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -25,6 +24,7 @@ import { Checklist } from './inspection/entities/checklist.entity';
 import { ChecklistItem } from './inspection/entities/checklist-item.entity';
 import { InspectionScore } from './inspection/entities/inspection-score.entity';
 import { InspectionModule } from './inspection/inspection.module';
+import { ReportModule } from './reports/report.module';
 
 @Module({
   imports: [
@@ -66,6 +66,7 @@ import { InspectionModule } from './inspection/inspection.module';
     CustomerModule,
     AssetsModule,
     InspectionModule,
+    ReportModule,
   ],
 })
 export class AppModule {}

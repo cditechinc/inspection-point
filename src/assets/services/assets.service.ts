@@ -93,7 +93,7 @@ export class AssetsService {
   async findOne(id: string): Promise<Asset> {
     const asset = await this.assetsRepository.findOne({
       where: { id },
-      relations: ['photos', 'client', 'customer']
+      relations: ['photos', 'client', 'customer', 'type']
     });
     if (!asset) {
       throw new NotFoundException(`Asset #${id} not found`);

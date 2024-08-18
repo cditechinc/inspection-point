@@ -10,6 +10,9 @@ import { Checklist } from './../entities/checklist.entity';
 import { InspectionScore } from './../entities/inspection-score.entity';
 import { User } from './../../user/entities/user.entity';
 import { ChecklistItem } from '../entities/checklist-item.entity';
+import { Client } from './../../client/entities/client.entity';
+import { Asset } from './../../assets/entities/asset.entity';
+import { Customer } from './../../customer/entities/customer.entity';
 
 @Injectable()
 export class InspectionService {
@@ -24,70 +27,78 @@ export class InspectionService {
     private readonly inspectionScoreRepository: Repository<InspectionScore>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Customer)
+    private readonly customerRepository: Repository<Customer>,
+    @InjectRepository(Client)
+    private readonly clientRepository: Repository<Client>,
+    @InjectRepository(Asset)
+    private readonly assetRepository: Repository<Asset>,
   ) {}
 
+  
+  
   async create(createInspectionDto: CreateInspectionDTO): Promise<Inspection> {
-
-    console.log('Received DTO:', createInspectionDto);
-    // Retrieve the assigned user, if provided
-    let assignedToUser: User | null = null;
-    if (createInspectionDto.assignedTo) {
-      assignedToUser = await this.userRepository.findOne({
-        where: { id: createInspectionDto.assignedTo },
-      });
-  
-      if (!assignedToUser) {
-        throw new NotFoundException(
-          `User with ID ${createInspectionDto.assignedTo} not found`,
-        );
+    return await this.inspectionRepository.manager.transaction(async transactionalEntityManager => {
+      
+      // Fetch the related entities (Client, Customer, Asset)
+      const client = await transactionalEntityManager.findOne(Client, { where: { id: createInspectionDto.clientId } });
+      const customer = await transactionalEntityManager.findOne(Customer, { where: { id: createInspectionDto.customerId } });
+      const asset = await transactionalEntityManager.findOne(Asset, { where: { id: createInspectionDto.assetId } });
+      let assignedToUser: User | null = null;
+      
+      if (createInspectionDto.assignedTo) {
+        assignedToUser = await transactionalEntityManager.findOne(User, { where: { id: createInspectionDto.assignedTo } });
       }
-    }
   
-    // Create the inspection
-    const inspection = this.inspectionRepository.create({
-      ...createInspectionDto,
-      assignedTo: assignedToUser,
-    });
+      if (!client || !customer || !asset) {
+        throw new Error('Related entities not found');  // Ensure all entities are found before proceeding
+      }
 
-    console.log('Creating Inspection:', inspection); 
-  
-    // Handle related entities (Checklists and Scores)
-    if (createInspectionDto.checklists) {
-      const checklists = await Promise.all(
-        createInspectionDto.checklists.map(async (checklistDto) => {
-          // Fetch the checklist items by their IDs
-          const checklistItems = await this.checklistItemRepository.findBy({
-            id: In(checklistDto.checklistItemIds),
-          });
-
-          if (checklistItems.length !== checklistDto.checklistItemIds.length) {
-            throw new NotFoundException('Some ChecklistItems were not found');
-          }
-
-          // Create the checklist entity
-          const checklist = this.checklistRepository.create({
-            ...checklistDto,
-            items: checklistItems,
-          });
-
-          return this.checklistRepository.save(checklist);
-        })
-      );
-      inspection.checklists = checklists;
-    }
-  
-    if (createInspectionDto.score) {
-      const inspectionScore = this.inspectionScoreRepository.create({
-        ...createInspectionDto.score,
-        inspection,
+      // Create the inspection entity
+      const inspection = transactionalEntityManager.create(Inspection, {
+        ...createInspectionDto,
+        client,
+        customer, // Correctly assign the customer entity
+        asset,
+        assignedTo: assignedToUser,
       });
-      inspection.scores = [
-        await this.inspectionScoreRepository.save(inspectionScore),
-      ];
-    }
   
-    return this.inspectionRepository.save(inspection);
+      // Save the inspection entity first to get the ID
+      const savedInspection = await transactionalEntityManager.save(inspection);
+  
+      // Create and save the checklists
+      if (createInspectionDto.checklists) {
+        const checklists = await Promise.all(
+          createInspectionDto.checklists.map(async (checklistDto) => {
+            const checklistItems = await transactionalEntityManager.findByIds(ChecklistItem, checklistDto.checklistItemIds);
+            const checklist = transactionalEntityManager.create(Checklist, {
+              ...checklistDto,
+              inspection: savedInspection,
+              items: checklistItems,
+            });
+            return transactionalEntityManager.save(checklist);
+          }),
+        );
+        savedInspection.checklists = checklists;
+      }
+  
+      // Create and save the inspection scores
+      if (createInspectionDto.score) {
+        const inspectionScore = transactionalEntityManager.create(InspectionScore, {
+          ...createInspectionDto.score,
+          inspection: savedInspection,
+        });
+        savedInspection.scores = [
+          await transactionalEntityManager.save(inspectionScore),
+        ];
+      }
+  
+      // Save the fully linked inspection entity
+      return transactionalEntityManager.save(savedInspection);
+    });
   }
+
+  
   
 
   async findAll(): Promise<Inspection[]> {
@@ -99,7 +110,7 @@ export class InspectionService {
   async findOne(id: string): Promise<Inspection> {
     const inspection = await this.inspectionRepository.findOne({
       where: { id },
-      relations: ['checklists', 'scores', 'client', 'customer', 'assignedTo'],
+      relations: ['checklists', 'scores', 'client', 'customer', 'assignedTo', 'asset'],
     });
     if (!inspection) {
       throw new NotFoundException(`Inspection with ID ${id} not found`);
