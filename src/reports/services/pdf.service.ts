@@ -5,6 +5,9 @@ import { AwsService } from '../../aws/aws.service';
 import { Inspection } from '../../inspection/entities/inspection.entity';
 import { PdfCustomizationDTO } from '../dto/pdf-customization.dto';
 import { InspectionService } from './../../inspection/services/inspection.service';
+import { Checklist } from './../../inspection/entities/checklist.entity';
+import { ChecklistItem } from './../../inspection/entities/checklist-item.entity';
+import { InspectionScore } from './../../inspection/entities/inspection-score.entity';
 
 @Injectable()
 export class PdfService {
@@ -202,22 +205,88 @@ export class PdfService {
     });
   }
 
-  // Method to update an existing PDF in S3
   async updatePdfReport(
     inspectionId: string,
     customizationDto: PdfCustomizationDTO,
   ): Promise<string> {
     // Fetch the inspection based on the inspectionId
     const inspection = await this.inspectionService.findOne(inspectionId);
-
-    // Customize the inspection object based on the customizationDto
-    Object.assign(inspection, customizationDto);
-
+  
+    // Customize only the fields that are present in the DTO
+    if (customizationDto.client) {
+      inspection.client = {
+        ...inspection.client,
+        ...customizationDto.client,
+      };
+    }
+  
+    if (customizationDto.customer) {
+      inspection.customer = {
+        ...inspection.customer,
+        ...customizationDto.customer,
+      };
+    }
+  
+    if (customizationDto.asset) {
+      inspection.asset = {
+        ...inspection.asset,
+        ...customizationDto.asset,
+        latitude: Number(customizationDto.asset.latitude) || inspection.asset.latitude,
+        longitude: Number(customizationDto.asset.longitude) || inspection.asset.longitude,
+      };
+    }
+  
+    if (customizationDto.comments) {
+      inspection.comments = customizationDto.comments;
+    }
+  
+    if (customizationDto.checklists) {
+      inspection.checklists = customizationDto.checklists.map((checklistDto) => {
+        // Try to find an existing checklist that matches by name or other unique property if available
+        const existingChecklist = inspection.checklists.find(c => c.name === checklistDto.name) || new Checklist();
+    
+        return {
+          ...existingChecklist,
+          ...checklistDto,
+          items: checklistDto.items?.map((itemDto) => {
+            // Find an existing item by description or create a new one
+            const existingItem = existingChecklist.items?.find(i => i.description === itemDto.description) || new ChecklistItem();
+            return {
+              ...existingItem,
+              ...itemDto,
+            };
+          }) || existingChecklist.items,
+        };
+      });
+    }
+    
+    if (Array.isArray(customizationDto.scores)) {
+      inspection.scores = customizationDto.scores.map((scoreDto) => {
+        const existingScore = inspection.scores.find(s => s.structureScore === scoreDto.structureScore) || new InspectionScore();
+        return {
+          ...existingScore,
+          ...scoreDto,
+          inspection: existingScore.inspection || inspection, // Ensure the inspection relation is maintained
+        };
+      });
+    } else if (customizationDto.scores) {
+      // If scores exist but aren't an array, log a warning or handle it accordingly
+      console.warn("Expected 'scores' to be an array but received:", customizationDto.scores);
+    }
+    
+    
+    
+  
     // Generate the updated PDF with the customized data
     const pdfBuffer = await this.generatePdfReport(inspection);
-
-    // Upload the new PDF file to S3, possibly overwriting the old one
+  
+    // Ensure the `clientId` is correctly referenced
     const clientId = inspection.client.id;
+    if (!clientId) {
+      throw new Error('Client ID is undefined');
+    }
+  
+    // Upload the new PDF file to S3, possibly overwriting the old one
     const filePath = await this.awsService.uploadFile(
       clientId,
       'inspection',
@@ -225,9 +294,12 @@ export class PdfService {
       pdfBuffer,
       `inspection-report-${inspection.id}.pdf`,
     );
-
+  
     return filePath;
   }
+  
+  
+  
 
   // Method to delete an existing PDF from S3
   async deletePdfReport(inspectionId: string, clientId: string): Promise<void> {

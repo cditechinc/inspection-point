@@ -20,6 +20,9 @@ export class Inspection {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column('varchar', { length: 255 })
+    name: string;
+
   @ManyToOne(() => Client, (client) => client.inspections, {
     onDelete: 'CASCADE',
   })

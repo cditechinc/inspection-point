@@ -17,6 +17,10 @@ export class CreateInspectionDTO {
   @IsOptional()
   assignedTo: string;
 
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
   @IsEnum(['pending', 'in_progress', 'completed', 'canceled'])
   status: string;
 
@@ -52,6 +56,10 @@ export class UpdateInspectionDTO {
   @IsUUID()
   @IsOptional()
   assignedTo?: string;
+
+  @IsString()
+  @IsOptional()
+  name?: string;
 
   @IsEnum(['pending', 'in_progress', 'completed', 'canceled'])
   @IsOptional()
