@@ -18,7 +18,7 @@ export class PumpBrandsController {
   @UseInterceptors(FileInterceptor('file'))
   create(
     @Body() createPumpBrandDto: CreatePumpBrandDto,
-    @UploadedFile() file: multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     return this.pumpBrandsService.create(createPumpBrandDto, file);
   }
@@ -41,7 +41,7 @@ export class PumpBrandsController {
   update(
     @Param('id') id: string,
     @Body() updatePumpBrandDto: UpdatePumpBrandDto,
-    @UploadedFile() file: multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     return this.pumpBrandsService.update(id, updatePumpBrandDto, file);
   }

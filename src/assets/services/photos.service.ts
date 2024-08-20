@@ -21,7 +21,7 @@ export class PhotosService {
     private readonly awsService: AwsService,
   ) {}
 
-  async create(createPhotoDto: CreatePhotoDto, files: multer.File[]): Promise<Photo[]> {
+  async create(createPhotoDto: CreatePhotoDto, files: Express.Multer.File[]): Promise<Photo[]> {
     const photos: Photo[] = [];
 
     const entityType = this.getEntityType(createPhotoDto);
@@ -103,7 +103,7 @@ export class PhotosService {
   async update(
     id: string,
     updatePhotoDto: UpdatePhotoDto,
-    file: multer.File,
+    file: Express.Multer.File,
   ): Promise<Photo> {
     const photo = await this.photosRepository.preload({
       id,

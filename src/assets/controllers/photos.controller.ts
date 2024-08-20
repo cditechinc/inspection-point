@@ -34,7 +34,7 @@ export class PhotosController {
   create(
     @Param('clientId') clientId: string,
     @Body() createPhotoDto: CreatePhotoDto,
-    @UploadedFiles() files: multer.File[],
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
     createPhotoDto.clientId = clientId; // Ensure the clientId is included in the DTO
     console.log('CreatePhotoDto:', createPhotoDto);
@@ -60,7 +60,7 @@ export class PhotosController {
   update(
     @Param('id') id: string,
     @Body() updatePhotoDto: UpdatePhotoDto,
-    @UploadedFile() file: multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     return this.photosService.update(id, updatePhotoDto, file);
   }

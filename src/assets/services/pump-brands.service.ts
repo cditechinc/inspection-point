@@ -15,7 +15,7 @@ export class PumpBrandsService {
     private readonly awsService: AwsService,
   ) {}
 
-  async create(createPumpBrandDto: CreatePumpBrandDto, file: multer.File): Promise<PumpBrand> {
+  async create(createPumpBrandDto: CreatePumpBrandDto, file: Express.Multer.File): Promise<PumpBrand> {
     const pumpBrand = this.pumpBrandsRepository.create(createPumpBrandDto);
     const savedPumpBrand = await this.pumpBrandsRepository.save(pumpBrand);
 
@@ -40,7 +40,7 @@ export class PumpBrandsService {
     return pumpBrand;
   }
 
-  async update(id: string, updatePumpBrandDto: UpdatePumpBrandDto, file: multer.File): Promise<PumpBrand> {
+  async update(id: string, updatePumpBrandDto: UpdatePumpBrandDto, file: Express.Multer.File): Promise<PumpBrand> {
     const pumpBrand = await this.pumpBrandsRepository.preload({ id, ...updatePumpBrandDto });
     if (!pumpBrand) {
       throw new NotFoundException(`PumpBrand #${id} not found`);

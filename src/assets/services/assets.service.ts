@@ -28,7 +28,7 @@ export class AssetsService {
     private readonly awsService: AwsService,
   ) {}
 
-  async create(createAssetDto: CreateAssetDto, files: multer.File[]): Promise<Asset> {
+  async create(createAssetDto: CreateAssetDto, files: Express.Multer.File[]): Promise<Asset> {
     const client = await this.clientsRepository.findOne({ where: { id: createAssetDto.clientId } });
     if (!client) {
       throw new NotFoundException(`Client #${createAssetDto.clientId} not found`);
@@ -102,7 +102,7 @@ export class AssetsService {
   }
   
 
-  async update(id: string, updateAssetDto: UpdateAssetDto, files: multer.File[]): Promise<Asset> {
+  async update(id: string, updateAssetDto: UpdateAssetDto, files: Express.Multer.File[]): Promise<Asset> {
     const asset = await this.assetsRepository.preload({
       id,
       name: updateAssetDto.name,

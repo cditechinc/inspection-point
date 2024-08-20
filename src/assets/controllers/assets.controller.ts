@@ -3,6 +3,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { AssetsService } from './../services/assets.service';
 import { CreateAssetDto } from './../dto/create-asset.dto';
 import { UpdateAssetDto } from './../dto/update-asset.dto';
+import { Express } from 'express';
 import * as multer from 'multer';
 import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from './../../auth/guards/roles.guard';
@@ -19,7 +20,7 @@ export class AssetsController {
   @UseInterceptors(FilesInterceptor('files'))
   create(
     @Body() createAssetDto: CreateAssetDto,
-    @UploadedFiles() files: multer.File[],
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.assetsService.create(createAssetDto, files);
   }
@@ -42,7 +43,7 @@ export class AssetsController {
   update(
     @Param('id') id: string,
     @Body() updateAssetDto: UpdateAssetDto,
-    @UploadedFiles() files: multer.File[],
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.assetsService.update(id, updateAssetDto, files);
   }

@@ -19,7 +19,7 @@ export class PumpsController {
   @UseInterceptors(FilesInterceptor('files'))
   create(
     @Body() createPumpDto: CreatePumpDto,
-    @UploadedFiles() files: multer.File[],
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.pumpsService.create(createPumpDto, files);
   }
@@ -42,7 +42,7 @@ export class PumpsController {
   update(
     @Param('id') id: string,
     @Body() updatePumpDto: UpdatePumpDto,
-    @UploadedFiles() files: multer.File[],
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.pumpsService.update(id, updatePumpDto, files);
   }

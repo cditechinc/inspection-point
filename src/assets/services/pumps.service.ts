@@ -24,7 +24,7 @@ export class PumpsService {
     private readonly awsService: AwsService,
   ) {}
 
-  async create(createPumpDto: CreatePumpDto, files: multer.File[]): Promise<Pump> {
+  async create(createPumpDto: CreatePumpDto, files: Express.Multer.File[]): Promise<Pump> {
     const asset = await this.assetsRepository.findOne({ where: { id: createPumpDto.assetId } });
     if (!asset) {
       throw new NotFoundException(`Asset #${createPumpDto.assetId} not found`);
@@ -67,7 +67,7 @@ export class PumpsService {
     return pump;
   }
 
-  async update(id: string, updatePumpDto: UpdatePumpDto, files: multer.File[]): Promise<Pump> {
+  async update(id: string, updatePumpDto: UpdatePumpDto, files: Express.Multer.File[]): Promise<Pump> {
     const pump = await this.pumpsRepository.preload({
       id,
       ...updatePumpDto,
@@ -104,7 +104,7 @@ export class PumpsService {
     await this.pumpsRepository.remove(pump);
   }
 
-  private async addPhotosToPump(pump: Pump, files: multer.File[]) {
+  private async addPhotosToPump(pump: Pump, files: Express.Multer.File[]) {
     const photos: Photo[] = pump.photos || [];
     for (const file of files) {
       const url = await this.awsService.uploadFile(
