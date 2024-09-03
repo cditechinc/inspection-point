@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as OAuthClient from 'intuit-oauth';
 import { ClientService } from './../client/client.service';
@@ -48,7 +48,40 @@ export class QuickBooksOAuthService {
     return this.oauthClient;
   }
 
+  async refreshTokenIfNeeded(clientId: string): Promise<void> {
+    const client = await this.clientService.findOne(clientId);
+  
+    if (!client || !client.quickbooksAccessToken || !client.quickbooksRealmId) {
+      throw new Error('Client is not authorized with QuickBooks');
+    }
+  
+    const currentTime = new Date().getTime();
+    const tokenExpirationTime = new Date(client.quickbooksTokenExpiresIn).getTime();
+  
+    // Refresh the token if it will expire in the next 5 minutes
+    if (currentTime >= tokenExpirationTime - 5 * 60 * 1000) {
+      try {
+        const tokenResponse = await this.oauthClient.refreshUsingToken(client.quickbooksRefreshToken);
+  
+        // Update the client with the new token details
+        const updateClientDto = {
+          quickbooksAccessToken: tokenResponse.token.access_token,
+          quickbooksRefreshToken: tokenResponse.token.refresh_token,
+          quickbooksTokenExpiresIn: new Date(currentTime + tokenResponse.token.expires_in * 1000),
+        };
+  
+        await this.clientService.update(client.id, updateClientDto);
+      } catch (error) {
+        throw new InternalServerErrorException(`Failed to refresh QuickBooks token: ${error.message}`);
+      }
+    }
+  }
+  
+
   async createCustomer(clientId: string, customerData: any) {
+
+    await this.refreshTokenIfNeeded(clientId);
+
     const client = await this.clientService.findOne(clientId);
 
     if (!client || !client.quickbooksAccessToken || !client.quickbooksRealmId) {

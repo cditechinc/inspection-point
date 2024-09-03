@@ -2,6 +2,7 @@ import { IsUUID, IsString, IsNotEmpty, IsOptional, IsEnum, IsDecimal, IsDate, Is
 import { Type } from 'class-transformer';
 import { ChecklistDTO } from './checklist.dto';
 import { InspectionScoreDTO } from './inspection-score.dto';
+import { InspectionStatus } from '../entities/inspection.entity';
 
 export class CreateInspectionDTO {
   @IsUUID()
@@ -21,8 +22,8 @@ export class CreateInspectionDTO {
   @IsNotEmpty()
   name: string;
 
-  @IsEnum(['pending', 'in_progress', 'completed', 'canceled'])
-  status: string;
+  @IsEnum(InspectionStatus)
+  status: InspectionStatus;
 
   @IsDate()
   scheduledDate: Date;
@@ -61,10 +62,10 @@ export class UpdateInspectionDTO {
   @IsOptional()
   name?: string;
 
-  @IsEnum(['pending', 'in_progress', 'completed', 'canceled'])
+  @IsEnum(InspectionStatus)
   @IsOptional()
-  status?: string;
-
+  status?: InspectionStatus;
+  
   @IsOptional()
   @IsDate()
   completedDate?: Date;

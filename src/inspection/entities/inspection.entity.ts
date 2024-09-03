@@ -15,6 +15,15 @@ import { Checklist } from './checklist.entity';
 import { InspectionScore } from './inspection-score.entity';
 import { Customer } from './../../customer/entities/customer.entity';
 
+export enum InspectionStatus {
+  NOT_DONE = 'Not-Done',
+  STARTED_NOT_FINISHED = 'Started Not Finished',
+  PAST_DUE = 'Past-Due',
+  COMPLETE_BILLED = 'Complete Billed',
+  COMPLETE_NOT_BILLED = 'Complete Not-Billed',
+  ON_HOLD = 'On-Hold',
+  CANCELED = 'Canceled',
+}
 @Entity('inspections')
 export class Inspection {
   @PrimaryGeneratedColumn('uuid')
@@ -58,8 +67,12 @@ export class Inspection {
   // @Column('uuid', { nullable: true })
   // assignedTo: string;
 
-  @Column('varchar', { length: 50 })
-  status: string;
+  @Column({
+    type: 'enum',
+    enum: InspectionStatus,
+    default: InspectionStatus.NOT_DONE,
+  })
+  status: InspectionStatus;
 
   @Column('timestamp')
   scheduledDate: Date;

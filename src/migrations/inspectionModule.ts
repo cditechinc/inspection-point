@@ -13,7 +13,7 @@ export class InspectionModuleMigration20240804123456 implements MigrationInterfa
         "customer_id" uuid REFERENCES "users"("id") ON DELETE CASCADE,
         "asset_id" uuid REFERENCES "assets"("id") ON DELETE CASCADE,
         "assigned_to" uuid REFERENCES "users"("id") ON DELETE SET NULL,
-        "status" varchar(50) CHECK (status IN ('pending', 'in_progress', 'completed', 'canceled')),
+        "status" enum ('Not-Done', 'Started Not Finished', 'Past-Due', 'Complete Billed', 'Complete Not-Billed', 'On-Hold', 'Canceled') NOT NULL DEFAULT 'Not-Done',
         "scheduled_date" TIMESTAMP,
         "completed_date" TIMESTAMP,
         "route" jsonb,
