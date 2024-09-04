@@ -8,6 +8,7 @@ import {
     Delete,
     ParseUUIDPipe,
     UseGuards,
+    Patch,
   } from '@nestjs/common';
   import { ChecklistService } from './../services/checklist.service';
   import { ChecklistDTO, UpdateChecklistDTO } from './../dto/checklist.dto';
@@ -40,7 +41,7 @@ import {
     }
   
     @Roles(Role.Client)
-    @Put(':id')
+    @Patch(':id')
     update(
       @Param('id', ParseUUIDPipe) id: string,
       @Body() updateChecklistDto: UpdateChecklistDTO,

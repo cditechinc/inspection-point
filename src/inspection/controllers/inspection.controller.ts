@@ -8,6 +8,7 @@ import {
     Delete,
     ParseUUIDPipe,
     UseGuards,
+    Patch,
   } from '@nestjs/common';
   import { InspectionService } from './../services/inspection.service';
   import { CreateInspectionDTO, UpdateInspectionDTO } from './../dto/inspection.dto';
@@ -41,7 +42,7 @@ import { Role } from './../../auth/role.enum';
     }
   
     @Roles(Role.Client)
-    @Put(':id')
+    @Patch(':id')
     update(
       @Param('id', ParseUUIDPipe) id: string,
       @Body() updateInspectionDto: UpdateInspectionDTO,
