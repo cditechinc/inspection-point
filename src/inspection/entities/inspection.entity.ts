@@ -14,6 +14,7 @@ import {
 import { Checklist } from './checklist.entity';
 import { InspectionScore } from './inspection-score.entity';
 import { Customer } from './../../customer/entities/customer.entity';
+import { Invoice } from './../../invoice/entities/invoice.entity';
 
 export enum InspectionStatus {
   NOT_DONE = 'Not-Done',
@@ -63,6 +64,9 @@ export class Inspection {
     (inspectionScore) => inspectionScore.inspection,
   )
   scores: InspectionScore[];
+
+  @OneToMany(() => Invoice, invoice => invoice.inspection)
+  invoices: Invoice[];
 
   // @Column('uuid', { nullable: true })
   // assignedTo: string;

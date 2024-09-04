@@ -25,6 +25,8 @@ import { ChecklistItem } from './inspection/entities/checklist-item.entity';
 import { InspectionScore } from './inspection/entities/inspection-score.entity';
 import { InspectionModule } from './inspection/inspection.module';
 import { ReportModule } from './reports/report.module';
+import { Invoice } from './invoice/entities/invoice.entity';
+import { InvoiceModule } from './invoice/invoice.module';
 
 @Module({
   imports: [
@@ -54,7 +56,8 @@ import { ReportModule } from './reports/report.module';
           Inspection,
           Checklist,
           ChecklistItem,
-          InspectionScore
+          InspectionScore,
+          Invoice
         ],
         synchronize: true,
       }),
@@ -67,6 +70,7 @@ import { ReportModule } from './reports/report.module';
     AssetsModule,
     InspectionModule,
     ReportModule,
+    InvoiceModule
   ],
 })
 export class AppModule {}

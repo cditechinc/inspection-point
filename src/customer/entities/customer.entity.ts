@@ -3,6 +3,7 @@ import { Client } from '../../client/entities/client.entity';
 import { Photo } from './../../assets/entities/photo.entity';
 import { Asset } from './../../assets/entities/asset.entity';
 import { Inspection } from './../../inspection/entities/inspection.entity';
+import { Invoice } from './../../invoice/entities/invoice.entity';
 
 @Entity('customers')
 export class Customer {
@@ -56,6 +57,9 @@ export class Customer {
 
   @OneToMany(() => Inspection, (inspection) => inspection.customer)
   inspections: Inspection[];
+
+  @OneToMany(() => Invoice, invoice => invoice.customer)
+  invoices: Invoice[];
 
   @CreateDateColumn()
   created_at: Date;

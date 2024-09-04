@@ -4,6 +4,7 @@ import { Customer } from '../../customer/entities/customer.entity';
 import { Asset } from './../../assets/entities/asset.entity';
 import { Photo } from './../../assets/entities/photo.entity';
 import { Inspection } from './../../inspection/entities/inspection.entity';
+import { Invoice } from './../../invoice/entities/invoice.entity';
 
 
 @Entity('clients')
@@ -102,4 +103,7 @@ export class Client {
 
   @OneToMany(() => Inspection, (inspection) => inspection.client)
   inspections: Inspection[];
+
+  @OneToMany(() => Invoice, invoice => invoice.client)
+  invoices: Invoice[];
 }

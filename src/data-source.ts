@@ -20,6 +20,8 @@ import { ChecklistItem } from './inspection/entities/checklist-item.entity';
 import { InspectionScore } from './inspection/entities/inspection-score.entity';
 import { AddNotNullToOverallScore1723316461538 } from './migrations/1723316461538-AddNotNullToOverallScore';
 import { AddNameToInspections20240820143000 } from './migrations/AddNameToInspection';
+import { Invoice } from './invoice/entities/invoice.entity';
+import { AddInvoicesTableWithQuickBooksFields20240901123456 } from './migrations/invoicesModule';
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -45,12 +47,14 @@ const dataSourceOptions: DataSourceOptions = {
     Checklist,
     ChecklistItem,
     InspectionScore,
+    Invoice
   ],
   migrations: [
     CombinedMigration20240722162333,
     InspectionModuleMigration20240804123456,
     AddNotNullToOverallScore1723316461538,
     AddNameToInspections20240820143000,
+    AddInvoicesTableWithQuickBooksFields20240901123456
   ],
   synchronize: false,
   logging: true,
