@@ -9,10 +9,14 @@ import { UserModule } from './../user/user.module';
 import { AssetsModule } from './../assets/assets.module';
 import { AuthModule } from './../auth/auth.module';
 import { QuickBooksOAuthService } from './../auth/quickbooks-oauth.service';
+import { User } from './../user/entities/user.entity';
+import { UserGroup } from './../user-groups/entities/user-group.entity';
+import { UserGroupMembership } from './../user-groups/entities/user-group-membership.entity';
+import { UserGroupPermission } from './../user-groups/entities/user-group-permission.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Client]),
+    TypeOrmModule.forFeature([Client, User, UserGroup, UserGroupMembership, UserGroupPermission]),
     UserModule,
     AssetsModule,
     forwardRef(() => AuthModule),

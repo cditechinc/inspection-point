@@ -76,7 +76,7 @@ export class AuthService {
   }
 
   async login(user: User, ipAddress: string, gpsLocation?: string) {
-    const accessToken = await this.signToken(user);
+    const { accessToken, refreshToken } = await this.generateTokens(user);
     const sessionToken = await this.createSession(user, ipAddress);
 
     // Update the user's last login details
@@ -94,6 +94,7 @@ export class AuthService {
 
     return {
       access_token: accessToken,
+      refresh_token: refreshToken,
       session_token: sessionToken,
       user,
     };
@@ -241,6 +242,50 @@ export class AuthService {
       quickbooksRealmId: realmId,
       quickbooksTokenExpiresIn: new Date(Date.now() + 3600 * 1000), // Assuming token expires in 1 hour
     });
+  }
+
+   // Generate both access and refresh tokens
+   async generateTokens(userOrClient: User | Client): Promise<{ accessToken: string; refreshToken: string }> {
+    const accessToken = await this.signToken(userOrClient);
+    const refreshToken = await this.generateRefreshToken(userOrClient);
+
+    return { accessToken, refreshToken };
+  }
+
+  // Sign a new refresh token (with a longer expiration time)
+  async generateRefreshToken(userOrClient: User | Client): Promise<string> {
+    let payload: JwtPayload;
+
+    if (userOrClient instanceof User) {
+      payload = {
+        email: userOrClient.email,
+        sub: userOrClient.id,
+        role: userOrClient.role,
+        clientId: userOrClient.client?.id,
+      };
+    } else {
+      payload = {
+        email: userOrClient.user.email,
+        sub: userOrClient.user.id,
+        role: userOrClient.user.role,
+        clientId: userOrClient.id,
+      };
+    }
+
+    // Set refresh token expiration time (e.g., 7 days)
+    return this.jwtService.sign(payload, { expiresIn: '7d' });
+  }
+
+  // Verify the refresh token
+  async verifyRefreshToken(refreshToken: string): Promise<User | Client> {
+    try {
+      const payload = this.jwtService.verify(refreshToken);
+      const user = await this.userService.findById(payload.sub);
+      if (!user) throw new UnauthorizedException('Invalid refresh token');
+      return user;
+    } catch (err) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
   }
   
 }

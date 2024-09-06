@@ -6,6 +6,8 @@ import { Client } from '../../client/entities/client.entity';
 
 import { Asset } from './../../assets/entities/asset.entity';
 import { Inspection } from './../../inspection/entities/inspection.entity';
+import { UserGroupMembership } from './../../user-groups/entities/user-group-membership.entity';
+import { Permission } from './../../permissions/entities/permission.entity';
 
 @Entity('users')
 export class User {
@@ -38,6 +40,12 @@ export class User {
   @JoinColumn({ name: 'client_id' })
   client: Client;
 
+  @OneToMany(() => UserGroupMembership, (membership) => membership.user)
+  groupMemberships: UserGroupMembership[];
+
+  @OneToMany(() => Permission, (permission) => permission.user)
+  permissions: Permission[];
+
   @Column({ nullable: true })
   phone: string;
 
@@ -49,6 +57,9 @@ export class User {
 
   @Column({ default: false })
   is_customer_admin: boolean;
+
+  @Column({ default: false })
+  isProtectedUser: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
   last_login: Date;

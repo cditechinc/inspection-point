@@ -22,6 +22,11 @@ import { AddNotNullToOverallScore1723316461538 } from './migrations/172331646153
 import { AddNameToInspections20240820143000 } from './migrations/AddNameToInspection';
 import { Invoice } from './invoice/entities/invoice.entity';
 import { AddInvoicesTableWithQuickBooksFields20240901123456 } from './migrations/invoicesModule';
+import { UserGroup } from './user-groups/entities/user-group.entity';
+import { UserGroupMembership } from './user-groups/entities/user-group-membership.entity';
+import { UserGroupPermission } from './user-groups/entities/user-group-permission.entity';
+import { Permission } from './permissions/entities/permission.entity';
+import { AddSecurityGroupsAndPermissions20240905123456 } from './migrations/securityGroupsAndPermissions';
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -47,14 +52,19 @@ const dataSourceOptions: DataSourceOptions = {
     Checklist,
     ChecklistItem,
     InspectionScore,
-    Invoice
+    Invoice,
+    UserGroup,
+    UserGroupMembership,
+    UserGroupPermission,
+    Permission,
   ],
   migrations: [
+    AddNotNullToOverallScore1723316461538,
     CombinedMigration20240722162333,
     InspectionModuleMigration20240804123456,
-    AddNotNullToOverallScore1723316461538,
     AddNameToInspections20240820143000,
-    AddInvoicesTableWithQuickBooksFields20240901123456
+    AddInvoicesTableWithQuickBooksFields20240901123456,
+    AddSecurityGroupsAndPermissions20240905123456,
   ],
   synchronize: false,
   logging: true,

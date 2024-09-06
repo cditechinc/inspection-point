@@ -71,6 +71,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "is_active" boolean DEFAULT TRUE,
         "is_client_admin" boolean DEFAULT FALSE,
         "is_customer_admin" boolean DEFAULT FALSE,
+        "is_protected_user" BOOLEAN DEFAULT FALSE,
         "last_login" TIMESTAMP,
         "last_login_ip" inet,
         "last_gps_location" point,

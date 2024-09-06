@@ -27,6 +27,12 @@ import { InspectionModule } from './inspection/inspection.module';
 import { ReportModule } from './reports/report.module';
 import { Invoice } from './invoice/entities/invoice.entity';
 import { InvoiceModule } from './invoice/invoice.module';
+import { UserGroup } from './user-groups/entities/user-group.entity';
+import { UserGroupMembership } from './user-groups/entities/user-group-membership.entity';
+import { UserGroupPermission } from './user-groups/entities/user-group-permission.entity';
+import { Permission } from './permissions/entities/permission.entity';
+import { UserGroupModule } from './user-groups/user-group.module';
+import { PermissionModule } from './permissions/permission.module';
 
 @Module({
   imports: [
@@ -57,7 +63,11 @@ import { InvoiceModule } from './invoice/invoice.module';
           Checklist,
           ChecklistItem,
           InspectionScore,
-          Invoice
+          Invoice,
+          UserGroup,
+          UserGroupMembership,
+          UserGroupPermission,
+          Permission,
         ],
         synchronize: true,
       }),
@@ -70,7 +80,9 @@ import { InvoiceModule } from './invoice/invoice.module';
     AssetsModule,
     InspectionModule,
     ReportModule,
-    InvoiceModule
+    InvoiceModule,
+    UserGroupModule,
+    PermissionModule,
   ],
 })
 export class AppModule {}

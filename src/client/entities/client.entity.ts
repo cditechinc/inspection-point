@@ -5,6 +5,7 @@ import { Asset } from './../../assets/entities/asset.entity';
 import { Photo } from './../../assets/entities/photo.entity';
 import { Inspection } from './../../inspection/entities/inspection.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
+import { UserGroup } from './../../user-groups/entities/user-group.entity';
 
 
 @Entity('clients')
@@ -90,6 +91,9 @@ export class Client {
 
   @OneToMany(() => Customer, customer => customer.client)
   customers: Customer[];
+
+  @OneToMany(() => UserGroup, (userGroup) => userGroup.client)
+  userGroups: UserGroup[];
 
   @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn()

@@ -55,7 +55,8 @@ export class AuthController {
     }
 
     const ipAddress = req.ip || req.connection.remoteAddress;
-    const accessToken = await this.authService.signToken(client);
+   // Generate access and refresh tokens
+  const { accessToken, refreshToken } = await this.authService.generateTokens(client);
     const sessionToken = await this.authService.createClientSession(
       client,
       ipAddress,
@@ -78,6 +79,7 @@ export class AuthController {
 
     return {
       access_token: accessToken,
+      refresh_token: refreshToken,
       session_token: sessionToken,
       client,
     };
@@ -116,6 +118,20 @@ export class AuthController {
     return { message: '2FA verified successfully' };
   }
 
+  @Post('refresh')
+  async refresh(@Body('refresh_token') refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
+
+    const userOrClient = await this.authService.verifyRefreshToken(refreshToken);
+    const { accessToken, refreshToken: newRefreshToken } = await this.authService.generateTokens(userOrClient);
+
+    return {
+      access_token: accessToken,
+      refresh_token: newRefreshToken,
+    };
+  }
   // @UseGuards(JwtAuthGuard, RolesGuard)
   // @Roles('employee')
   // @Post('employee')
