@@ -14,7 +14,7 @@ export class PumpBrandsController {
   constructor(private readonly pumpBrandsService: PumpBrandsService) {}
 
   @Post()
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   @UseInterceptors(FileInterceptor('file'))
   create(
     @Body() createPumpBrandDto: CreatePumpBrandDto,
@@ -24,19 +24,19 @@ export class PumpBrandsController {
   }
 
   @Get()
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   findAll() {
     return this.pumpBrandsService.findAll();
   }
 
   @Get(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   findOne(@Param('id') id: string) {
     return this.pumpBrandsService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   @UseInterceptors(FileInterceptor('file'))
   update(
     @Param('id') id: string,
@@ -47,7 +47,7 @@ export class PumpBrandsController {
   }
 
   @Delete(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   remove(@Param('id') id: string) {
     return this.pumpBrandsService.remove(id);
   }

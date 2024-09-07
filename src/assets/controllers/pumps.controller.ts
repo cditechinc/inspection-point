@@ -15,7 +15,7 @@ export class PumpsController {
   constructor(private readonly pumpsService: PumpsService) {}
 
   @Post()
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   @UseInterceptors(FilesInterceptor('files'))
   create(
     @Body() createPumpDto: CreatePumpDto,
@@ -25,19 +25,19 @@ export class PumpsController {
   }
 
   @Get()
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   findAll() {
     return this.pumpsService.findAll();
   }
 
   @Get(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   findOne(@Param('id') id: string) {
     return this.pumpsService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   @UseInterceptors(FilesInterceptor('files'))
   update(
     @Param('id') id: string,
@@ -48,7 +48,7 @@ export class PumpsController {
   }
 
   @Delete(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   remove(@Param('id') id: string) {
     return this.pumpsService.remove(id);
   }

@@ -13,31 +13,31 @@ export class AssetTypesController {
   constructor(private readonly assetTypesService: AssetTypesService) {}
 
   @Post()
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   create(@Body() createAssetTypeDto: CreateAssetTypeDto) {
     return this.assetTypesService.create(createAssetTypeDto);
   }
 
   @Get()
-  @Roles(Role.Client, Role.CustomerAdmin)
+  @Roles(Role.Client, Role.ClientAdmin)
   findAll() {
     return this.assetTypesService.findAll();
   }
 
   @Get(':id')
-  @Roles(Role.Client, Role.CustomerAdmin)
+  @Roles(Role.Client, Role.ClientAdmin)
   findOne(@Param('id') id: string) {
     return this.assetTypesService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.ClientAdmin)
   update(@Param('id') id: string, @Body() updateAssetTypeDto: UpdateAssetTypeDto) {
     return this.assetTypesService.update(id, updateAssetTypeDto);
   }
 
   @Delete(':id')
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.ClientAdmin)
   remove(@Param('id') id: string) {
     return this.assetTypesService.remove(id);
   }

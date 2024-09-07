@@ -1,42 +1,24 @@
-import { Controller, Post, Param, Get, Body, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Post, Param, Get, Body, Delete, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
 import { PdfService } from '../services/pdf.service';
 import { InspectionService } from '../../inspection/services/inspection.service';
-import { PdfCustomizationDTO } from '../dto/pdf-customization.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from './../../auth/guards/roles.guard';
+import { Roles } from './../../auth/decorators/roles.decorator';
+import { Role } from './../../auth/role.enum';
 
 @Controller('reports')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ReportController {
   constructor(
     private readonly pdfService: PdfService,
     private readonly inspectionService: InspectionService,
   ) {}
 
-  // @Post('generate/:inspectionId')
-  // async generateReport(@Param('inspectionId') inspectionId: string): Promise<{ filePath: string }> {
-  //   const inspection = await this.inspectionService.findOne(inspectionId);
-  //   const filePath = await this.pdfService.generateAndUploadPdfReport(inspection);
-  //   return { filePath };
-  // }
-
-  // @Post('customize/:inspectionId')
-  // async customizeReport(
-  //   @Param('inspectionId') inspectionId: string,
-  //   @Body() customizationDto: PdfCustomizationDTO,
-  // ): Promise<{ filePath: string }> {
-  //   const filePath = await this.pdfService.updatePdfReport(inspectionId, customizationDto);
-  //   return { filePath };
-  // }
-
-  // @Delete('delete/:inspectionId/:clientId')
-  // async deleteReport(
-  //   @Param('inspectionId') inspectionId: string,
-  //   @Param('clientId') clientId: string,
-  // ): Promise<void> {
-  //   await this.pdfService.deletePdfReport(inspectionId, clientId);
-  // }
-
+  
   // Route for uploading a PDF generated from the frontend
   @Post('upload/:clientId/:inspectionId')
+  @Roles(Role.Admin, Role.ClientAdmin)
   @UseInterceptors(FileInterceptor('file'))
   async uploadReport(
     @Param('clientId') clientId: string,
@@ -58,6 +40,7 @@ export class ReportController {
 
   // Route for deleting a PDF
   @Delete('delete/:clientId/:inspectionId')
+  @Roles(Role.Admin, Role.ClientAdmin)
   async deleteReport(
     @Param('inspectionId') inspectionId: string,
     @Param('clientId') clientId: string

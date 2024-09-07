@@ -16,7 +16,7 @@ export class AssetsController {
   constructor(private readonly assetsService: AssetsService) {}
 
   @Post()
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   @UseInterceptors(FilesInterceptor('files'))
   create(
     @Body() createAssetDto: CreateAssetDto,
@@ -26,19 +26,19 @@ export class AssetsController {
   }
 
   @Get()
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   findAll() {
     return this.assetsService.findAll();
   }
 
   @Get(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   findOne(@Param('id') id: string) {
     return this.assetsService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   @UseInterceptors(FilesInterceptor('files'))
   update(
     @Param('id') id: string,
@@ -49,7 +49,7 @@ export class AssetsController {
   }
 
   @Delete(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   remove(@Param('id') id: string) {
     return this.assetsService.remove(id);
   }

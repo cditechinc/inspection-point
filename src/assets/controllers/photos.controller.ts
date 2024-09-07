@@ -29,7 +29,7 @@ export class PhotosController {
 
   // change this controller to the following create service function
   @Post('upload/:clientId')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   @UseInterceptors(FilesInterceptor('files'))
   create(
     @Param('clientId') clientId: string,
@@ -43,19 +43,19 @@ export class PhotosController {
   }
 
   @Get()
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   findAll() {
     return this.photosService.findAll();
   }
 
   @Get(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   findOne(@Param('id') id: string) {
     return this.photosService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   @UseInterceptors(FileInterceptor('file'))
   update(
     @Param('id') id: string,
@@ -66,7 +66,7 @@ export class PhotosController {
   }
 
   @Delete(':id')
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.ClientAdmin)
   remove(@Param('id') id: string) {
     return this.photosService.remove(id);
   }
