@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserGroupPermission } from './../entities/user-group-permission.entity';
 import { UserGroup } from './../entities/user-group.entity';
 import { CreateUserGroupPermissionDto } from './../dto/create-user-group-permission.dto';
 import { UpdateUserGroupPermissionDto } from './../dto/update-user-group-permission.dto';
+import { AssignMultiplePermissionsDto } from '../dto/assign-multiple-permissions.dto';
 
 @Injectable()
 export class UserGroupPermissionService {
@@ -15,46 +16,91 @@ export class UserGroupPermissionService {
     private readonly userGroupRepository: Repository<UserGroup>
   ) {}
 
-   // Assign permissions using the DTO
   async assignPermissions(
     groupId: string,
-    createPermissionDto: CreateUserGroupPermissionDto,  // Use DTO with resource and action
-  ): Promise<UserGroupPermission> {
+    assignMultiplePermissionsDto: AssignMultiplePermissionsDto,
+  ): Promise<UserGroupPermission[]> {
+    const group = await this.userGroupRepository.findOne({ where: { id: groupId } });
+    if (!group) {
+      throw new NotFoundException('User group not found');
+    }
+  
+    const { permissions } = assignMultiplePermissionsDto;
+  
+    // Start transaction
+    const queryRunner = this.userGroupPermissionRepository.manager.connection.createQueryRunner();
+    await queryRunner.startTransaction();
+  
+    try {
+      // Step 1: Delete all existing permissions for the group
+      const deleteResult = await queryRunner.manager.delete(UserGroupPermission, { userGroup: group });
+      console.log('Deleted permissions result:', deleteResult);
+  
+      // Step 2: Prepare and save new permissions from the request
+      const permissionsToSave: UserGroupPermission[] = [];
+  
+      for (const permissionDto of permissions) {
+        const { resource, actions } = permissionDto;
+  
+        for (const action of actions) {
+          const permissionName = `${resource}_${action}`;
+  
+          const newPermission = this.userGroupPermissionRepository.create({
+            userGroup: group,
+            permissionName,
+            canView: action === 'view',
+            canEdit: action === 'edit',
+            canCreate: action === 'create',
+            canDelete: action === 'delete',
+          });
+  
+          permissionsToSave.push(newPermission);
+        }
+      }
+  
+      console.log('Permissions to save:', permissionsToSave);
+  
+      if (permissionsToSave.length > 0) {
+        await queryRunner.manager.save(UserGroupPermission, permissionsToSave);
+      }
+  
+      // Commit transaction
+      await queryRunner.commitTransaction();
+  
+      // Return all the saved permissions for the group
+      const savedPermissions = await this.getGroupPermissions(groupId);
+      console.log('Saved permissions:', savedPermissions);
+      return savedPermissions;
+    } catch (error) {
+      // Rollback transaction on error
+      await queryRunner.rollbackTransaction();
+      console.error('Transaction error:', error);
+      throw new InternalServerErrorException('Failed to assign permissions');
+    } finally {
+      // Release transaction
+      await queryRunner.release();
+    }
+  }
+  
+  
+  
+
+
+  async getGroupPermissions(groupId: string): Promise<UserGroupPermission[]> {
     const group = await this.userGroupRepository.findOne({ where: { id: groupId } });
     if (!group) {
       throw new NotFoundException('User group not found');
     }
 
-    const { resource, action } = createPermissionDto; // Destructure resource and action from the DTO
-    const permissionName = `${resource}_${action}`;   // Combine resource and action
-
-    const permissionExists = await this.userGroupPermissionRepository.findOne({
-      where: { userGroup: group, permissionName },
+    return await this.userGroupPermissionRepository.find({
+      where: { userGroup: { id: groupId } },
     });
-
-    if (!permissionExists) {
-      const permission = this.userGroupPermissionRepository.create({
-        userGroup: group,
-        permissionName,
-        canView: action === 'view',
-        canEdit: action === 'edit',
-        canCreate: action === 'create',
-        canDelete: action === 'delete',
-      });
-
-      return await this.userGroupPermissionRepository.save(permission);
-    }
-
-    return permissionExists;  // Return the existing permission if found
   }
 
-  // Get all permissions for a group
-  async getGroupPermissions(groupId: string): Promise<UserGroupPermission[]> {
-    return await this.userGroupPermissionRepository.find({ where: { userGroup: { id: groupId } } });
-  }
-
-  // Update permissions for a group
-  async updatePermissions(id: string, updatePermissionDto: UpdateUserGroupPermissionDto): Promise<UserGroupPermission> {
+  async updatePermissions(
+    id: string,
+    updatePermissionDto: UpdateUserGroupPermissionDto,
+  ): Promise<UserGroupPermission> {
     const permission = await this.userGroupPermissionRepository.findOne({ where: { id } });
 
     if (!permission) {

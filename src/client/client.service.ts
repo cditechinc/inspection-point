@@ -15,6 +15,9 @@ import { UserGroupService } from './../user-groups/services/user-group.service';
 import { UserGroupPermissionService } from './../user-groups/services/user-group-permission.service';
 import { CreateUserGroupDto } from './../user-groups/dto/create-user-group.dto';
 import { CreateUserGroupPermissionDto } from './../user-groups/dto/create-user-group-permission.dto';
+import { AssignMultiplePermissionsDto } from './../user-groups/dto/assign-multiple-permissions.dto';
+import { Resource } from './../common/enums/resource.enum';
+import { Action } from './../common/enums/action.enum';
 
 @Injectable()
 export class ClientService {
@@ -56,75 +59,96 @@ export class ClientService {
   // }
 
   async create(registerClientDto: RegisterClientDto): Promise<Client> {
-  const hashedPassword = await bcrypt.hash(registerClientDto.password, 10);
+    const hashedPassword = await bcrypt.hash(registerClientDto.password, 10);
 
-  // Step 1: Create the client
-  const client = this.clientsRepository.create(registerClientDto);
+    // Step 1: Create the client
+    const client = this.clientsRepository.create(registerClientDto);
 
-  try {
-    await this.clientsRepository.save(client);
-
-    // Step 2: Create the first user (client admin)
-    const userDto: CreateUserDto = {
-      username: registerClientDto.name,
-      email: registerClientDto.email,
-      password: registerClientDto.password,
-      password_hash: hashedPassword,
-      role: 'client_admin',
-      is_client_admin: true,
-      isProtectedUser: true, // First user is protected
-      client: client,
-    };
-    const user = await this.userService.create(userDto);
-
-    // Step 3: Create the 'Client Admins' group
-    const createUserGroupDto = {
-      name: 'Client Admins',
-      description: 'Default admin group with full permissions',
-      isDefaultAdminGroup: true,
-      isProtected: true, // Group is protected
-      client: client,
-    };
-    const clientAdminsGroup = await this.userGroupService.create(
-      client.id,
-      createUserGroupDto,
-    );
-
-    // Step 4: Assign the user to 'Client Admins' group
-    await this.userService.assignUserToGroup(user.id, clientAdminsGroup.id);
-
-    // Step 5: Assign full permissions to 'Client Admins' group
-    const resources = ['users', 'groups', 'customers', 'assets', 'inspections', 'supportCases'];
-    const actions = ['view', 'edit', 'create', 'delete'];
-
-    for (const resource of resources) {
-      for (const action of actions) {
-        await this.userGroupPermissionService.assignPermissions(clientAdminsGroup.id, {
-          resource,
-          action,
-        });
-      }
-    }
-
-    // Update the client with user info and save
-    client.user = user;
-    await this.clientsRepository.save(client);
-
-    // Step 6: Create folders for the client in AWS (if applicable)
     try {
-      await this.awsService.createClientFolders(client.id);
-    } catch (awsError) {
-      console.error('Error creating AWS folders:', awsError);
-      throw new InternalServerErrorException('Error creating AWS folders');
+      await this.clientsRepository.save(client);
+
+      // Step 2: Create the first user (client admin)
+      const userDto: CreateUserDto = {
+        username: registerClientDto.name,
+        email: registerClientDto.email,
+        password: registerClientDto.password,
+        password_hash: hashedPassword,
+        role: 'client_admin',
+        is_client_admin: true,
+        isProtectedUser: true, // First user is protected
+        client: client,
+      };
+      const user = await this.userService.create(userDto);
+
+      // Step 3: Create the 'Client Admins' group
+      const createUserGroupDto = {
+        name: 'Client Admins',
+        description: 'Default admin group with full permissions',
+        isDefaultAdminGroup: true,
+        isProtected: true, // Group is protected
+        client: client,
+      };
+      const clientAdminsGroup = await this.userGroupService.create(
+        client.id,
+        createUserGroupDto,
+      );
+
+      // Step 4: Assign the user to 'Client Admins' group
+      await this.userService.assignUserToGroup(user.id, clientAdminsGroup.id);
+
+      // Step 5: Define permissions for 'Client Admins' group
+    const assignMultiplePermissionsDto: AssignMultiplePermissionsDto = {
+      permissions: [
+        // {
+        //   resource: Resource.USERS,
+        //   actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
+        // },
+        // {
+        //   resource: Resource.GROUPS,
+        //   actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
+        // },
+        {
+          resource: Resource.CUSTOMERS,
+          actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
+        },
+        {
+          resource: Resource.ASSETS,
+          actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
+        },
+        {
+          resource: Resource.INSPECTIONS,
+          actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
+        },
+        // {
+        //   resource: Resource.SUPPORT_CASES,
+        //   actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
+        // },
+      ],
+    };
+
+    // Step 6: Assign permissions to the 'Client Admins' group
+    await this.userGroupPermissionService.assignPermissions(
+      clientAdminsGroup.id,
+      assignMultiplePermissionsDto,
+    );
+      // Update the client with user info and save
+      client.user = user;
+      await this.clientsRepository.save(client);
+
+      // Step 6: Create folders for the client in AWS (if applicable)
+      try {
+        await this.awsService.createClientFolders(client.id);
+      } catch (awsError) {
+        console.error('Error creating AWS folders:', awsError);
+        throw new InternalServerErrorException('Error creating AWS folders');
+      }
+
+      return client;
+    } catch (error) {
+      console.error('Error creating client:', error); // Log the error for debugging
+      throw new InternalServerErrorException('Error creating client');
     }
-
-    return client;
-  } catch (error) {
-    console.error('Error creating client:', error);  // Log the error for debugging
-    throw new InternalServerErrorException('Error creating client');
   }
-}
-
 
   async findAll(): Promise<Client[]> {
     return this.clientsRepository.find({ relations: ['user'] });

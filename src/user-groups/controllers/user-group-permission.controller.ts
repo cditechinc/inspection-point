@@ -6,6 +6,7 @@ import {
     Param,
     Body,
     UseGuards,
+    Delete,
   } from '@nestjs/common';
   import { UserGroupPermissionService } from './../services/user-group-permission.service';
   import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
@@ -14,6 +15,8 @@ import {
   import { Role } from './../../auth/role.enum';
   import { CreateUserGroupPermissionDto } from './../dto/create-user-group-permission.dto';
   import { UpdateUserGroupPermissionDto } from './../dto/update-user-group-permission.dto';
+import { AssignMultiplePermissionsDto } from '../dto/assign-multiple-permissions.dto';
+import { UserGroupPermission } from '../entities/user-group-permission.entity';
   
   @Controller('user-groups/:id/permissions')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,14 +31,23 @@ import {
     }
   
     // Assign permissions to a group
-  @Post()
-  @Roles(Role.Admin, Role.ClientAdmin)
-  async assignPermissions(
-    @Param('id') groupId: string,
-    @Body() createPermissionDto: CreateUserGroupPermissionDto,  // Pass DTO directly
-  ) {
-    return this.permissionService.assignPermissions(groupId, createPermissionDto);
-  }
+    @Post()
+    @Roles(Role.ClientAdmin)
+    async assignPermissions(
+      @Param('groupId') groupId: string,
+      @Body() assignMultiplePermissionsDto: AssignMultiplePermissionsDto,
+    ): Promise<UserGroupPermission[]> {
+      return this.permissionService.assignPermissions(groupId, assignMultiplePermissionsDto);
+    }
+
+  //   @Delete()
+  // @Roles(Role.ClientAdmin)
+  // async removePermissions(
+  //   @Param('groupId') groupId: string,
+  //   @Body() removePermissionsDto: AssignMultiplePermissionsDto, // Or create a separate RemovePermissionsDto
+  // ): Promise<void> {
+  //   return this.permissionService.removePermissions(groupId, removePermissionsDto);
+  // }
   
     // Update permissions for a group
     @Put(':permissionId')

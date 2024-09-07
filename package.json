@@ -15,6 +15,7 @@
     "typeorm": "cross-env NODE_OPTIONS=\"-r tsconfig-paths/register -r dotenv/config\" ts-node ./cli.ts",
     "migration:run": "npm run typeorm -- migration:run -d ./src/data-source",
     "migration:generate": "npm run typeorm -- migration:generate -d ./src/data-source",
+    "seed:asset-types": "ts-node ./cli.ts seed:asset-types",
     "typeorm:revert": "typeorm migration:revert -d src/ormconfig.ts",
     "debug:test": "ts-node -r tsconfig-paths/register -r dotenv/config src/test-module-resolution.ts",
     "test": "jest",
