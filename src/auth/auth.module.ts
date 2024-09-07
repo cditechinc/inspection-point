@@ -19,6 +19,7 @@ import { AwsModule } from './../aws/aws.module';
 import { RolesGuard } from './guards/roles.guard';
 import { QuickBooksStrategy } from './strategies/quickbooks.strategy';
 import { QuickBooksOAuthService } from './quickbooks-oauth.service';
+import { UserGroupModule } from './../user-groups/user-group.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { QuickBooksOAuthService } from './quickbooks-oauth.service';
     TypeOrmModule.forFeature([User, UserSession, UserIP, Log]),
     forwardRef(() => ClientModule),
     AwsModule,
+    UserGroupModule,
   ],
   providers: [
     AuthService,

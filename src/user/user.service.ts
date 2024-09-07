@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UserSession } from './entities/user-session.entity';
 import { CreateUserDto } from '../auth/dto/create-user.dto';
+import { UserGroupMembership } from './../user-groups/entities/user-group-membership.entity';
+import * as bcrypt from 'bcrypt';
+import { CreateAssociatedUserDto } from './dto/create-associated-user.dto';
+
 
 @Injectable()
 export class UserService {
@@ -12,6 +16,8 @@ export class UserService {
     private usersRepository: Repository<User>,
     @InjectRepository(UserSession)
     private sessionsRepository: Repository<UserSession>,
+    @InjectRepository(UserGroupMembership)
+    private readonly userGroupMembershipRepository: Repository<UserGroupMembership>
   ) {}
 
   async findByEmail(email: string, options?: { relations: string[] }): Promise<User> {
@@ -48,4 +54,57 @@ export class UserService {
   async findSessionByToken(token: string): Promise<UserSession | undefined> {
     return this.sessionsRepository.findOne({ where: { session_token: token }, relations: ['user'] });
   }
+
+  // Prevent deletion of protected users
+  async remove(id: string): Promise<void> {
+    const user = await this.findById(id);
+    if (user.isProtectedUser) {
+      throw new BadRequestException('Cannot delete a protected user');
+    }
+    await this.usersRepository.delete(id);
+  }
+
+  // Prevent reassignment of protected users
+  async assignUserToGroup(userId: string, groupId: string): Promise<void> {
+    const user = await this.findById(userId);
+    
+    // Skip protected user check if this is the initial assignment during registration
+    const isNewUser = !user.groupMemberships || user.groupMemberships.length === 0;
+    
+    if (user.isProtectedUser && !isNewUser) {
+      throw new BadRequestException('Cannot reassign a protected user');
+    }
+  
+    // Logic to assign user to group
+    const membership = this.userGroupMembershipRepository.create({
+      user: user,
+      userGroup: { id: groupId },
+    });
+    await this.userGroupMembershipRepository.save(membership);
+  }
+
+  async createForClientAdmin(createAssociatedUserDto: CreateAssociatedUserDto, clientId: string): Promise<User> {
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(createAssociatedUserDto.password, 10);
+  
+    // Create a new user entity
+    const user = this.usersRepository.create({
+      ...createAssociatedUserDto,
+      password_hash: hashedPassword,
+      role: 'client',
+      client: { id: clientId },  // Associate the user with the client
+    });
+  
+    // Save the new user in the database
+    const newUser = await this.usersRepository.save(user);
+  
+    // Assign the user to a group if provided
+    if (createAssociatedUserDto.groupId) {
+      await this.assignUserToGroup(newUser.id, createAssociatedUserDto.groupId);
+    }
+  
+    return newUser;
+  }
+  
+  
 }

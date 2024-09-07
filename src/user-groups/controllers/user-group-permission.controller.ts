@@ -28,11 +28,14 @@ import {
     }
   
     // Assign permissions to a group
-    @Post()
-    @Roles(Role.Admin, Role.ClientAdmin)
-    async assignPermissions(@Param('id') groupId: string, @Body() createPermissionDto: CreateUserGroupPermissionDto) {
-      return this.permissionService.assignPermissions(groupId, createPermissionDto);
-    }
+  @Post()
+  @Roles(Role.Admin, Role.ClientAdmin)
+  async assignPermissions(
+    @Param('id') groupId: string,
+    @Body() createPermissionDto: CreateUserGroupPermissionDto,  // Pass DTO directly
+  ) {
+    return this.permissionService.assignPermissions(groupId, createPermissionDto);
+  }
   
     // Update permissions for a group
     @Put(':permissionId')

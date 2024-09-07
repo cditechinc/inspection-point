@@ -13,6 +13,7 @@ import { User } from './../user/entities/user.entity';
 import { UserGroup } from './../user-groups/entities/user-group.entity';
 import { UserGroupMembership } from './../user-groups/entities/user-group-membership.entity';
 import { UserGroupPermission } from './../user-groups/entities/user-group-permission.entity';
+import { UserGroupModule } from './../user-groups/user-group.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserGroupPermission } from './../user-groups/entities/user-group-permis
     UserModule,
     AssetsModule,
     forwardRef(() => AuthModule),
+    UserGroupModule,
   ],
   controllers: [ClientController],
   providers: [ClientService, AwsService, QuickBooksOAuthService],

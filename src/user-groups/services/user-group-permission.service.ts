@@ -15,19 +15,37 @@ export class UserGroupPermissionService {
     private readonly userGroupRepository: Repository<UserGroup>
   ) {}
 
-  // Assign permissions to a group
-  async assignPermissions(groupId: string, createPermissionDto: CreateUserGroupPermissionDto): Promise<UserGroupPermission> {
+   // Assign permissions using the DTO
+  async assignPermissions(
+    groupId: string,
+    createPermissionDto: CreateUserGroupPermissionDto,  // Use DTO with resource and action
+  ): Promise<UserGroupPermission> {
     const group = await this.userGroupRepository.findOne({ where: { id: groupId } });
     if (!group) {
       throw new NotFoundException('User group not found');
     }
 
-    const permission = this.userGroupPermissionRepository.create({
-      ...createPermissionDto,
-      userGroup: group,
+    const { resource, action } = createPermissionDto; // Destructure resource and action from the DTO
+    const permissionName = `${resource}_${action}`;   // Combine resource and action
+
+    const permissionExists = await this.userGroupPermissionRepository.findOne({
+      where: { userGroup: group, permissionName },
     });
 
-    return await this.userGroupPermissionRepository.save(permission);
+    if (!permissionExists) {
+      const permission = this.userGroupPermissionRepository.create({
+        userGroup: group,
+        permissionName,
+        canView: action === 'view',
+        canEdit: action === 'edit',
+        canCreate: action === 'create',
+        canDelete: action === 'delete',
+      });
+
+      return await this.userGroupPermissionRepository.save(permission);
+    }
+
+    return permissionExists;  // Return the existing permission if found
   }
 
   // Get all permissions for a group
