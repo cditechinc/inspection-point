@@ -25,25 +25,25 @@ import { Role } from './../../auth/role.enum';
 export class InspectionController {
   constructor(private readonly inspectionService: InspectionService) {}
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Post()
   create(@Body() createInspectionDto: CreateInspectionDTO) {
     return this.inspectionService.create(createInspectionDto);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Get()
   findAll() {
     return this.inspectionService.findAll();
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.inspectionService.findOne(id);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -58,13 +58,13 @@ export class InspectionController {
   //   return this.inspectionService.remove(id);
   // }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Patch(':id/complete-and-bill')
   completeAndBillInspection(@Param('id', ParseUUIDPipe) id: string) {
     return this.inspectionService.completeAndBillInspection(id);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Patch(':id/complete-without-billing')
   completeWithoutBilling(@Param('id', ParseUUIDPipe) id: string) {
     return this.inspectionService.completeInspectionWithoutBilling(id);

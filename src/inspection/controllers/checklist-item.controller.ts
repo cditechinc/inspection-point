@@ -22,25 +22,25 @@ import {
   export class ChecklistItemController {
     constructor(private readonly checklistItemService: ChecklistItemService) {}
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Post()
     create(@Body() createChecklistItemDto: CreateChecklistItemDTO) {
       return this.checklistItemService.create(createChecklistItemDto);
     }
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Get()
     findAll() {
       return this.checklistItemService.findAll();
     }
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Get(':id')
     findOne(@Param('id', ParseUUIDPipe) id: string) {
       return this.checklistItemService.findOne(id);
     }
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Patch(':id')
     update(
       @Param('id', ParseUUIDPipe) id: string,
@@ -49,7 +49,7 @@ import {
       return this.checklistItemService.update(id, updateChecklistItemDto);
     }
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Delete(':id')
     remove(@Param('id', ParseUUIDPipe) id: string) {
       return this.checklistItemService.remove(id);

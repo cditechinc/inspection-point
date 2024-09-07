@@ -15,7 +15,7 @@ import { QuickBooksTokenInterceptor } from './../auth/interceptor/quickbooks-tok
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Post()
   async create(@Body() createCustomerDto: CreateCustomerDto, @Request() req) {
     const user: CustomUser = req.user;
@@ -25,28 +25,28 @@ export class CustomerController {
     return this.customerService.create(createCustomerDto, user.clientId);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Get()
   async findAll(@Request() req) {
     const user: CustomUser = req.user;
     return this.customerService.findAll(user.clientId);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req) {
     const user: CustomUser = req.user;
     return this.customerService.findOne(id, user.clientId);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateCustomerDto: Partial<CreateCustomerDto>, @Request() req) {
     const user: CustomUser = req.user;
     return this.customerService.update(id, updateCustomerDto, user.clientId);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req) {
     const user: CustomUser = req.user;

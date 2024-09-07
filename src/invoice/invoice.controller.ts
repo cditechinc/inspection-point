@@ -12,27 +12,27 @@ import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 export class InvoiceController {
   constructor(private readonly invoiceService: InvoiceService) {}
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Post(':inspectionId')
   createInvoice(@Param('inspectionId') inspectionId: string, @Body() createInvoiceDto: CreateInvoiceDto) {
     return this.invoiceService.createInvoice(inspectionId, createInvoiceDto);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Get()
   async getAllInvoices() {
     return await this.invoiceService.findAllWithRelations();
   }
 
   // Route to get an invoice by ID
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Get(':id')
   async getInvoiceById(@Param('id', ParseUUIDPipe) id: string) {
     return await this.invoiceService.findOneWithRelations(id);
   }
 
   // Route to update an invoice by ID
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Patch(':id')
   async updateInvoice(
     @Param('id', ParseUUIDPipe) id: string,
@@ -42,7 +42,7 @@ export class InvoiceController {
   }
 
   // Route to delete an invoice by ID
-  @Roles(Role.Client)
+  @Roles(Role.ClientAdmin)
   @Delete(':id')
   async deleteInvoice(@Param('id', ParseUUIDPipe) id: string) {
     return await this.invoiceService.remove(id);

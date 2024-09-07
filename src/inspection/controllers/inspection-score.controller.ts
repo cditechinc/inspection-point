@@ -22,25 +22,25 @@ import {
   export class InspectionScoreController {
     constructor(private readonly inspectionScoreService: InspectionScoreService) {}
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Post()
     create(@Body() inspectionScoreDto: InspectionScoreDTO) {
       return this.inspectionScoreService.create(inspectionScoreDto);
     }
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Get()
     findAll() {
       return this.inspectionScoreService.findAll();
     }
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Get(':id')
     findOne(@Param('id', ParseUUIDPipe) id: string) {
       return this.inspectionScoreService.findOne(id);
     }
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Patch(':id')
     update(
       @Param('id', ParseUUIDPipe) id: string,
@@ -49,7 +49,7 @@ import {
       return this.inspectionScoreService.update(id, updateInspectionScoreDto);
     }
   
-    @Roles(Role.Client)
+    @Roles(Role.ClientAdmin)
     @Delete(':id')
     remove(@Param('id', ParseUUIDPipe) id: string) {
       return this.inspectionScoreService.remove(id);
