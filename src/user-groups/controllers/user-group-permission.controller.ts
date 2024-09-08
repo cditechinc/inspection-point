@@ -7,6 +7,7 @@ import {
     Body,
     UseGuards,
     Delete,
+    Patch,
   } from '@nestjs/common';
   import { UserGroupPermissionService } from './../services/user-group-permission.service';
   import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
@@ -50,7 +51,7 @@ import { UserGroupPermission } from '../entities/user-group-permission.entity';
   // }
   
     // Update permissions for a group
-    @Put(':permissionId')
+    @Patch(':permissionId')
     @Roles(Role.Admin, Role.ClientAdmin)
     async updatePermissions(
       @Param('id') groupId: string,

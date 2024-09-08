@@ -9,6 +9,7 @@ import {
     UseGuards,
     Request,
     BadRequestException,
+    Patch,
   } from '@nestjs/common';
   import { UserGroupService } from './../services/user-group.service';
   import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
@@ -47,7 +48,7 @@ import {
     }
   
     // Update a user group
-    @Put(':id')
+    @Patch(':id')
     @Roles(Role.Admin, Role.ClientAdmin)
     async update(@Param('id') id: string, @Body() updateUserGroupDto: UpdateUserGroupDto) {
       return this.userGroupService.update(id, updateUserGroupDto);

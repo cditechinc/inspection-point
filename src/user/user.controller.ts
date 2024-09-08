@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, ParseUUIDPipe, Patch, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
 import { JwtAuthGuard } from './../auth/guards/jwt-auth.guard';
@@ -6,6 +6,7 @@ import { Roles } from './../auth/decorators/roles.decorator';
 import { Role } from './../auth/role.enum';
 import { CreateAssociatedUserDto } from './dto/create-associated-user.dto';
 import { LocalAuthGuard } from './../auth/guards/local-auth.guard';
+import { UpdateAssociatedUserDto } from './dto/update-associated-user.dto';
 
 @Controller('users')
 export class UserController {
@@ -30,5 +31,30 @@ export class UserController {
     const clientId = req.user.clientId;  // Get the client ID from the authenticated client admin
     console.log(clientId)
     return this.userService.createForClientAdmin(createAssociatedUserDto, clientId);
+  }
+
+  @Patch(':id')
+  @Roles(Role.ClientAdmin)  // Only client admins can update users
+  async updateUser(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() updateAssociatedUserDto: UpdateAssociatedUserDto,
+    @Req() req: any,
+  ): Promise<User> {
+    // Get the client ID from the authenticated user
+    const clientId = req.user.clientId;
+
+    // Fetch the user to be updated
+    const userToUpdate = await this.userService.findById(id, { relations: ['client'] });
+
+    if (!userToUpdate) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Ensure the user belongs to the same client
+    if (userToUpdate.client.id !== clientId) {
+      throw new UnauthorizedException('You do not have permission to update this user');
+    }
+
+    return await this.userService.updateUser(id, updateAssociatedUserDto);
   }
 }
