@@ -22,6 +22,13 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @Get('client/associated')
+  @Roles(Role.ClientAdmin)  // Only client admins can fetch associated users
+  async getUsersByClient(@Req() req: any): Promise<User[]> {
+    const clientId = req.user.clientId;  // Get the client ID from the authenticated user
+    return this.userService.findAllByClientId(clientId);
+  }
+
   // Client admin adds new user
   @UseGuards(JwtAuthGuard)
   @Roles(Role.ClientAdmin)  // Only client admins can add users
