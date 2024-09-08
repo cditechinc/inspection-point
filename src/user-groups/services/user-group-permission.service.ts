@@ -218,10 +218,13 @@ export class UserGroupPermissionService {
   }
 
   async getGroupPermissions(groupId: string): Promise<UserGroupPermission[]> {
+
+    console.log(`Fetching permissions for group in service: ${groupId}`);
     const group = await this.userGroupRepository.findOne({
       where: { id: groupId },
       relations: ['permissions'],
     });
+    console.log('Group:', group);
     if (!group) {
       throw new NotFoundException('User group not found');
     }

@@ -27,7 +27,8 @@ export class UserGroupPermissionController {
   // Get all permissions for a group
   @Get()
   @Roles(Role.Admin, Role.ClientAdmin)
-  async getPermissions(@Param('id') groupId: string) {
+  async getPermissions(@Param('groupId') groupId: string) {
+    console.log('Getting permissions for group:', groupId);
     return this.permissionService.getGroupPermissions(groupId);
   }
 
