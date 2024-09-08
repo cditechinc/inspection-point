@@ -97,39 +97,13 @@ export class ClientService {
       await this.userService.assignUserToGroup(user.id, clientAdminsGroup.id);
 
       // Step 5: Define permissions for 'Client Admins' group
-    const assignMultiplePermissionsDto: AssignMultiplePermissionsDto = {
-      permissions: [
-        // {
-        //   resource: Resource.USERS,
-        //   actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
-        // },
-        // {
-        //   resource: Resource.GROUPS,
-        //   actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
-        // },
-        {
-          resource: Resource.CUSTOMERS,
-          actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
-        },
-        {
-          resource: Resource.ASSETS,
-          actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
-        },
-        {
-          resource: Resource.INSPECTIONS,
-          actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
-        },
-        // {
-        //   resource: Resource.SUPPORT_CASES,
-        //   actions: [Action.VIEW, Action.EDIT, Action.CREATE, Action.DELETE],
-        // },
-      ],
-    };
+    
 
     // Step 6: Assign permissions to the 'Client Admins' group
     await this.userGroupPermissionService.assignPermissions(
       clientAdminsGroup.id,
-      assignMultiplePermissionsDto,
+      { permissions: [] }, // Empty, as all permissions are assigned automatically in the function
+      true, 
     );
       // Update the client with user info and save
       client.user = user;

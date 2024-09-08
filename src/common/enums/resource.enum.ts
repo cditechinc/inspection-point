@@ -3,5 +3,6 @@ export enum Resource {
     ASSETS = 'assets',
     REPORTS = 'reports',
     CUSTOMERS = 'customers',
+    GROUPS = 'groups',
     // Add more resources as needed
   }
