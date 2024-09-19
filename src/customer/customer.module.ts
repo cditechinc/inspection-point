@@ -7,9 +7,10 @@ import { Customer } from './entities/customer.entity';
 import { ClientModule } from '../client/client.module';
 import { AuthModule } from '../auth/auth.module';
 import { Client } from '../client/entities/client.entity';
+import { UserGroupModule } from './../user-groups/user-group.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Customer, Client]), ClientModule, AuthModule],
+  imports: [TypeOrmModule.forFeature([Customer, Client]), ClientModule, AuthModule, UserGroupModule],
   providers: [CustomerService],
   controllers: [CustomerController],
   exports: [CustomerService],

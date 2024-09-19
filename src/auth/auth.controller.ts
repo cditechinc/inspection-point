@@ -30,6 +30,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req) {
+    console.log('Logged In User:', req.user);
     const ipAddress = req.ip || req.connection.remoteAddress;
     const gpsLocation = req.body.gpsLocation; // Assuming GPS location is passed in the body
     return this.authService.login(req.user, ipAddress);
@@ -45,7 +46,10 @@ export class AuthController {
     @Body() body: { email: string; password: string; gpsLocation?: string },
     @Request() req,
   ) {
-    const client = await this.clientService.findOneByEmail(body.email);
+    const client = await this.clientService.findOneByEmail(body.email, {
+      relations: ['user'],
+    });
+    console.log('Client:', client);
     if (
       !client ||
       !client.user ||
@@ -55,8 +59,9 @@ export class AuthController {
     }
 
     const ipAddress = req.ip || req.connection.remoteAddress;
-   // Generate access and refresh tokens
-  const { accessToken, refreshToken } = await this.authService.generateTokens(client);
+    // Generate access and refresh tokens
+    const { accessToken, refreshToken } =
+      await this.authService.generateTokens(client);
     const sessionToken = await this.authService.createClientSession(
       client,
       ipAddress,
@@ -84,6 +89,57 @@ export class AuthController {
       client,
     };
   }
+  // @Post('client/login')
+  // async loginClient(
+  //   @Body() body: { email: string; password: string; gpsLocation?: string },
+  //   @Request() req,
+  // ) {
+  //   // First fetch the user
+  //   const user = await this.userService.findByEmail(body.email, {
+  //     relations: ['client'],
+  //   });
+
+  //   if (!user) {
+  //     throw new UnauthorizedException('User not found');
+  //   }
+
+  //   if (!(await bcrypt.compare(body.password, user.password_hash))) {
+  //     throw new UnauthorizedException('Invalid credentials');
+  //   }
+
+  //   // Fetch the associated client from the user
+  //   const client = user.client;
+
+  //   if (!client) {
+  //     throw new UnauthorizedException('Client not found');
+  //   }
+
+  //   const ipAddress = req.ip || req.connection.remoteAddress;
+  //   const { accessToken, refreshToken } =
+  //     await this.authService.generateTokens(client);
+  //   const sessionToken = await this.authService.createClientSession(
+  //     client,
+  //     ipAddress,
+  //   );
+
+  //   // Update client's last login details
+  //   await this.userService.update(user.id, {
+  //     last_login: new Date(),
+  //     last_login_ip: ipAddress,
+  //     last_gps_location: body.gpsLocation,
+  //   });
+
+  //   // Record client IP and log login action
+  //   await this.authService.recordClientIP(user.id, ipAddress);
+  //   await this.authService.logClientAction(user.id, 'login', { ipAddress });
+
+  //   return {
+  //     access_token: accessToken,
+  //     refresh_token: refreshToken,
+  //     session_token: sessionToken,
+  //     client,
+  //   };
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/generate')
@@ -124,8 +180,10 @@ export class AuthController {
       throw new UnauthorizedException('Refresh token is required');
     }
 
-    const userOrClient = await this.authService.verifyRefreshToken(refreshToken);
-    const { accessToken, refreshToken: newRefreshToken } = await this.authService.generateTokens(userOrClient);
+    const userOrClient =
+      await this.authService.verifyRefreshToken(refreshToken);
+    const { accessToken, refreshToken: newRefreshToken } =
+      await this.authService.generateTokens(userOrClient);
 
     return {
       access_token: accessToken,

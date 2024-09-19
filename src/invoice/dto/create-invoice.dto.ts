@@ -10,10 +10,17 @@ export class CreateInvoiceDto {
   customerId: string;
 
   @IsNotEmpty()
+  @IsUUID()
+  inspectionId: string;
+
+  @IsNotEmpty()
   @IsNumber()
   amountDue: number;
 
   @IsNotEmpty()
   @IsDateString()
   dueDate: string;
+
+  @IsNotEmpty()
+  pdfReportPath: string;
 }

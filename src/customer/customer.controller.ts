@@ -8,10 +8,11 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { CustomUser } from '../auth/interface/custom-user.interface';
 import { QuickBooksTokenInterceptor } from './../auth/interceptor/quickbooks-token.interceptor';
+import { PermissionsGuard } from './../auth/guards/permissions.guard';
 
 @Controller('client/customers')
 @UseInterceptors(QuickBooksTokenInterceptor)
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 

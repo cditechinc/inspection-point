@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as OAuthClient from 'intuit-oauth';
 import { ClientService } from './../client/client.service';
@@ -50,52 +50,57 @@ export class QuickBooksOAuthService {
 
   async refreshTokenIfNeeded(clientId: string): Promise<void> {
     const client = await this.clientService.findOne(clientId);
-  
+
     if (!client || !client.quickbooksAccessToken || !client.quickbooksRealmId) {
       throw new Error('Client is not authorized with QuickBooks');
     }
-  
+
     const currentTime = new Date().getTime();
-    const tokenExpirationTime = new Date(client.quickbooksTokenExpiresIn).getTime();
-  
+    const tokenExpirationTime = new Date(
+      client.quickbooksTokenExpiresIn,
+    ).getTime();
+
     // Refresh the token if it will expire in the next 5 minutes
     if (currentTime >= tokenExpirationTime - 5 * 60 * 1000) {
       try {
-        const tokenResponse = await this.oauthClient.refreshUsingToken(client.quickbooksRefreshToken);
-  
+        const tokenResponse = await this.oauthClient.refreshUsingToken(
+          client.quickbooksRefreshToken,
+        );
+
         // Update the client with the new token details
         const updateClientDto = {
           quickbooksAccessToken: tokenResponse.token.access_token,
           quickbooksRefreshToken: tokenResponse.token.refresh_token,
-          quickbooksTokenExpiresIn: new Date(currentTime + tokenResponse.token.expires_in * 1000),
+          quickbooksTokenExpiresIn: new Date(
+            currentTime + tokenResponse.token.expires_in * 1000,
+          ),
         };
-  
+
         await this.clientService.update(client.id, updateClientDto);
       } catch (error) {
-        throw new InternalServerErrorException(`Failed to refresh QuickBooks token: ${error.message}`);
+        throw new InternalServerErrorException(
+          `Failed to refresh QuickBooks token: ${error.message}`,
+        );
       }
     }
   }
-  
 
   async createCustomer(clientId: string, customerData: any) {
-
     await this.refreshTokenIfNeeded(clientId);
-
+  
     const client = await this.clientService.findOne(clientId);
-
+  
     if (!client || !client.quickbooksAccessToken || !client.quickbooksRealmId) {
-      throw new Error('Client is not authorized with QuickBooks');
+      throw new InternalServerErrorException('Client is not authorized with QuickBooks');
     }
-
-    // Set the OAuth 2.0 token
+  
     this.oauthClient.setToken({
       token_type: 'bearer',
       access_token: client.quickbooksAccessToken,
       refresh_token: client.quickbooksRefreshToken,
       realmId: client.quickbooksRealmId,
     });
-
+  
     try {
       const response = await this.oauthClient.makeApiCall({
         url: `${this.oauthClient.environment == 'sandbox' ? 'https://sandbox-quickbooks.api.intuit.com' : 'https://quickbooks.api.intuit.com'}/v3/company/${client.quickbooksRealmId}/customer`,
@@ -106,14 +111,24 @@ export class QuickBooksOAuthService {
         },
         body: JSON.stringify(customerData),
       });
-
+  
       if (response.json) {
         return response.json;
       } else {
-        throw new Error('Failed to create customer in QuickBooks');
+        throw new InternalServerErrorException('Failed to create customer in QuickBooks');
       }
     } catch (error) {
-      throw new Error(`QuickBooks API error: ${error.message}`);
+      if (error.response && error.response.data && error.response.data.Fault) {
+        const fault = error.response.data.Fault;
+        if (fault.Error[0].code === '6240') {
+          console.error(`Duplicate customer name error: ${fault.Error[0].Message}`);
+          throw new ConflictException(`Customer with name "${customerData.DisplayName}" already exists in QuickBooks.`);
+        }
+      }
+  
+      console.error('Error creating customer in QuickBooks:', error.response ? JSON.stringify(error.response.data, null, 2) : error.message);
+      throw new InternalServerErrorException(`QuickBooks API error: ${error.message}`);
     }
   }
+  
 }

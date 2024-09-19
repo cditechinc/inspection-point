@@ -25,25 +25,25 @@ import { Role } from './../../auth/role.enum';
 export class InspectionController {
   constructor(private readonly inspectionService: InspectionService) {}
 
-  @Roles(Role.ClientAdmin)
+  @Roles(Role.ClientAdmin, Role.Client)
   @Post()
   create(@Body() createInspectionDto: CreateInspectionDTO) {
     return this.inspectionService.create(createInspectionDto);
   }
 
-  @Roles(Role.ClientAdmin)
+  @Roles(Role.ClientAdmin, Role.Client)
   @Get()
   findAll() {
     return this.inspectionService.findAll();
   }
 
-  @Roles(Role.ClientAdmin)
-  @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.inspectionService.findOne(id);
-  }
+  // @Roles(Role.ClientAdmin, Role.Client)
+  // @Get(':id')
+  // findOne(@Param('id', ParseUUIDPipe) id: string) {
+  //   return this.inspectionService.findOne(id);
+  // }
 
-  @Roles(Role.ClientAdmin)
+  @Roles(Role.ClientAdmin, Role.Client)
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -52,21 +52,65 @@ export class InspectionController {
     return this.inspectionService.update(id, updateInspectionDto);
   }
 
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Post(':id/submit-bill')
+  async submitAndBill(
+    @Param('id') inspectionId: string,
+    @Body() { serviceFee }: { serviceFee: number },
+  ) {
+    return this.inspectionService.submitAndBillCustomer(
+      inspectionId,
+      serviceFee,
+    );
+  }
+
   // @Roles(Role.Client)
   // @Delete(':id')
   // remove(@Param('id', ParseUUIDPipe) id: string) {
   //   return this.inspectionService.remove(id);
   // }
 
-  @Roles(Role.ClientAdmin)
+  @Roles(Role.ClientAdmin, Role.Client)
   @Patch(':id/complete-and-bill')
   completeAndBillInspection(@Param('id', ParseUUIDPipe) id: string) {
     return this.inspectionService.completeAndBillInspection(id);
   }
 
-  @Roles(Role.ClientAdmin)
+  @Roles(Role.ClientAdmin, Role.Client)
   @Patch(':id/complete-without-billing')
   completeWithoutBilling(@Param('id', ParseUUIDPipe) id: string) {
     return this.inspectionService.completeInspectionWithoutBilling(id);
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Patch(':id/complete-and-add-to-invoice')
+  completeAndAddToInvoice(@Param('id', ParseUUIDPipe) id: string) {
+    return this.inspectionService.completeAndAddToExistingInvoice(id);
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Post(':id/submit-dont-bill')
+  async submitAndDontBill(
+    @Param('id', ParseUUIDPipe) inspectionId: string,
+    @Body() { serviceFee }: { serviceFee: number },
+  ) {
+    return this.inspectionService.submitAndDontBillCustomer(
+      inspectionId,
+      serviceFee,
+    );
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Post(':id/add-to-existing-invoice')
+  async submitAndAddToExistingInvoice(
+    @Param('id', ParseUUIDPipe) inspectionId: string,
+    @Body()
+    { invoiceId, serviceFee }: { invoiceId: string; serviceFee: number },
+  ) {
+    return this.inspectionService.submitAndAddToExistingInvoice(
+      inspectionId,
+      invoiceId,
+      serviceFee,
+    );
   }
 }

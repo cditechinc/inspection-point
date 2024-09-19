@@ -4,6 +4,10 @@ export class CreateChecklistItemDTO {
 
   @IsString()
   @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
   description: string;
 
   @IsBoolean()
@@ -12,6 +16,11 @@ export class CreateChecklistItemDTO {
 }
 
 export class UpdateChecklistItemDTO {
+
+  @IsString()
+  @IsOptional()
+  name?: string;
+
   @IsString()
   @IsOptional()
   description?: string;
@@ -23,6 +32,7 @@ export class UpdateChecklistItemDTO {
 
 export class ChecklistItemDTO {
   id: string;
+  name: string;
   description: string;
   isCompleted: boolean;
   createdAt: Date;

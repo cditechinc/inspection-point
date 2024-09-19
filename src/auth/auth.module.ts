@@ -20,6 +20,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { QuickBooksStrategy } from './strategies/quickbooks.strategy';
 import { QuickBooksOAuthService } from './quickbooks-oauth.service';
 import { UserGroupModule } from './../user-groups/user-group.module';
+import { PermissionsGuard } from './guards/permissions.guard';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { UserGroupModule } from './../user-groups/user-group.module';
     TypeOrmModule.forFeature([User, UserSession, UserIP, Log]),
     forwardRef(() => ClientModule),
     AwsModule,
-    UserGroupModule,
+    forwardRef(() => UserGroupModule),
   ],
   providers: [
     AuthService,
@@ -44,10 +45,11 @@ import { UserGroupModule } from './../user-groups/user-group.module';
     LocalStrategy,
     JwtStrategy,
     RolesGuard,
+    PermissionsGuard,
     QuickBooksStrategy,
     QuickBooksOAuthService,
   ],
   controllers: [AuthController],
-  exports: [AuthService, UserService, RolesGuard, JwtModule, QuickBooksOAuthService],
+  exports: [AuthService, UserService, RolesGuard, JwtModule, QuickBooksOAuthService, PermissionsGuard],
 })
 export class AuthModule {}

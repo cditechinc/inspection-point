@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AssetsService } from './services/assets.service';
 import { AssetsController } from './controllers/assets.controller';
@@ -19,6 +19,8 @@ import { AssetTypesController } from './controllers/asset-types.controller';
 import { PhotosController } from './controllers/photos.controller';
 import { AwsModule } from './../aws/aws.module';
 import { Customer } from './../customer/entities/customer.entity';
+import { AuthModule } from './../auth/auth.module';
+import { UserGroupModule } from './../user-groups/user-group.module';
 
 @Module({
   imports: [
@@ -32,7 +34,9 @@ import { Customer } from './../customer/entities/customer.entity';
       User,
       Customer
     ]),
-    AwsModule
+    AwsModule,
+    forwardRef(() => AuthModule),
+    UserGroupModule
   ],
   controllers: [
     AssetsController,

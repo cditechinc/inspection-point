@@ -78,6 +78,9 @@ export class Inspection {
   })
   status: InspectionStatus;
 
+  @Column({ nullable: true }) // Allow null if the PDF hasn't been uploaded yet
+  pdfFilePath: string;
+
   @Column('timestamp')
   scheduledDate: Date;
 

@@ -18,15 +18,16 @@ import {
   import { Role } from './../../auth/role.enum';
   import { CreateUserGroupDto } from './../dto/create-user-group.dto';
   import { UpdateUserGroupDto } from './../dto/update-user-group.dto';
+import { PermissionsGuard } from './../../auth/guards/permissions.guard';
   
   @Controller('user-groups')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   export class UserGroupController {
     constructor(private readonly userGroupService: UserGroupService) {}
   
     // Get all user groups
     @Get()
-    @Roles(Role.Admin, Role.ClientAdmin)
+    @Roles(Role.ClientAdmin)
     async findAll(@Request() req) {
       const clientId = req.user.clientId;
       return this.userGroupService.findAll(clientId);

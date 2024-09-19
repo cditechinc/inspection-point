@@ -59,6 +59,7 @@ export class InspectionModuleMigration20240804123456 implements MigrationInterfa
       CREATE TABLE IF NOT EXISTS "checklist_items" (
         "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         "checklist_id" uuid REFERENCES "checklists"("id") ON DELETE CASCADE,
+        "name" varchar(255) NOT NULL DEFAULT 'Unnamed',
         "description" text,
         "is_completed" boolean DEFAULT FALSE,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

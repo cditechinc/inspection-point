@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { Client } from './entities/client.entity';
 import { RegisterClientDto } from './dto/register-client.dto';
 import { AwsService } from '../aws/aws.service';
@@ -139,12 +139,10 @@ export class ClientService {
     return client;
   }
 
-  async findOneByEmail(email: string): Promise<Client | undefined> {
-    return this.clientsRepository.findOne({
-      where: { email },
-      relations: ['user'],
-    });
+  async findOneByEmail(email: string, options?: FindOneOptions<Client>): Promise<Client | null> {
+    return this.clientsRepository.findOne({ where: { email }, relations: ['user'], ...options });
   }
+  
 
   async findOneByState(state: string): Promise<Client> {
     return this.clientsRepository.findOne({

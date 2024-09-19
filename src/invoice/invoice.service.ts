@@ -27,75 +27,7 @@ export class InvoiceService {
     private readonly inspectionService: InspectionService,
   ) {}
 
-  // async createInvoice(inspectionId: string, createInvoiceDto: CreateInvoiceDto): Promise<Invoice> {
-  //   const clientId = createInvoiceDto.clientId;
-
-  //   await this.quickBooksOAuthService.refreshTokenIfNeeded(clientId);
-
-  //   const client = await this.clientService.findOne(clientId);
-  //   const customer = await this.customerService.findOne(createInvoiceDto.customerId, clientId);
-  //   const inspection = await this.inspectionService.findOne(inspectionId);
-
-  //   if (!client || !client.quickbooksAccessToken || !client.quickbooksRealmId) {
-  //     throw new Error('Client is not authorized with QuickBooks');
-  //   }
-
-  //   const lineItem = {
-  //     Amount: createInvoiceDto.amountDue,
-  //     DetailType: 'SalesItemLineDetail',
-  //     SalesItemLineDetail: {
-  //       ItemRef: {
-  //         value: '1', // The service item in QuickBooks
-  //         name: 'Inspection Service',
-  //       },
-  //     },
-  //   };
-
-  //   const invoiceData = {
-  //     CustomerRef: {
-  //       value: customer.quickbooksCustomerId, // Now using customer
-  //     },
-  //     Line: [lineItem],
-  //     DueDate: createInvoiceDto.dueDate,
-  //     PrivateNote: `Invoice for inspection #${inspectionId}`,
-  //   };
-
-  //   try {
-  //     const qbInvoice = await this.quickBooksOAuthService.getClient().makeApiCall({
-  //       url: `${this.quickBooksOAuthService.getClient().environment == 'sandbox' ? 'https://sandbox-quickbooks.api.intuit.com' : 'https://quickbooks.api.intuit.com'}/v3/company/${client.quickbooksRealmId}/invoice`,
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         Accept: 'application/json',
-  //       },
-  //       body: JSON.stringify(invoiceData),
-  //     });
-
-  //     if (qbInvoice.json) {
-  //       const savedInvoice = this.invoiceRepository.create({
-  //         quickbooks_invoice_id: qbInvoice.json.Invoice.Id,
-  //         client: client, // Pass entity directly
-  //         customer: customer, // Pass entity directly
-  //         inspection: inspection, // Pass entity directly
-  //         status: qbInvoice.json.Invoice.Balance === 0 ? 'paid' : 'pending',
-  //         amount_due: qbInvoice.json.Invoice.TotalAmt,
-  //         amount_paid: qbInvoice.json.Invoice.TotalAmt - qbInvoice.json.Invoice.Balance,
-  //         balance: qbInvoice.json.Invoice.Balance,
-  //         due_date: qbInvoice.json.Invoice.DueDate,
-  //         quickbooks_invoice_number: qbInvoice.json.Invoice.DocNumber,
-  //         quickbooks_invoice_url: qbInvoice.json.Invoice.InvoiceLink,
-  //         quickbooks_sync_status: 'synced',
-  //       });
-
-  //       return await this.invoiceRepository.save(savedInvoice);
-  //     } else {
-  //       throw new Error('Failed to create invoice in QuickBooks');
-  //     }
-  //   } catch (error) {
-  //     throw new InternalServerErrorException(`QuickBooks API error: ${error.message}`);
-  //   }
-  // }
-
+  
   async createInvoice(
     inspectionId: string,
     createInvoiceDto: CreateInvoiceDto,
@@ -187,6 +119,49 @@ export class InvoiceService {
       );
     }
   }
+
+  async findInvoiceById(invoiceId: string): Promise<Invoice | null> {
+    return this.invoiceRepository.findOne({
+      where: { id: invoiceId },
+      relations: ['client', 'customer', 'inspection'], // Ensure relations are loaded
+    });
+  }
+  
+  async addInspectionToInvoice(
+    invoiceId: string,
+    { inspectionId, serviceFee, pdfReportPath }: { inspectionId: string; serviceFee: number; pdfReportPath: string }
+  ): Promise<Invoice> {
+    const invoice = await this.findInvoiceById(invoiceId);
+  
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+  
+    // Assuming `invoice.items` is an array of line items. If it doesn't exist, initialize it.
+    if (!invoice.items) {
+      invoice.items = [];
+    }
+  
+    // Add the new line item for the inspection service fee
+    invoice.items.push({
+      description: `Inspection Service Fee for Inspection ID ${inspectionId}`,
+      amount: serviceFee,
+    });
+  
+    // Update the total amount due and balance
+    invoice.amount_due += serviceFee;
+    invoice.balance += serviceFee;
+  
+    // Attach PDF report if applicable
+    if (pdfReportPath) {
+      invoice.quickbooks_invoice_url = pdfReportPath;
+    }
+  
+    // Save and return the updated invoice
+    return this.invoiceRepository.save(invoice);
+  }
+  
+  
 
   async findInvoiceByInspectionId(
     inspectionId: string,

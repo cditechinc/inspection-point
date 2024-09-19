@@ -22,6 +22,17 @@ export class UserGroupService {
     return await this.userGroupRepository.save(group);
   }
 
+   // Fetch all groups a user belongs to
+   async getUserGroups(userId: string): Promise<UserGroup[]> {
+    const memberships = await this.userGroupMembershipRepository.find({
+      where: { user: { id: userId } },
+      relations: ['userGroup'], // Eager load the userGroup
+    });
+
+    // Return only the user groups
+    return memberships.map((membership) => membership.userGroup);
+  }
+
   // Get all user groups for a client
   async findAll(clientId: string): Promise<UserGroup[]> {
     return await this.userGroupRepository.find({

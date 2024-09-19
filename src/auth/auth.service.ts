@@ -1,5 +1,5 @@
 // auth.service.ts
-import { forwardRef, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, forwardRef, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
@@ -15,6 +15,8 @@ import { Log } from '../user/entities/log.entity';
 import { ClientService } from '../client/client.service';
 import { Client } from '../client/entities/client.entity';
 import { JwtPayload } from './interface/jwt-payload.interface';
+import { UserGroupPermissionService } from './../user-groups/services/user-group-permission.service';
+import { UserGroupService } from './../user-groups/services/user-group.service';
 
 @Injectable()
 export class AuthService {
@@ -29,6 +31,8 @@ export class AuthService {
     private userSessionRepository: Repository<UserSession>,
     @InjectRepository(Log)
     private logRepository: Repository<Log>,
+    private readonly userGroupPermissionService: UserGroupPermissionService,
+    private readonly userGroupService: UserGroupService,
   ) {}
 
   async verifyPayload(payload: JwtPayload): Promise<User> {
@@ -286,6 +290,34 @@ export class AuthService {
     } catch (err) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+  }
+
+  // Method to check if user has permission to access a specific resource
+  async checkUserPermissions(userId: string, resource: string, action: string): Promise<boolean> {
+    // Step 1: Find the user by ID
+    const user = await this.userService.findById(userId);
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    // Step 2: Get all the groups the user belongs to
+    const userGroups = await this.userGroupService.getUserGroups(user.id);
+
+    // Step 3: Retrieve permissions for each group and check if any group has the required permission
+    for (const group of userGroups) {
+      const groupPermissions = await this.userGroupPermissionService.getGroupPermissions(group.id);
+
+      for (const permission of groupPermissions) {
+        const [resourceName, actionName] = permission.permissionName.split('_');
+        
+        // Step 4: Check if the resource and action match
+        if (resourceName === resource && actionName === action) {
+          return true; // User has the required permission
+        }
+      }
+    }
+
+    return false; // User doesn't have the required permission
   }
   
 }

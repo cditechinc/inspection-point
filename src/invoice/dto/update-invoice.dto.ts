@@ -4,6 +4,8 @@ export enum InvoiceStatus {
   PENDING = 'pending',
   PAID = 'paid',
   CANCELED = 'canceled',
+  SENT = 'sent',
+  NOT_SENT = 'not sent',
 }
 
 export class UpdateInvoiceDto {
@@ -14,6 +16,10 @@ export class UpdateInvoiceDto {
   @IsOptional()
   @IsNumber()
   amountPaid?: number;
+
+  @IsOptional()
+  @IsNumber()
+  amountDue?: number;
 
   @IsOptional()
   @IsNumber()

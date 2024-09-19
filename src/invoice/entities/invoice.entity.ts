@@ -50,6 +50,9 @@ export class Invoice {
   @Column({ type: 'varchar', length: 50 })
   quickbooks_sync_status: string;
 
+  @Column('jsonb', { nullable: true })  // Use JSONB type in PostgreSQL, or adjust based on your DB.
+  items: Array<{ description: string; amount: number }>;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 

@@ -4,7 +4,9 @@ import { ConfigService } from '@nestjs/config';
 import * as session from 'express-session';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],  // Enable verbose logging
+  });
 
   const configService = app.get(ConfigService);
 

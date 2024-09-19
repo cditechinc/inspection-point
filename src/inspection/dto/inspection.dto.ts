@@ -108,6 +108,7 @@ export class InspectionDTO {
   serviceFee: number;
   checklists: ChecklistDTO[];
   score: InspectionScoreDTO;
+  invoiceId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

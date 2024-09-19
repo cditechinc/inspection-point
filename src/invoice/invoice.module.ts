@@ -7,13 +7,17 @@ import { ClientModule } from '../client/client.module';
 import { QuickBooksOAuthService } from '../auth/quickbooks-oauth.service';
 import { CustomerModule } from './../customer/customer.module';
 import { InspectionModule } from './../inspection/inspection.module';
+import { AuthModule } from './../auth/auth.module';
+import { UserGroupModule } from './../user-groups/user-group.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Invoice]),
     ClientModule,
     CustomerModule,
+    UserGroupModule,
     forwardRef(() => InspectionModule), 
+    forwardRef(() => AuthModule)
   ],
   controllers: [InvoiceController],
   providers: [InvoiceService, QuickBooksOAuthService],

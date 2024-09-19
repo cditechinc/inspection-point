@@ -18,9 +18,10 @@ import { CreateUserGroupPermissionDto } from './../dto/create-user-group-permiss
 import { UpdateUserGroupPermissionDto } from './../dto/update-user-group-permission.dto';
 import { AssignMultiplePermissionsDto } from '../dto/assign-multiple-permissions.dto';
 import { UserGroupPermission } from '../entities/user-group-permission.entity';
+import { PermissionsGuard } from './../../auth/guards/permissions.guard';
 
 @Controller('user-groups/:groupId/permissions')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 export class UserGroupPermissionController {
   constructor(private readonly permissionService: UserGroupPermissionService) {}
 

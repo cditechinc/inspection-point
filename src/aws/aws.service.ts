@@ -89,4 +89,25 @@ export class AwsService {
       });
     });
   }
+  
+  async getPdfReport(bucket: string, key: string): Promise<Buffer> {
+    const params = {
+      Bucket: bucket,
+      Key: key,
+    };
+  
+    console.log('S3 Params:', params);
+  
+    return new Promise<Buffer>((resolve, reject) => {
+      this.s3.getObject(params, (err, data) => {
+        if (err) {
+          console.error('Error fetching PDF from S3:', err);
+          return reject(err);
+        }
+        console.log('Successfully fetched PDF from S3');
+        resolve(data.Body as Buffer);
+      });
+    });
+  }
+  
 }

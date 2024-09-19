@@ -19,6 +19,9 @@ export class ChecklistItem {
   @JoinColumn({ name: 'checklist_id' })
   checklist: Checklist;
 
+  @Column({ type: 'varchar', length: 255 })
+  name: string;
+
   @Column('text')
   description: string;
 

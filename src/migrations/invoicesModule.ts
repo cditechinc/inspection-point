@@ -20,6 +20,7 @@ export class AddInvoicesTableWithQuickBooksFields20240901123456 implements Migra
         "quickbooks_invoice_number" varchar(50),
         "quickbooks_invoice_url" varchar(255),
         "quickbooks_sync_status" varchar(50) CHECK (quickbooks_sync_status IN ('synced', 'failed')) DEFAULT 'synced',
+        "items" jsonb DEFAULT '[]',
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

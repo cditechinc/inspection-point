@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserGroup } from './entities/user-group.entity';
 import { UserGroupMembership } from './entities/user-group-membership.entity';
@@ -10,9 +10,18 @@ import { UserGroupController } from './controllers/user-group.controller';
 import { UserGroupMembershipController } from './controllers/user-group-membership.controller';
 import { UserGroupPermissionController } from './controllers/user-group-permission.controller';
 import { User } from '../user/entities/user.entity';
+import { AuthModule } from './../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserGroup, UserGroupMembership, UserGroupPermission, User])],
+  imports: [
+    TypeOrmModule.forFeature([
+      UserGroup,
+      UserGroupMembership,
+      UserGroupPermission,
+      User,
+    ]),
+    forwardRef(() => AuthModule)
+  ],
   controllers: [
     UserGroupController,
     UserGroupMembershipController,
@@ -23,6 +32,10 @@ import { User } from '../user/entities/user.entity';
     UserGroupMembershipService,
     UserGroupPermissionService,
   ],
-  exports: [UserGroupService, UserGroupMembershipService, UserGroupPermissionService],
+  exports: [
+    UserGroupService,
+    UserGroupMembershipService,
+    UserGroupPermissionService,
+  ],
 })
 export class UserGroupModule {}
