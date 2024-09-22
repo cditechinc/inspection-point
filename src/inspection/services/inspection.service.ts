@@ -128,7 +128,7 @@ export class InspectionService {
 
   async findAll(): Promise<Inspection[]> {
     return this.inspectionRepository.find({
-      relations: ['checklists', 'scores', 'client', 'customer', 'assignedTo'],
+      relations: ['checklists', 'scores', 'client', 'customer', 'assignedTo', 'asset', 'invoices'],
     });
   }
 
@@ -335,7 +335,7 @@ export class InspectionService {
     }
   
     // Use the service fee from the inspection
-    const serviceFee = inspection.serviceFee;
+    const serviceFee = Number(inspection.serviceFee);
   
     // Add the inspection details and PDF report to the existing invoice
     const updatedInvoice = await this.invoiceService.addInspectionToInvoice(

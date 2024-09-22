@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   forwardRef,
   Inject,
   Injectable,
@@ -129,6 +130,60 @@ export class InvoiceService {
     });
   }
 
+  // async addInspectionToInvoice(
+  //   invoiceId: string,
+  //   {
+  //     inspectionId,
+  //     serviceFee,
+  //     pdfReportPath,
+  //   }: { inspectionId: string; serviceFee: number; pdfReportPath: string },
+  // ): Promise<Invoice> {
+  //   console.log('Adding inspection to invoice:', inspectionId, serviceFee);
+  //   const invoice = await this.findInvoiceById(invoiceId);
+
+  //   if (!invoice) {
+  //     throw new NotFoundException('Invoice not found');
+  //   }
+
+  //   // Ensure serviceFee is a number
+  //   const numericServiceFee = Number(serviceFee);
+  //   if (isNaN(numericServiceFee)) {
+  //     throw new BadRequestException('Invalid service fee');
+  //   }
+
+  //   // Ensure invoice.amount_due and invoice.balance are numbers
+  //   const amountDue = Number(invoice.amount_due);
+  //   const balance = Number(invoice.balance);
+  //   if (isNaN(amountDue) || isNaN(balance)) {
+  //     throw new InternalServerErrorException(
+  //       'Invalid amount_due or balance value',
+  //     );
+  //   }
+
+  //   // Assuming `invoice.items` is an array of line items. If it doesn't exist, initialize it.
+  //   if (!invoice.items) {
+  //     invoice.items = [];
+  //   }
+
+  //   // Add the new line item for the inspection service fee
+  //   invoice.items.push({
+  //     description: `Inspection Service Fee for Inspection ID ${inspectionId}`,
+  //     amount: serviceFee,
+  //   });
+
+  //   // Update the total amount due and balance
+  //   invoice.amount_due = amountDue + numericServiceFee;
+  //   invoice.balance = balance + numericServiceFee;
+
+  //   // Attach PDF report if applicable
+  //   if (pdfReportPath) {
+  //     invoice.quickbooks_invoice_url = pdfReportPath;
+  //   }
+
+  //   // Save and return the updated invoice
+  //   return this.invoiceRepository.save(invoice);
+  // }
+
   async addInspectionToInvoice(
     invoiceId: string,
     {
@@ -136,36 +191,69 @@ export class InvoiceService {
       serviceFee,
       pdfReportPath,
     }: { inspectionId: string; serviceFee: number; pdfReportPath: string },
-  ): Promise<Invoice> {
+  ): Promise<any> {  // Use 'any' to allow custom response
+    console.log('Adding inspection to invoice:', inspectionId, serviceFee);
+    
     const invoice = await this.findInvoiceById(invoiceId);
-
     if (!invoice) {
       throw new NotFoundException('Invoice not found');
     }
-
-    // Assuming `invoice.items` is an array of line items. If it doesn't exist, initialize it.
+  
+    // Ensure serviceFee is a number
+    const numericServiceFee = Number(serviceFee);
+    if (isNaN(numericServiceFee)) {
+      throw new BadRequestException('Invalid service fee');
+    }
+  
+    // Ensure invoice.amount_due and invoice.balance are numbers
+    const amountDue = Number(invoice.amount_due);
+    const balance = Number(invoice.balance);
+    if (isNaN(amountDue) || isNaN(balance)) {
+      throw new InternalServerErrorException('Invalid amount_due or balance value');
+    }
+  
+    // Initialize items if not already present
     if (!invoice.items) {
       invoice.items = [];
     }
-
-    // Add the new line item for the inspection service fee
+  
+    // Add the new inspection line item to the invoice
     invoice.items.push({
       description: `Inspection Service Fee for Inspection ID ${inspectionId}`,
-      amount: serviceFee,
+      amount: numericServiceFee,
+      inspectionId,  // Associate the inspection ID
+      pdfReportPath,  // Attach the PDF report path
     });
-
+  
     // Update the total amount due and balance
-    invoice.amount_due += serviceFee;
-    invoice.balance += serviceFee;
-
+    invoice.amount_due = amountDue + numericServiceFee;
+    invoice.balance = balance + numericServiceFee;
+  
     // Attach PDF report if applicable
     if (pdfReportPath) {
       invoice.quickbooks_invoice_url = pdfReportPath;
     }
-
-    // Save and return the updated invoice
-    return this.invoiceRepository.save(invoice);
+  
+    // Save the updated invoice
+    const updatedInvoice = await this.invoiceRepository.save(invoice);
+  
+    // Fetch all inspections related to this invoice
+    const inspections = invoice.items.map(item => ({
+      inspectionId: item.inspectionId,
+      description: item.description,
+      serviceFee: item.amount,
+      pdfReportPath: item.pdfReportPath,
+    }));
+  
+    // Return a custom object containing the invoice and the inspection details
+    return {
+      invoice: updatedInvoice, // Full updated invoice
+      inspections,  // Include inspection details in the custom response
+    };
   }
+  
+  
+  
 
   async findInvoiceByInspectionId(
     inspectionId: string,

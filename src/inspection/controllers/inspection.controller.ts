@@ -37,11 +37,13 @@ export class InspectionController {
     return this.inspectionService.findAll();
   }
 
-  // @Roles(Role.ClientAdmin, Role.Client)
-  // @Get(':id')
-  // findOne(@Param('id', ParseUUIDPipe) id: string) {
-  //   return this.inspectionService.findOne(id);
-  // }
+
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Get(':id')
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.inspectionService.findOne(id);
+  }
 
   @Roles(Role.ClientAdmin, Role.Client)
   @Patch(':id')
@@ -103,7 +105,7 @@ export class InspectionController {
   async submitAndAddToExistingInvoice(
     @Param('id', ParseUUIDPipe) inspectionId: string,
     @Body()
-    { invoiceId, serviceFee }: { invoiceId: string; serviceFee: number },
+    { invoiceId }: { invoiceId: string},
   ) {
     return this.inspectionService.submitAndAddToExistingInvoice(
       inspectionId,

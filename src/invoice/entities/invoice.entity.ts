@@ -3,6 +3,12 @@ import { Client } from '../../client/entities/client.entity';
 import { Customer } from '../../customer/entities/customer.entity';
 import { Inspection } from '../../inspection/entities/inspection.entity';
 
+interface InvoiceItem {
+  description: string;
+  amount: number;
+  inspectionId?: string;  // Optional inspectionId field
+  pdfReportPath?: string; // Optional pdfReportPath field
+}
 @Entity('invoices')
 export class Invoice {
   @PrimaryGeneratedColumn('uuid')
@@ -51,7 +57,7 @@ export class Invoice {
   quickbooks_sync_status: string;
 
   @Column('jsonb', { nullable: true })  // Use JSONB type in PostgreSQL, or adjust based on your DB.
-  items: Array<{ description: string; amount: number }>;
+  items: InvoiceItem[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
