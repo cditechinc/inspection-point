@@ -10,6 +10,11 @@ export enum Resource {
     CHECKLIST_ITEMS = 'checklist-items',
     PERMISSIONS = 'permissions',
     CLIENTS = 'clients',
+    PUMP_BRANDS = 'pump-brands',
+    PUMPS = 'pumps',
+    ASSET_TYPES = 'asset-types',
+    PHOTOS = 'photos',
+    
     // USER_GROUPS = 'user-groups',
     // USER_GROUP_PERMISSIONS = 'user-group',
 
