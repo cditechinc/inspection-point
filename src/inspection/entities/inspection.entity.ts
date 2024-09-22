@@ -15,6 +15,7 @@ import { Checklist } from './checklist.entity';
 import { InspectionScore } from './inspection-score.entity';
 import { Customer } from './../../customer/entities/customer.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
+import { Photo } from './../../assets/entities/photo.entity';
 
 export enum InspectionStatus {
   NOT_DONE = 'Not-Done',
@@ -67,6 +68,9 @@ export class Inspection {
 
   @OneToMany(() => Invoice, invoice => invoice.inspection)
   invoices: Invoice[];
+
+  @OneToMany(() => Photo, (photo) => photo.inspection, { cascade: true })
+  photos: Photo[];
 
   // @Column('uuid', { nullable: true })
   // assignedTo: string;

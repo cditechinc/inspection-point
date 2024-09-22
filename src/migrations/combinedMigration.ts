@@ -190,6 +190,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
       CREATE TABLE IF NOT EXISTS "photos" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "url" character varying NOT NULL,
+        "inspection_id" uuid,
         "asset_id" uuid,
         "pump_id" uuid,
         "pump_brand_id" uuid,
@@ -222,6 +223,10 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "idx_photos_customer_id" ON "photos" ("customer_id");
+    `);
+
+    await queryRunner.query(`
+      CREATE INDEX IF NOT EXISTS "idx_photos_inspection_id" ON "photos" ("inspection_id");
     `);
 
     await queryRunner.query(`

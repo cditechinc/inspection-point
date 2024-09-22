@@ -1,5 +1,16 @@
-
-import { Controller, Post, Body, Get, Param, Patch, Delete, Request, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Patch,
+  Delete,
+  Request,
+  UseGuards,
+  UseInterceptors,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -9,12 +20,16 @@ import { Role } from '../auth/role.enum';
 import { CustomUser } from '../auth/interface/custom-user.interface';
 import { QuickBooksTokenInterceptor } from './../auth/interceptor/quickbooks-token.interceptor';
 import { PermissionsGuard } from './../auth/guards/permissions.guard';
+import { QuickBooksOAuthService } from './../auth/quickbooks-oauth.service';
 
 @Controller('client/customers')
 @UseInterceptors(QuickBooksTokenInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 export class CustomerController {
-  constructor(private readonly customerService: CustomerService) {}
+  constructor(
+    private readonly customerService: CustomerService,
+    private readonly quickBooksOAuthService: QuickBooksOAuthService,
+  ) {}
 
   @Roles(Role.ClientAdmin)
   @Post()
@@ -42,7 +57,11 @@ export class CustomerController {
 
   @Roles(Role.ClientAdmin)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateCustomerDto: Partial<CreateCustomerDto>, @Request() req) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateCustomerDto: Partial<CreateCustomerDto>,
+    @Request() req,
+  ) {
     const user: CustomUser = req.user;
     return this.customerService.update(id, updateCustomerDto, user.clientId);
   }
@@ -52,5 +71,21 @@ export class CustomerController {
   async remove(@Param('id') id: string, @Request() req) {
     const user: CustomUser = req.user;
     return this.customerService.remove(id, user.clientId);
+  }
+
+  @Roles(Role.ClientAdmin)
+  @Get('sync/:clientId')
+  async syncCustomers(@Param('clientId') clientId: string) {
+    try {
+      const customers =
+        await this.quickBooksOAuthService.syncCustomers(clientId);
+      // You can store the customers in the database here if needed
+      return { message: 'Customers synced successfully', customers };
+    } catch (error) {
+      console.error('Error syncing customers:', error.message);
+      throw new InternalServerErrorException(
+        'Failed to sync customers from QuickBooks',
+      );
+    }
   }
 }

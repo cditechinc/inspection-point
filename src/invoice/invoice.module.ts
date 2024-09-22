@@ -9,10 +9,11 @@ import { CustomerModule } from './../customer/customer.module';
 import { InspectionModule } from './../inspection/inspection.module';
 import { AuthModule } from './../auth/auth.module';
 import { UserGroupModule } from './../user-groups/user-group.module';
+import { Inspection } from './../inspection/entities/inspection.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Invoice]),
+    TypeOrmModule.forFeature([Invoice, Inspection]),
     ClientModule,
     CustomerModule,
     UserGroupModule,

@@ -60,7 +60,6 @@ export class InspectionController {
   ) {
     return this.inspectionService.submitAndBillCustomer(
       inspectionId,
-      serviceFee,
     );
   }
 
@@ -96,7 +95,6 @@ export class InspectionController {
   ) {
     return this.inspectionService.submitAndDontBillCustomer(
       inspectionId,
-      serviceFee,
     );
   }
 
@@ -110,7 +108,6 @@ export class InspectionController {
     return this.inspectionService.submitAndAddToExistingInvoice(
       inspectionId,
       invoiceId,
-      serviceFee,
     );
   }
 }

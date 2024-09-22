@@ -190,8 +190,6 @@ export class UserGroupPermissionService {
     }
   }
   
-  
-
   async assignCustomPermissions(
     groupId: string,
     assignMultiplePermissionsDto: AssignMultiplePermissionsDto,
@@ -276,28 +274,6 @@ export class UserGroupPermissionService {
     }
   }
   
-  
-
-  // async getGroupPermissions(groupId: string): Promise<UserGroupPermission[]> {
-  //   try {
-  //     const group = await this.userGroupRepository.findOne({
-  //       where: { id: groupId },
-  //       relations: ['permissions'],
-  //     });
-  
-  //     if (!group) {
-  //       throw new NotFoundException(`User group with ID ${groupId} not found`);
-  //     }
-  
-  //     return await this.userGroupPermissionRepository.find({
-  //       where: { userGroup: { id: groupId } },
-  //     });
-  //   } catch (error) {
-  //     console.error('Error fetching group permissions:', error.message);
-  //     throw new InternalServerErrorException('Failed to fetch group permissions');
-  //   }
-  // }
-
   async getGroupPermissions(groupId: string): Promise<any> {
     try {
       const group = await this.userGroupRepository.findOne({
@@ -349,8 +325,6 @@ export class UserGroupPermissionService {
       throw new InternalServerErrorException('Failed to fetch group permissions');
     }
   }
-  
-  
 
   async updatePermissions(
     id: string,
@@ -359,12 +333,43 @@ export class UserGroupPermissionService {
     const permission = await this.userGroupPermissionRepository.findOne({
       where: { id },
     });
-
+  
     if (!permission) {
       throw new NotFoundException('Permission not found');
     }
-
-    Object.assign(permission, updatePermissionDto);
+  
+    const { resource, actions } = updatePermissionDto;
+  
+    if (!Array.isArray(actions)) {
+      throw new BadRequestException('Actions should be an array');
+    }
+  
+    // Ensure we are updating the specific resource's permissions
+    if (permission.permissionName !== `manage_${resource}`) {
+      throw new BadRequestException(`Permission does not match the resource: ${resource}`);
+    }
+  
+    // Update the permission actions based on what's provided in the request
+    actions.forEach((action) => {
+      switch (action) {
+        case Action.VIEW:
+          permission.canView = true;
+          break;
+        case Action.EDIT:
+          permission.canEdit = true;
+          break;
+        case Action.CREATE:
+          permission.canCreate = true;
+          break;
+        case Action.DELETE:
+          permission.canDelete = true;
+          break;
+        default:
+          throw new BadRequestException(`Invalid action: ${action}`);
+      }
+    });
+  
     return await this.userGroupPermissionRepository.save(permission);
   }
+  
 }

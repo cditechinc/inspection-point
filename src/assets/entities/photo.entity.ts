@@ -4,6 +4,7 @@ import { Pump } from './pump.entity';
 import { PumpBrand } from './pump-brand.entity';
 import { Client } from '../../client/entities/client.entity';
 import { Customer } from '../../customer/entities/customer.entity';
+import { Inspection } from './../../inspection/entities/inspection.entity';
 
 @Entity('photos')
 export class Photo {
@@ -52,6 +53,14 @@ export class Photo {
   @ManyToOne(() => Customer, customer => customer.photos, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
+
+  @Column({ nullable: true })
+  @Index()
+  inspectionId?: string;
+
+  @ManyToOne(() => Inspection, inspection => inspection.photos, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'inspection_id' })
+  inspection: Inspection;
 
   @CreateDateColumn()
   createdAt: Date;

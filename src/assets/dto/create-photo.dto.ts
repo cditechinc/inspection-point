@@ -38,6 +38,10 @@ export class CreatePhotoDto {
   @IsUUID()
   customerId?: string;
 
+  @IsOptional()
+  @IsUUID()
+  inspectionId: string;
+
   @IsNotEmpty()
   @IsString()
   clientId: string;

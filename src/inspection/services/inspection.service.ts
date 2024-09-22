@@ -242,14 +242,22 @@ export class InspectionService {
         throw new NotFoundException('PDF report not found in S3 bucket');
       }
 
+      let imagePaths: string[] = [];
+      for (const photo of inspection.photos) {
+        imagePaths.push(photo.url); // Assuming the photo URLs are already stored in S3
+      }
+      console.log('Image Paths:', imagePaths);
+
       // Prepare the invoice data
       const invoiceData = {
         inspectionId: inspection.id,
         clientId: inspection.client.id,
         customerId: inspection.customer.id,
+        quickbooksCustomerId: inspection.customer.quickbooksCustomerId,
         amountDue: inspection.serviceFee,
         dueDate: new Date().toISOString(),
         pdfReportPath: pdfReportPath.toString(),
+        imagePaths,
       };
 
       console.log(
@@ -298,49 +306,56 @@ export class InspectionService {
   async submitAndAddToExistingInvoice(
     inspectionId: string,
     invoiceId: string,
-    serviceFee: number,
   ) {
+    // Fetch the inspection by its ID
     const inspection = await this.inspectionRepository.findOne({
       where: { id: inspectionId },
     });
-
+  
     if (!inspection) {
       throw new NotFoundException('Inspection not found');
     }
-
+  
     // Fetch the existing invoice
-    const existingInvoice =
-      await this.invoiceService.findInvoiceById(invoiceId);
+    const existingInvoice = await this.invoiceService.findInvoiceById(invoiceId);
     console.log('Invoice Status:', existingInvoice?.status); // Log the status of the invoice
-    if (!existingInvoice || (existingInvoice.status !== 'pending' && existingInvoice.status !== 'Not Sent')) {
+  
+    if (
+      !existingInvoice ||
+      (existingInvoice.status !== 'pending' && existingInvoice.status !== 'Not Sent')
+    ) {
       throw new BadRequestException('Invalid invoice or invoice already sent');
     }
-
+  
     // Fetch the PDF report from the S3 bucket
     const pdfReportPath = await this.pdfService.fetchPdfReport(inspection.id);
-
+  
     if (!pdfReportPath) {
       throw new NotFoundException('PDF report not found in S3 bucket');
     }
-
-    // Add the service fee and PDF report to the existing invoice
+  
+    // Use the service fee from the inspection
+    const serviceFee = inspection.serviceFee;
+  
+    // Add the inspection details and PDF report to the existing invoice
     const updatedInvoice = await this.invoiceService.addInspectionToInvoice(
       invoiceId,
       {
         inspectionId,
-        serviceFee,
+        serviceFee, // Using serviceFee from inspection
         pdfReportPath,
       },
     );
-
+  
     // Mark the inspection as Complete Billed
     if (updatedInvoice) {
       inspection.status = InspectionStatus.COMPLETE_BILLED;
       await this.inspectionRepository.save(inspection);
     }
-
+  
     return updatedInvoice;
   }
+  
 
   async completeAndAddToExistingInvoice(inspectionId: string): Promise<any> {
     const inspection = await this.findOne(inspectionId);
@@ -417,11 +432,11 @@ export class InspectionService {
     await this.inspectionRepository.save(inspection);
   }
 
-  async submitAndBillCustomer(inspectionId: string, serviceFee: number) {
-    // Fetch the inspection by its ID, including relations with client and customer
+  async submitAndBillCustomer(inspectionId: string) {
+    // Fetch the inspection by its ID, including relations with client, customer, and photos
     const inspection = await this.inspectionRepository.findOne({
       where: { id: inspectionId },
-      relations: ['client', 'customer'],
+      relations: ['client', 'customer', 'photos'], // Include photos relation here
     });
 
     // Check if the inspection exists
@@ -429,25 +444,33 @@ export class InspectionService {
       throw new NotFoundException('Inspection not found');
     }
 
+    const quickbooksCustomerId = inspection.customer.quickbooksCustomerId;
+    const localCustomerId = inspection.customer.id;
+    if (!quickbooksCustomerId) {
+      throw new InternalServerErrorException('QuickBooks Customer ID is missing');
+    }
+
     // Fetch the PDF report from the S3 bucket
     let pdfReportPath: string;
+    let imagePaths: string[] = [];
+
     try {
       console.log('Fetching PDF report for inspection:', inspectionId);
-      const pdfReportBuffer = await this.pdfService.fetchPdfReport(
-        // inspection.client.id,
+      const pdfReportBuffer  = await this.pdfService.fetchPdfReport(
         inspection.id,
       );
 
-      console.log('PDF Report Buffer:', pdfReportBuffer);
-
-      // If the PDF report is returned as a Buffer, convert it to a string
-      // pdfReportPath = pdfReportBuffer?.toString('utf-8');
-
-      console.log('PDF Report Path:', pdfReportPath);
+      pdfReportPath = pdfReportBuffer.toString();
 
       if (!pdfReportPath) {
         throw new NotFoundException('PDF report not found in S3 bucket');
       }
+
+      // Iterate through the inspection photos and collect image URLs
+      for (const photo of inspection.photos) {
+        imagePaths.push(photo.url); // Assuming the photo URLs are stored in the S3 bucket
+      }
+      console.log('Image Paths:', imagePaths);
     } catch (error) {
       // Handle the case where the PDF report is missing from S3
       if (error.code === 'NoSuchKey') {
@@ -463,11 +486,13 @@ export class InspectionService {
     // Create the invoice in QuickBooks using the InvoiceService
     const invoiceData: CreateInvoiceDto = {
       clientId: inspection.client.id,
-      customerId: inspection.customer.id,
+      customerId: localCustomerId,
+      quickbooksCustomerId: quickbooksCustomerId,
       inspectionId,
-      amountDue: serviceFee,
+      amountDue: inspection.serviceFee, // Use the service fee from the inspection
       dueDate: new Date().toISOString(), // Set the due date to now, customize as needed
       pdfReportPath, // Attach the PDF report path
+      imagePaths, // Attach the image paths
     };
 
     try {
@@ -482,7 +507,20 @@ export class InspectionService {
       // If QuickBooks responds successfully, mark the inspection as billed
       if (invoice.quickbooks_invoice_id) {
         inspection.status = InspectionStatus.COMPLETE_BILLED;
-        await this.inspectionRepository.save(inspection);
+        await this.inspectionRepository.save({
+          ...inspection,
+          customerId: localCustomerId, // Use UUID here for PostgreSQL
+        });
+
+        // Send the invoice via QuickBooks, including the PDF and images as attachments
+        // await this.invoiceService.sendInvoiceWithAttachments(
+        //   invoice.quickbooks_invoice_id,
+        //   inspection.client.id,
+        //   inspection.id,
+        //   pdfReportPath,
+        //   imagePaths,
+        // );
+
         return invoice; // Return the created invoice
       } else {
         throw new BadRequestException('Failed to create invoice in QuickBooks');
@@ -500,9 +538,10 @@ export class InspectionService {
         'Failed to create invoice in QuickBooks',
       );
     }
-  }
+}
 
-  async submitAndDontBillCustomer(inspectionId: string, serviceFee: number) {
+
+  async submitAndDontBillCustomer(inspectionId: string) {
     const inspection = await this.inspectionRepository.findOne({
       where: { id: inspectionId },
       relations: ['client', 'customer'],
@@ -523,10 +562,12 @@ export class InspectionService {
     const invoiceData: CreateInvoiceDto = {
       clientId: inspection.client.id,
       customerId: inspection.customer.id,
+      quickbooksCustomerId: inspection.customer.quickbooksCustomerId,
       inspectionId,
-      amountDue: serviceFee,
+      amountDue: inspection.serviceFee,
       dueDate: new Date().toISOString(), // Set a due date
-      pdfReportPath: pdfReportPath.toString(), // Attach the PDF report as a string
+      pdfReportPath: pdfReportPath.toString(),
+      imagePaths: [], // No images for this invoice
     };
 
     // Create the invoice in QuickBooks using the InvoiceService without sending the email

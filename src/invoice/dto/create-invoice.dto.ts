@@ -1,9 +1,13 @@
-import { IsNotEmpty, IsNumber, IsUUID, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsUUID, IsDateString, IsString } from 'class-validator';
 
 export class CreateInvoiceDto {
   @IsNotEmpty()
   @IsUUID()
   clientId: string;
+
+  @IsNotEmpty()
+  @IsString()  // QuickBooks customer ID is typically a string
+  quickbooksCustomerId: string;
 
   @IsNotEmpty()
   @IsUUID()
@@ -23,4 +27,7 @@ export class CreateInvoiceDto {
 
   @IsNotEmpty()
   pdfReportPath: string;
+
+  @IsNotEmpty()
+  imagePaths: string[];
 }

@@ -8,7 +8,7 @@ export class Invoice {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ type: 'varchar', nullable: true }) // or 'int' if it's a number
   quickbooks_invoice_id: string;
 
   // Many invoices can belong to one client

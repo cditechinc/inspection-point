@@ -1,19 +1,7 @@
-import { IsBoolean, IsOptional } from 'class-validator';
-
 export class UpdateUserGroupPermissionDto {
-  @IsBoolean()
-  @IsOptional()
-  canView?: boolean;
 
-  @IsBoolean()
-  @IsOptional()
-  canEdit?: boolean;
+  resource: string;
 
-  @IsBoolean()
-  @IsOptional()
-  canCreate?: boolean;
+  actions: string[];
 
-  @IsBoolean()
-  @IsOptional()
-  canDelete?: boolean;
 }

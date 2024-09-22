@@ -72,10 +72,11 @@ export class UserGroupPermissionController {
   @Patch(':permissionId')
   @Roles(Role.Admin, Role.ClientAdmin)
   async updatePermissions(
-    @Param('id') groupId: string,
+    @Param('groupId') groupId: string,
     @Param('permissionId') permissionId: string,
     @Body() updatePermissionDto: UpdateUserGroupPermissionDto,
-  ) {
+  ): Promise<UserGroupPermission> {
+    console.log(`Updating permission ${permissionId} for group ${groupId}`);
     return this.permissionService.updatePermissions(
       permissionId,
       updatePermissionDto,

@@ -12,6 +12,7 @@ import { AwsService } from './../../aws/aws.service';
 import * as multer from 'multer';
 import { Client } from './../../client/entities/client.entity';
 import { Asset } from '../entities/asset.entity';
+import { Inspection } from './../../inspection/entities/inspection.entity';
 
 @Injectable()
 export class PhotosService {
@@ -41,6 +42,13 @@ export class PhotosService {
       });
       if (!assetExists) {
         throw new BadRequestException('Invalid asset ID');
+      }
+    } else if (createPhotoDto.inspectionId) {
+      const inspectionExists = await this.photosRepository.manager.findOne(Inspection, {
+        where: { id: createPhotoDto.inspectionId },
+      });
+      if (!inspectionExists) {
+        throw new BadRequestException('Invalid inspection ID');
       }
     }
 
@@ -136,11 +144,12 @@ export class PhotosService {
 
   private getEntityType(
     dto: CreatePhotoDto | UpdatePhotoDto,
-  ): 'asset' | 'pump' | 'pumpBrand' | 'customer' {
+  ): 'asset' | 'pump' | 'pumpBrand' | 'customer' | 'inspection' {
     if (dto.assetId) return 'asset';
     if (dto.pumpId) return 'pump';
     if (dto.pumpBrandId) return 'pumpBrand';
     if (dto.customerId) return 'customer';
+    if (dto.inspectionId) return 'inspection';
     throw new BadRequestException(
       'Invalid entity type: At least one of assetId, pumpId, pumpBrandId, or customerId must be provided',
     );
