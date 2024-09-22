@@ -7,6 +7,22 @@ export class InspectionModuleMigration20240804123456 implements MigrationInterfa
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
     await queryRunner.query(`
+
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'inspection_status_enum') THEN
+          CREATE TYPE inspection_status_enum AS ENUM (
+            'Not-Done', 
+            'Started Not Finished', 
+            'Past-Due', 
+            'Complete Billed', 
+            'Complete Not-Billed', 
+            'On-Hold', 
+            'Canceled'
+          );
+        END IF;
+      $$;
+
       CREATE TABLE IF NOT EXISTS "inspections" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "client_id" uuid REFERENCES "clients"("id") ON DELETE CASCADE,
