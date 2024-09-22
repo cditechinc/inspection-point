@@ -1,28 +1,28 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InspectionModuleMigration20240804123456 implements MigrationInterface {
+export class InspectionModuleMigration20240804123456
+  implements MigrationInterface
+{
   name = 'InspectionModuleMigration20240804123456';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
     await queryRunner.query(`
-
       DO $$
       BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'inspection_status_enum') THEN
           CREATE TYPE inspection_status_enum AS ENUM (
-            'Not-Done', 
-            'Started Not Finished', 
-            'Past-Due', 
-            'Complete Billed', 
-            'Complete Not-Billed', 
-            'On-Hold', 
+            'Not-Done',
+            'Started Not Finished',
+            'Past-Due',
+            'Complete Billed',
+            'Complete Not-Billed',
+            'On-Hold',
             'Canceled'
           );
         END IF;
       $$;
-
       CREATE TABLE IF NOT EXISTS "inspections" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "client_id" uuid REFERENCES "clients"("id") ON DELETE CASCADE,
@@ -83,7 +83,6 @@ export class InspectionModuleMigration20240804123456 implements MigrationInterfa
       );
     `);
 
-  
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "idx_checklist_items_checklist_id" ON "checklist_items" ("checklist_id");  
     `);
@@ -113,19 +112,33 @@ export class InspectionModuleMigration20240804123456 implements MigrationInterfa
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_inspection_scores_inspection_id";`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_inspection_scores_inspection_id";`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "InspectionScores";`);
 
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_checklist_items_checklist_id";`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_checklist_items_checklist_id";`,
+    );
     await queryRunner.query(`DROP TABLE IF NOT EXISTS "ChecklistItems";`);
 
-    await queryRunner.query(`DROP INDEX IF NOT EXISTS "idx_checklists_inspection_id";`);
+    await queryRunner.query(
+      `DROP INDEX IF NOT EXISTS "idx_checklists_inspection_id";`,
+    );
     await queryRunner.query(`DROP TABLE IF NOT EXISTS "Checklists";`);
 
-    await queryRunner.query(`DROP INDEX IF NOT EXISTS "idx_inspections_assigned_to";`);
-    await queryRunner.query(`DROP INDEX IF NOT EXISTS "idx_inspections_asset_id";`);
-    await queryRunner.query(`DROP INDEX IF NOT EXISTS "idx_inspections_customer_id";`);
-    await queryRunner.query(`DROP INDEX IF NOT EXISTS "idx_inspections_client_id";`);
+    await queryRunner.query(
+      `DROP INDEX IF NOT EXISTS "idx_inspections_assigned_to";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF NOT EXISTS "idx_inspections_asset_id";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF NOT EXISTS "idx_inspections_customer_id";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF NOT EXISTS "idx_inspections_client_id";`,
+    );
     await queryRunner.query(`DROP TABLE IF NOT EXISTS "Inspections";`);
   }
 }
