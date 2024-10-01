@@ -27,6 +27,9 @@ export class UserGroup {
   @OneToMany(() => UserGroupPermission, (permission) => permission.userGroup)
   permissions: UserGroupPermission[];
 
+  @Column({ type: 'varchar', length: 7, nullable: true }) // New color column
+  color: string;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 

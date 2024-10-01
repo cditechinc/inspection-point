@@ -9,6 +9,7 @@ export class AddSecurityGroupsAndPermissions20240905123456 implements MigrationI
       CREATE TABLE IF NOT EXISTS "user_groups" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "name" VARCHAR(255) NOT NULL,
+        "color" VARCHAR(7) DEFAULT '#FFFFFF';
         "client_id" uuid REFERENCES "clients"("id") ON DELETE CASCADE,
         "description" TEXT,
         "is_default_admin_group" BOOLEAN DEFAULT FALSE,

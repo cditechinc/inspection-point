@@ -10,4 +10,9 @@ export class UpdateUserGroupDto {
   @IsOptional()
   @MaxLength(500)
   description?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(7)
+  color?: string;
 }

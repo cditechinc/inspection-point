@@ -14,4 +14,9 @@ export class CreateUserGroupDto {
   @IsBoolean()
   @IsOptional()
   isDefaultAdminGroup?: boolean;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(7)
+  color?: string; 
 }
