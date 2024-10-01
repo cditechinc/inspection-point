@@ -50,6 +50,12 @@ import {
 
     @Column('jsonb', { name: 'pump_scores' })
     pumpScores: object;
+
+    @Column('varchar', { length: 10, name: 'overall_score' })
+    overallScore: string;
+
+    @Column('boolean', { name: 'cleaning' })
+    cleaning: boolean;
   
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

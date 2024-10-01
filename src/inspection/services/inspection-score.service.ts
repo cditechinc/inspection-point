@@ -25,6 +25,8 @@ export class InspectionScoreService {
       thermalsScore: inspectionScoreDto.thermalsScore,
       floatScores: inspectionScoreDto.floatScores,
       pumpScores: inspectionScoreDto.pumpScores,
+      overallScore: inspectionScoreDto.overallScore,
+      cleaning: inspectionScoreDto.cleaning,
     };
 
     const createdInspectionScore = this.inspectionScoreRepository.create(inspectionScore);
@@ -61,6 +63,8 @@ export class InspectionScoreService {
       thermalsScore: updateInspectionScoreDto.thermalsScore,
       floatScores: updateInspectionScoreDto.floatScores,
       pumpScores: updateInspectionScoreDto.pumpScores,
+      overallScore: updateInspectionScoreDto.overallScore,
+      cleaning: updateInspectionScoreDto.cleaning,
     };
 
     this.inspectionScoreRepository.merge(inspectionScore, updatedData);

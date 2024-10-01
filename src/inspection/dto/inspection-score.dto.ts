@@ -36,6 +36,12 @@ export class InspectionScoreDTO {
 
   @IsJSON()
   pumpScores: object;
+
+  @IsString()
+  overallScore: string;
+
+  @IsOptional()
+  cleaning: boolean;
 }
 
 export class UpdateInspectionScoreDTO {
@@ -82,4 +88,11 @@ export class UpdateInspectionScoreDTO {
   @IsJSON()
   @IsOptional()
   pumpScores?: object;
+
+  @IsString()
+  @IsOptional()
+  overallScore?: string;
+
+  @IsOptional()
+  cleaning?: boolean;
 }

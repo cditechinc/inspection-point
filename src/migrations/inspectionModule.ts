@@ -253,6 +253,8 @@ export class InspectionModuleMigration20240804123456
         "thermals_score" varchar(10),
         "float_scores" jsonb,
         "pump_scores" jsonb,
+        "overallScore" varchar(10),
+        "cleaning" boolean DEFAULT FALSE,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
