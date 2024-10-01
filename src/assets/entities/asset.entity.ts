@@ -22,7 +22,7 @@ export class Asset {
   name: string;
 
   @ManyToOne(() => AssetType)
-  type: AssetType;
+  assetType: AssetType;
 
   @Column({ nullable: true })
   location: string;

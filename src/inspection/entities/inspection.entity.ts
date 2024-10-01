@@ -57,6 +57,17 @@ export class Inspection {
   @JoinColumn({ name: 'assigned_to' })
   assignedTo: User;
 
+  @Column('boolean', { default: false })
+  inspectionPassed: boolean; 
+
+  @Column('boolean', { default: false })
+  isRecurring: boolean; 
+
+  @Column('int', { nullable: true })
+  intervalInDays: number; 
+  @Column('timestamp', { nullable: true })
+  recurrenceEndDate: Date;
+
   @OneToMany(() => Checklist, (checklist) => checklist.inspection)
   checklists: Checklist[];
 

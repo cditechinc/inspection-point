@@ -37,8 +37,6 @@ export class InspectionController {
     return this.inspectionService.findAll();
   }
 
-
-
   @Roles(Role.ClientAdmin, Role.Client)
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
@@ -60,9 +58,7 @@ export class InspectionController {
     @Param('id') inspectionId: string,
     @Body() { serviceFee }: { serviceFee: number },
   ) {
-    return this.inspectionService.submitAndBillCustomer(
-      inspectionId,
-    );
+    return this.inspectionService.submitAndBillCustomer(inspectionId);
   }
 
   // @Roles(Role.Client)
@@ -95,9 +91,7 @@ export class InspectionController {
     @Param('id', ParseUUIDPipe) inspectionId: string,
     @Body() { serviceFee }: { serviceFee: number },
   ) {
-    return this.inspectionService.submitAndDontBillCustomer(
-      inspectionId,
-    );
+    return this.inspectionService.submitAndDontBillCustomer(inspectionId);
   }
 
   @Roles(Role.ClientAdmin, Role.Client)
@@ -105,11 +99,41 @@ export class InspectionController {
   async submitAndAddToExistingInvoice(
     @Param('id', ParseUUIDPipe) inspectionId: string,
     @Body()
-    { invoiceId }: { invoiceId: string},
+    { invoiceId }: { invoiceId: string },
   ) {
     return this.inspectionService.submitAndAddToExistingInvoice(
       inspectionId,
       invoiceId,
     );
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Get('/history/client/:clientId')
+  getClientInspectionHistory(
+    @Param('clientId', ParseUUIDPipe) clientId: string,
+  ) {
+    return this.inspectionService.getClientInspectionHistory(clientId);
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Get('/history/customer/:customerId')
+  getCustomerInspectionHistory(
+    @Param('customerId', ParseUUIDPipe) customerId: string,
+  ) {
+    return this.inspectionService.getCustomerInspectionHistory(customerId);
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Get('/history/asset/:assetId')
+  getAssetInspectionHistory(@Param('assetId', ParseUUIDPipe) assetId: string) {
+    return this.inspectionService.getAssetInspectionHistory(assetId);
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Get('/history/asset-type/:assetTypeId')
+  getAssetTypeInspectionHistory(
+    @Param('assetTypeId', ParseUUIDPipe) assetTypeId: string,
+  ) {
+    return this.inspectionService.getAssetTypeInspectionHistory(assetTypeId);
   }
 }

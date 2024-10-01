@@ -13,7 +13,7 @@ export class CreateAssetDto {
 
   @IsOptional()
   @IsUUID()
-  type?: string;
+  assetType?: string;
 
   @IsOptional()
   @IsString()

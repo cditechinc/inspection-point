@@ -1,4 +1,4 @@
-import { IsUUID, IsString, IsNotEmpty, IsOptional, IsEnum, IsDecimal, IsDate, IsArray, ValidateNested } from 'class-validator';
+import { IsUUID, IsString, IsNotEmpty, IsOptional, IsEnum, IsDecimal, IsDate, IsArray, ValidateNested, IsBoolean, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ChecklistDTO } from './checklist.dto';
 import { InspectionScoreDTO } from './inspection-score.dto';
@@ -43,6 +43,22 @@ export class CreateInspectionDTO {
   @IsDecimal()
   serviceFee: number;
 
+  @IsBoolean()
+  @IsOptional()
+  inspectionPassed?: boolean; // Track if the inspection passed
+
+  @IsBoolean()
+  @IsOptional()
+  isRecurring?: boolean; // Whether the inspection is recurring
+
+  @IsOptional()
+  @IsInt()
+  intervalInDays?: number; // The frequency of the inspection in days
+
+  @IsOptional()
+  @IsDate()
+  recurrenceEndDate?: Date;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChecklistDTO)
@@ -82,6 +98,22 @@ export class UpdateInspectionDTO {
   @IsDecimal()
   serviceFee?: number;
 
+  @IsBoolean()
+  @IsOptional()
+  inspectionPassed?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isRecurring?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  intervalInDays?: number;
+
+  @IsOptional()
+  @IsDate()
+  recurrenceEndDate?: Date;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChecklistDTO)
@@ -106,6 +138,10 @@ export class InspectionDTO {
   route: any[];
   comments: string;
   serviceFee: number;
+  inspectionPassed: boolean;
+  isRecurring: boolean;
+  intervalInDays: number;
+  recurrenceEndDate: Date;
   checklists: ChecklistDTO[];
   score: InspectionScoreDTO;
   invoiceId?: string;

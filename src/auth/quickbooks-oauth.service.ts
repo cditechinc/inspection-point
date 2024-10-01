@@ -186,7 +186,7 @@ export class QuickBooksOAuthService {
     const client = await this.clientService.findOne(clientId);
 
     if (!client || !client.quickbooksAccessToken || !client.quickbooksRealmId) {
-      throw new Error('Client is not authorized with QuickBooks');
+      throw new InternalServerErrorException('Client is not authorized with QuickBooks');
     }
 
     const currentTime = new Date().getTime();
@@ -201,13 +201,19 @@ export class QuickBooksOAuthService {
           client.quickbooksRefreshToken,
         );
 
-        // Update the client with the new token details
+        if (!tokenResponse.token.access_token || !tokenResponse.token.refresh_token) {
+          throw new Error('Missing token in the refresh response from QuickBooks');
+        }
+  
+        // Calculate new expiration time
+        const tokenExpirationDate = new Date(currentTime + tokenResponse.token.expires_in * 1000);
+        console.log(`New token expires at: ${tokenExpirationDate.toISOString()}`);
+  
+        // Update client with new token and expiration
         const updateClientDto = {
           quickbooksAccessToken: tokenResponse.token.access_token,
           quickbooksRefreshToken: tokenResponse.token.refresh_token,
-          quickbooksTokenExpiresIn: new Date(
-            currentTime + tokenResponse.token.expires_in * 1000,
-          ),
+          quickbooksTokenExpiresIn: tokenExpirationDate,
         };
 
         await this.clientService.update(client.id, updateClientDto);

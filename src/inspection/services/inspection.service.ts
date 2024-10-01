@@ -121,14 +121,69 @@ export class InspectionService {
           ];
         }
 
+        // Check if the inspection is recurring and schedule recurring inspections
+        if (
+          createInspectionDto.isRecurring &&
+          createInspectionDto.intervalInDays
+        ) {
+          await this.scheduleRecurring(
+            savedInspection,
+            createInspectionDto.intervalInDays,
+            createInspectionDto.recurrenceEndDate,
+            transactionalEntityManager,
+          );
+        }
+
         return transactionalEntityManager.save(savedInspection);
       },
     );
   }
 
+  async scheduleRecurring(
+    inspection: Inspection,
+    intervalInDays: number,
+    recurrenceEndDate: Date,
+    transactionalEntityManager: any,
+  ): Promise<void> {
+    let nextScheduledDate = new Date(inspection.scheduledDate);
+    const endDate = new Date(recurrenceEndDate);
+
+    // Loop until the nextScheduledDate is beyond the recurrenceEndDate
+    while (nextScheduledDate <= endDate) {
+      nextScheduledDate = new Date(
+        nextScheduledDate.setDate(nextScheduledDate.getDate() + intervalInDays),
+      );
+
+      // Ensure we don't create an inspection after the end date
+      if (nextScheduledDate > endDate) break;
+
+      // Create the new recurring inspection entity
+      const newInspection = transactionalEntityManager.create(Inspection, {
+        ...inspection,
+        id: undefined, // New ID for the new inspection
+        scheduledDate: nextScheduledDate,
+        status: InspectionStatus.NOT_DONE, // Reset status for the new inspection
+        createdAt: undefined, // Reset timestamps
+        updatedAt: undefined,
+        completedDate: null, // Reset completed date
+      });
+
+      // Save the new recurring inspection
+      await transactionalEntityManager.save(newInspection);
+    }
+  }
+
   async findAll(): Promise<Inspection[]> {
     return this.inspectionRepository.find({
-      relations: ['checklists', 'scores', 'client', 'customer', 'assignedTo', 'asset', 'invoices'],
+      relations: [
+        'checklists',
+        'scores',
+        'client',
+        'customer',
+        'assignedTo',
+        'asset',
+        'invoices',
+      ],
     });
   }
 
@@ -303,40 +358,39 @@ export class InspectionService {
     return inspection;
   }
 
-  async submitAndAddToExistingInvoice(
-    inspectionId: string,
-    invoiceId: string,
-  ) {
+  async submitAndAddToExistingInvoice(inspectionId: string, invoiceId: string) {
     // Fetch the inspection by its ID
     const inspection = await this.inspectionRepository.findOne({
       where: { id: inspectionId },
     });
-  
+
     if (!inspection) {
       throw new NotFoundException('Inspection not found');
     }
-  
+
     // Fetch the existing invoice
-    const existingInvoice = await this.invoiceService.findInvoiceById(invoiceId);
+    const existingInvoice =
+      await this.invoiceService.findInvoiceById(invoiceId);
     console.log('Invoice Status:', existingInvoice?.status); // Log the status of the invoice
-  
+
     if (
       !existingInvoice ||
-      (existingInvoice.status !== 'pending' && existingInvoice.status !== 'Not Sent')
+      (existingInvoice.status !== 'pending' &&
+        existingInvoice.status !== 'Not Sent')
     ) {
       throw new BadRequestException('Invalid invoice or invoice already sent');
     }
-  
+
     // Fetch the PDF report from the S3 bucket
     const pdfReportPath = await this.pdfService.fetchPdfReport(inspection.id);
-  
+
     if (!pdfReportPath) {
       throw new NotFoundException('PDF report not found in S3 bucket');
     }
-  
+
     // Use the service fee from the inspection
     const serviceFee = Number(inspection.serviceFee);
-  
+
     // Add the inspection details and PDF report to the existing invoice
     const updatedInvoice = await this.invoiceService.addInspectionToInvoice(
       invoiceId,
@@ -346,16 +400,15 @@ export class InspectionService {
         pdfReportPath,
       },
     );
-  
+
     // Mark the inspection as Complete Billed
     if (updatedInvoice) {
       inspection.status = InspectionStatus.COMPLETE_BILLED;
       await this.inspectionRepository.save(inspection);
     }
-  
+
     return updatedInvoice;
   }
-  
 
   async completeAndAddToExistingInvoice(inspectionId: string): Promise<any> {
     const inspection = await this.findOne(inspectionId);
@@ -447,7 +500,9 @@ export class InspectionService {
     const quickbooksCustomerId = inspection.customer.quickbooksCustomerId;
     const localCustomerId = inspection.customer.id;
     if (!quickbooksCustomerId) {
-      throw new InternalServerErrorException('QuickBooks Customer ID is missing');
+      throw new InternalServerErrorException(
+        'QuickBooks Customer ID is missing',
+      );
     }
 
     // Fetch the PDF report from the S3 bucket
@@ -456,7 +511,7 @@ export class InspectionService {
 
     try {
       console.log('Fetching PDF report for inspection:', inspectionId);
-      const pdfReportBuffer  = await this.pdfService.fetchPdfReport(
+      const pdfReportBuffer = await this.pdfService.fetchPdfReport(
         inspection.id,
       );
 
@@ -538,8 +593,7 @@ export class InspectionService {
         'Failed to create invoice in QuickBooks',
       );
     }
-}
-
+  }
 
   async submitAndDontBillCustomer(inspectionId: string) {
     const inspection = await this.inspectionRepository.findOne({
@@ -586,4 +640,57 @@ export class InspectionService {
 
     return invoice;
   }
+
+  // Retrieve inspections for a specific client
+  async getClientInspectionHistory(clientId: string): Promise<any> {
+    const inspections = await this.inspectionRepository.find({
+      where: { client: { id: clientId } },
+      relations: ['client', 'customer', 'asset'],
+    });
+    return {
+      clientId: clientId,
+      totalInspections: inspections.length,
+      inspections,
+    };
+  }
+
+  // Retrieve inspections for a specific customer
+  async getCustomerInspectionHistory(customerId: string): Promise<any> {
+    const inspections = await this.inspectionRepository.find({
+      where: { customer: { id: customerId } },
+      relations: ['client', 'customer', 'asset'],
+    });
+    return {
+      customerId: customerId,
+      totalInspections: inspections.length,
+      inspections,
+    };
+  }
+
+  // Retrieve inspections for a specific asset
+  async getAssetInspectionHistory(assetId: string): Promise<any> {
+    const inspections = await this.inspectionRepository.find({
+      where: { asset: { id: assetId } },
+      relations: ['client', 'customer', 'asset'],
+    });
+    return {
+      assetId: assetId,
+      totalInspections: inspections.length,
+      inspections,
+    };
+  }
+
+  // Retrieve inspections for a specific asset type
+  async getAssetTypeInspectionHistory(assetTypeId: string): Promise<any> {
+    const inspections = await this.inspectionRepository.find({
+      where: { asset: { assetType: { id: assetTypeId } } },
+      relations: ['client', 'customer', 'asset', 'asset.assetType'],
+    });
+    return {
+      assetTypeId: assetTypeId,
+      totalInspections: inspections.length,
+      inspections,
+    };
+  }
 }
+

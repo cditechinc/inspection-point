@@ -39,16 +39,16 @@ export class AssetsService {
       throw new NotFoundException(`Customer #${createAssetDto.customerId} not found`);
     }
 
-    const assetType = createAssetDto.type 
-      ? await this.assetTypeRepository.findOne({ where: { id: createAssetDto.type } })
+    const assetType = createAssetDto.assetType 
+      ? await this.assetTypeRepository.findOne({ where: { id: createAssetDto.assetType } })
       : undefined;
-    if (createAssetDto.type && !assetType) {
-      throw new NotFoundException(`AssetType #${createAssetDto.type} not found`);
+    if (createAssetDto.assetType && !assetType) {
+      throw new NotFoundException(`AssetType #${createAssetDto.assetType} not found`);
     }
 
     const asset = this.assetsRepository.create({
       name: createAssetDto.name,
-      type: assetType,
+      assetType,
       location: createAssetDto.location,
       latitude: createAssetDto.latitude,
       longitude: createAssetDto.longitude,

@@ -234,19 +234,30 @@ export class AuthService {
     await this.logRepository.save(log);
   }
 
-  async saveQuickBooksTokens(clientId: string, accessToken: string, refreshToken: string, realmId: string): Promise<void> {
+  async saveQuickBooksTokens(
+    clientId: string,
+    accessToken: string,
+    refreshToken: string,
+    realmId: string,
+  ): Promise<void> {
     const client = await this.clientService.findOne(clientId);
+  
     if (!client) {
       throw new Error('Client not found');
     }
-
+  
+    const tokenExpirationDate = new Date(Date.now() + 3600 * 1000); // Assuming token expires in 1 hour
+  
+    console.log(`Saving QuickBooks tokens for client ${clientId}. Token expires at ${tokenExpirationDate.toISOString()}`);
+  
     await this.clientService.update(clientId, {
       quickbooksAccessToken: accessToken,
       quickbooksRefreshToken: refreshToken,
       quickbooksRealmId: realmId,
-      quickbooksTokenExpiresIn: new Date(Date.now() + 3600 * 1000), // Assuming token expires in 1 hour
+      quickbooksTokenExpiresIn: tokenExpirationDate,
     });
   }
+  
 
    // Generate both access and refresh tokens
    async generateTokens(userOrClient: User | Client): Promise<{ accessToken: string; refreshToken: string }> {

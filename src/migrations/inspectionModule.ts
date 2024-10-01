@@ -182,6 +182,10 @@ export class InspectionModuleMigration20240804123456
         "route" jsonb,
         "comments" text,
         "service_fee" decimal(10, 2),
+        "inspection_passed" boolean DEFAULT FALSE, 
+        "is_recurring" boolean DEFAULT FALSE, 
+        "interval_in_days" integer, 
+        "recurrence_end_date" TIMESTAMP, 
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
