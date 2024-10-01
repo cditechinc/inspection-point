@@ -252,6 +252,7 @@ export class InspectionModuleMigration20240804123456
         "contactors_score" varchar(10),
         "thermals_score" varchar(10),
         "float_scores" jsonb,
+        "pump_scores" jsonb,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

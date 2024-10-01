@@ -33,6 +33,9 @@ export class InspectionScoreDTO {
 
   @IsJSON()
   floatScores: object;
+
+  @IsJSON()
+  pumpScores: object;
 }
 
 export class UpdateInspectionScoreDTO {
@@ -75,4 +78,8 @@ export class UpdateInspectionScoreDTO {
   @IsJSON()
   @IsOptional()
   floatScores?: object;
+
+  @IsJSON()
+  @IsOptional()
+  pumpScores?: object;
 }

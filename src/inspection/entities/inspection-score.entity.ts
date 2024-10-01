@@ -47,6 +47,9 @@ import {
   
     @Column('jsonb', { name: 'float_scores' })
     floatScores: object;
+
+    @Column('jsonb', { name: 'pump_scores' })
+    pumpScores: object;
   
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

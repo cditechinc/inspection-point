@@ -173,6 +173,8 @@ export class RolesGuard implements CanActivate {
       requiredPermission = 'manage_asset-types';
     } else if (route.includes('photos')) {
       requiredPermission = 'manage_photos';
+    } else if (route.includes('inspection-scores')) {
+      requiredPermission = 'manage_inspection-scores';
     }
     // Add more cases as needed
 
