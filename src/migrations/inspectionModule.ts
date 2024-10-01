@@ -212,7 +212,6 @@ export class InspectionModuleMigration20240804123456
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "inspection_id" uuid REFERENCES "inspections"("id") ON DELETE CASCADE,
         "name" varchar(255),
-        "overall_score" varchar(10) NOT NULL,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

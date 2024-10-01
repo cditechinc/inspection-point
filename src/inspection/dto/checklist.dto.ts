@@ -17,10 +17,6 @@ export class ChecklistDTO {
   @IsNotEmpty()
   name: string;
 
-  @IsNotEmpty()
-  @IsString()
-  overallScore: string;
-
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => String)
@@ -33,9 +29,7 @@ export class UpdateChecklistDTO {
   @IsOptional()
   name?: string;
 
-  @IsString()
-  @IsNotEmpty()
-  overallScore?: string;
+ 
 }
 
 // export class ChecklistItemDTO {
