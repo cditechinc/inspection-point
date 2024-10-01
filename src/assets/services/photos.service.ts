@@ -144,12 +144,13 @@ export class PhotosService {
 
   private getEntityType(
     dto: CreatePhotoDto | UpdatePhotoDto,
-  ): 'asset' | 'pump' | 'pumpBrand' | 'customer' | 'inspection' {
+  ): 'asset' | 'pump' | 'pumpBrand' | 'customer' | 'inspection' | 'client' {
     if (dto.assetId) return 'asset';
     if (dto.pumpId) return 'pump';
     if (dto.pumpBrandId) return 'pumpBrand';
     if (dto.customerId) return 'customer';
     if (dto.inspectionId) return 'inspection';
+    if (dto.clientId) return 'client';
     throw new BadRequestException(
       'Invalid entity type: At least one of assetId, pumpId, pumpBrandId, or customerId must be provided',
     );

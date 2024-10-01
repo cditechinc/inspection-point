@@ -23,7 +23,7 @@ export class AwsService {
 
   async uploadFile(
     clientId: string,
-    entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer' | 'inspection',
+    entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer' | 'inspection' | 'client',
     fileType: 'pdf' | 'image',
     file: Buffer,
     originalName: string,
@@ -57,7 +57,7 @@ export class AwsService {
     return `${date}-${baseName}-${randomInt}.${extension}`;
   }
 
-  private getEntityFolder(entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer' | 'inspection'): string {
+  private getEntityFolder(entityType: 'asset' | 'pump' | 'pumpBrand' | 'customer' | 'inspection' | 'client'): string {
     switch (entityType) {
       case 'asset':
         return 'assets';
@@ -68,7 +68,9 @@ export class AwsService {
       case 'customer':
         return 'customers';
       case 'inspection':
-        return 'inspections'; // Return 'inspections' for inspection reports
+        return 'inspections'; 
+      case 'client':
+        return 'clients';
       default:
         throw new Error('Invalid entity type');
     }
