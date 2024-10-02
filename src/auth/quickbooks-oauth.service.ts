@@ -132,7 +132,7 @@
 //   }
   
 // }
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as OAuthClient from 'intuit-oauth';
 import { ClientService } from './../client/client.service';
@@ -305,6 +305,118 @@ export class QuickBooksOAuthService {
     } catch (error) {
       console.error('Error syncing customers:', error.message);
       throw new InternalServerErrorException(`QuickBooks API error: ${error.message}`);
+    }
+  }
+
+
+  async processQuickBooksWebhook(payload: any) {
+    try {
+      console.log('Processing QuickBooks Webhook:', JSON.stringify(payload, null, 2));
+
+      // Loop through eventNotifications
+      for (const notification of payload.eventNotifications) {
+        const { dataChangeEvent } = notification;
+
+        // Loop through entities in dataChangeEvent
+        for (const entity of dataChangeEvent.entities) {
+          const { name, operation, id } = entity;
+
+          // Handle Customer creation
+          if (name === 'Customer' && operation === 'Create') {
+            console.log(`Customer created with ID: ${id}`);
+            // Add your logic to fetch customer details and store in your database
+            await this.handleCustomerCreation(notification.realmId, id);
+          }
+
+          // Handle Invoice creation
+          if (name === 'Invoice' && operation === 'Create') {
+            console.log(`Invoice created with ID: ${id}`);
+            // Add your logic to fetch invoice details and store in your database
+            await this.handleInvoiceCreation(notification.realmId, id);
+          }
+        }
+      }
+
+      return { message: 'Webhook processed successfully' };
+    } catch (error) {
+      console.error('Error processing QuickBooks webhook:', error.message);
+      throw new HttpException('Error processing webhook', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  // Method to handle customer creation
+  async handleCustomerCreation(realmId: string, customerId: string) {
+    try {
+      const customer = await this.fetchCustomerFromQuickBooks(realmId, customerId);
+      console.log('Fetched customer details:', customer);
+      
+      // You can now save the customer to your database
+      // Example: await this.customerService.create(customer);
+      
+    } catch (error) {
+      console.error('Error fetching customer:', error.message);
+      throw new InternalServerErrorException(`Failed to fetch customer from QuickBooks: ${error.message}`);
+    }
+  }
+
+  // Method to handle invoice creation
+  async handleInvoiceCreation(realmId: string, invoiceId: string) {
+    try {
+      const invoice = await this.fetchInvoiceFromQuickBooks(realmId, invoiceId);
+      console.log('Fetched invoice details:', invoice);
+
+      // You can now save the invoice to your database
+      // Example: await this.invoiceService.create(invoice);
+
+    } catch (error) {
+      console.error('Error fetching invoice:', error.message);
+      throw new InternalServerErrorException(`Failed to fetch invoice from QuickBooks: ${error.message}`);
+    }
+  }
+
+  // Method to fetch customer details from QuickBooks
+  async fetchCustomerFromQuickBooks(realmId: string, customerId: string) {
+    try {
+      const url = `${this.oauthClient.environment === 'sandbox'
+        ? 'https://sandbox-quickbooks.api.intuit.com'
+        : 'https://quickbooks.api.intuit.com'}/v3/company/${realmId}/customer/${customerId}`;
+
+      const response = await this.oauthClient.makeApiCall({
+        url,
+        method: 'GET',
+      });
+
+      if (response.json) {
+        return response.json.Customer;
+      } else {
+        throw new InternalServerErrorException('Failed to fetch customer from QuickBooks');
+      }
+    } catch (error) {
+      console.error('Error fetching customer from QuickBooks:', error.message);
+      throw new InternalServerErrorException('QuickBooks API error');
+    }
+  }
+
+  // Method to fetch invoice details from QuickBooks
+  async fetchInvoiceFromQuickBooks(realmId: string, invoiceId: string) {
+    try {
+      const url = `${this.oauthClient.environment === 'sandbox'
+        ? 'https://sandbox-quickbooks.api.intuit.com'
+        : 'https://quickbooks.api.intuit.com'}/v3/company/${realmId}/invoice/${invoiceId}`;
+
+      const response = await this.oauthClient.makeApiCall({
+        url,
+        method: 'GET',
+      });
+
+      if (response.json) {
+        return response.json.Invoice;
+      } else {
+        throw new InternalServerErrorException('Failed to fetch invoice from QuickBooks');
+      }
+    } catch (error) {
+      console.error('Error fetching invoice from QuickBooks:', error.message);
+      throw new InternalServerErrorException('QuickBooks API error');
     }
   }
 

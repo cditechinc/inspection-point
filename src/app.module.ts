@@ -33,6 +33,8 @@ import { UserGroupPermission } from './user-groups/entities/user-group-permissio
 import { Permission } from './permissions/entities/permission.entity';
 import { UserGroupModule } from './user-groups/user-group.module';
 import { PermissionModule } from './permissions/permission.module';
+import { QuickBooksOAuthService } from './auth/quickbooks-oauth.service';
+import { QuickBooksController } from './quickbooks.controller';
 
 @Module({
   imports: [
@@ -84,5 +86,7 @@ import { PermissionModule } from './permissions/permission.module';
     UserGroupModule,
     PermissionModule,
   ],
+  providers: [QuickBooksOAuthService], // Add the QuickBooks service as a provider
+  controllers: [QuickBooksController],
 })
 export class AppModule {}
