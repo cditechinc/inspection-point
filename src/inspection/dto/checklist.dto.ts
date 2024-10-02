@@ -10,6 +10,10 @@ import { Type } from 'class-transformer';
 import { ChecklistItemDTO } from './checklist-item.dto';
 
 export class ChecklistDTO {
+
+  @IsUUID()
+  id: string;
+
   @IsUUID()
   inspectionId: string;
 

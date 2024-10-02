@@ -240,6 +240,7 @@ export class InspectionModuleMigration20240804123456
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "inspection_scores" (
         "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "name" varchar(255),
         "inspection_id" uuid REFERENCES "inspections"("id") ON DELETE CASCADE,
         "structure_score" varchar(10),
         "panel_score" varchar(10),

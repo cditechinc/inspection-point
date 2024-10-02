@@ -13,6 +13,9 @@ import {
   export class InspectionScore {
     @PrimaryGeneratedColumn('uuid')
     id: string;
+
+    @Column('varchar', { length: 255, name: 'name' })
+    name: string;
   
     @ManyToOne(() => Inspection, (inspection) => inspection.scores, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'inspection_id' })

@@ -13,6 +13,7 @@ export class InspectionScoreService {
 
   async create(inspectionScoreDto: InspectionScoreDTO): Promise<InspectionScore> {
     const inspectionScore: DeepPartial<InspectionScore> = {
+      name: inspectionScoreDto.name,
       inspection: { id: inspectionScoreDto.inspectionId },  // Assuming inspection is a relation
       structureScore: inspectionScoreDto.structureScore,
       panelScore: inspectionScoreDto.panelScore,
@@ -52,6 +53,7 @@ export class InspectionScoreService {
     const inspectionScore = await this.findOne(id);
 
     const updatedData: DeepPartial<InspectionScore> = {
+      name: updateInspectionScoreDto.name,
       structureScore: updateInspectionScoreDto.structureScore,
       panelScore: updateInspectionScoreDto.panelScore,
       pipesScore: updateInspectionScoreDto.pipesScore,

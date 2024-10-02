@@ -1,6 +1,13 @@
 import { IsUUID, IsString, IsNotEmpty, IsOptional, IsJSON } from 'class-validator';
 
 export class InspectionScoreDTO {
+
+  @IsUUID()
+  scoreId: string;
+
+  @IsString()
+  name: string;
+
   @IsUUID()
   inspectionId: string;
 
@@ -45,6 +52,11 @@ export class InspectionScoreDTO {
 }
 
 export class UpdateInspectionScoreDTO {
+
+  @IsString()
+  @IsOptional()
+  name?: string;
+
   @IsString()
   @IsOptional()
   structureScore?: string;

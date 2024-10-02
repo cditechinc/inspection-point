@@ -88,37 +88,37 @@ export class InspectionService {
         const savedInspection =
           await transactionalEntityManager.save(inspection);
 
-        // Create and save the checklists
+        
+
+        // Associate existing checklists
         if (createInspectionDto.checklists) {
-          const checklists = await Promise.all(
-            createInspectionDto.checklists.map(async (checklistDto) => {
-              const checklistItems = await transactionalEntityManager.findByIds(
-                ChecklistItem,
-                checklistDto.checklistItemIds,
-              );
-              const checklist = transactionalEntityManager.create(Checklist, {
-                ...checklistDto,
-                inspection: savedInspection,
-                items: checklistItems,
-              });
-              return transactionalEntityManager.save(checklist);
-            }),
+          const checklistIds = createInspectionDto.checklists.map(
+            (checklist) => checklist.id,
           );
+
+          // Fetch the existing checklists with their items
+          const checklists = await transactionalEntityManager.find(Checklist, {
+            where: { id: In(checklistIds) },
+            relations: ['items'], // Load items with the checklist
+          });
+
           savedInspection.checklists = checklists;
         }
 
-        // Create and save the inspection scores
-        if (createInspectionDto.score) {
-          const inspectionScore = transactionalEntityManager.create(
+        // Fetch and associate the existing inspection scores by ID
+        if (createInspectionDto.score && createInspectionDto.score.scoreId) {
+          const existingScore = await transactionalEntityManager.findOne(
             InspectionScore,
             {
-              ...createInspectionDto.score,
-              inspection: savedInspection,
+              where: { id: createInspectionDto.score.scoreId },
             },
           );
-          savedInspection.scores = [
-            await transactionalEntityManager.save(inspectionScore),
-          ];
+
+          if (!existingScore) {
+            throw new Error('Score not found');
+          }
+
+          savedInspection.scores = [existingScore]; // Associate existing score
         }
 
         // Check if the inspection is recurring and schedule recurring inspections
@@ -138,6 +138,7 @@ export class InspectionService {
       },
     );
   }
+
 
   async scheduleRecurring(
     inspection: Inspection,
@@ -192,6 +193,7 @@ export class InspectionService {
       where: { id },
       relations: [
         'checklists',
+        'checklists.items',
         'scores',
         'client',
         'customer',
@@ -693,4 +695,3 @@ export class InspectionService {
     };
   }
 }
-

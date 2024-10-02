@@ -7,6 +7,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     JoinColumn,
+    JoinTable,
   } from 'typeorm';
   import { Inspection } from './inspection.entity';
   import { ChecklistItem } from './checklist-item.entity';
@@ -21,6 +22,7 @@ import {
     inspection: Inspection;
   
     @OneToMany(() => ChecklistItem, (checklistItem) => checklistItem.checklist, { cascade: true })
+    @JoinTable()
     items: ChecklistItem[];
   
     @Column('varchar', { length: 255 })
