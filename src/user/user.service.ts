@@ -35,12 +35,16 @@ export class UserService {
   }
 
   async findAllByClientId(clientId: string): Promise<User[]> {
-    // Find all users where the client ID matches the clientAdmin's client ID
     return this.usersRepository.find({
-      where: { client: { id: clientId } },  // Assuming user has a client relation
-      relations: ['client', 'groupMemberships', 'groupMemberships.userGroup'],  // Fetch client and group info
+      where: [
+        { client: { id: clientId } },  // Find users linked to this client
+        { created_by: clientId },  // OR find users created by this client
+      ],
+      relations: ['client', 'groupMemberships', 'groupMemberships.userGroup'],
     });
   }
+  
+  
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();

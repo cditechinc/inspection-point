@@ -1,4 +1,16 @@
-import { Body, Controller, Get, NotFoundException, Param, ParseUUIDPipe, Patch, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
 import { JwtAuthGuard } from './../auth/guards/jwt-auth.guard';
@@ -7,7 +19,9 @@ import { Role } from './../auth/role.enum';
 import { CreateAssociatedUserDto } from './dto/create-associated-user.dto';
 import { LocalAuthGuard } from './../auth/guards/local-auth.guard';
 import { UpdateAssociatedUserDto } from './dto/update-associated-user.dto';
+import { RolesGuard } from './../auth/guards/roles.guard';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -23,25 +37,33 @@ export class UserController {
   }
 
   @Get('client/associated')
-  @Roles(Role.ClientAdmin)  // Only client admins can fetch associated users
+  @Roles(Role.ClientAdmin) // Only client admins can fetch associated users
   async getUsersByClient(@Req() req: any): Promise<User[]> {
-    const clientId = req.user.clientId;  // Get the client ID from the authenticated user
-    return this.userService.findAllByClientId(clientId);
+    const clientId = req.user.clientId; // Get the client ID from the authenticated user
+    if (!clientId) {
+      throw new UnauthorizedException('Client ID not found in the request');
+    }
+    return this.userService.findAllByClientId(clientId); // Get all users associated with this client
   }
 
   // Client admin adds new user
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.ClientAdmin)  // Only client admins can add users
+  @Roles(Role.ClientAdmin) // Only client admins can add users
   @Post('add')
-  async addUser(@Body() createAssociatedUserDto: CreateAssociatedUserDto, @Req() req: any): Promise<User> {
-    console.log(req.user);  // Log the authenticated user
-    const clientId = req.user.clientId;  // Get the client ID from the authenticated client admin
-    console.log(clientId)
-    return this.userService.createForClientAdmin(createAssociatedUserDto, clientId);
+  async addUser(
+    @Body() createAssociatedUserDto: CreateAssociatedUserDto,
+    @Req() req: any,
+  ): Promise<User> {
+    console.log(req.user); // Log the authenticated user
+    const clientId = req.user.clientId; // Get the client ID from the authenticated client admin
+    console.log(clientId);
+    return this.userService.createForClientAdmin(
+      createAssociatedUserDto,
+      clientId,
+    );
   }
 
   @Patch(':id')
-  @Roles(Role.ClientAdmin)  // Only client admins can update users
+  @Roles(Role.ClientAdmin) // Only client admins can update users
   async updateUser(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateAssociatedUserDto: UpdateAssociatedUserDto,
@@ -51,7 +73,9 @@ export class UserController {
     const clientId = req.user.clientId;
 
     // Fetch the user to be updated
-    const userToUpdate = await this.userService.findById(id, { relations: ['client'] });
+    const userToUpdate = await this.userService.findById(id, {
+      relations: ['client'],
+    });
 
     if (!userToUpdate) {
       throw new NotFoundException('User not found');
@@ -59,7 +83,9 @@ export class UserController {
 
     // Ensure the user belongs to the same client
     if (userToUpdate.client.id !== clientId) {
-      throw new UnauthorizedException('You do not have permission to update this user');
+      throw new UnauthorizedException(
+        'You do not have permission to update this user',
+      );
     }
 
     return await this.userService.updateUser(id, updateAssociatedUserDto);
