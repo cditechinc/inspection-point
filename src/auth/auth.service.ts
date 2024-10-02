@@ -55,29 +55,28 @@ export class AuthService {
 
   async signToken(userOrClient: User | Client): Promise<string> {
     let payload: JwtPayload;
-
+  
     if (userOrClient instanceof User) {
       payload = {
         email: userOrClient.email,
         sub: userOrClient.id,
         role: userOrClient.role,
-        clientId: userOrClient.client?.id,
+        clientId: userOrClient.client?.id || null,
         iat: Math.floor(Date.now() / 1000),
-        // exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiration
       };
-    } else {
+    } else if (userOrClient instanceof Client) {
       payload = {
         email: userOrClient.user.email,
         sub: userOrClient.user.id,
         role: userOrClient.user.role,
         clientId: userOrClient.id,
         iat: Math.floor(Date.now() / 1000),
-        // exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiration
       };
     }
-
+  
     return this.jwtService.sign(payload);
   }
+  
 
   async login(user: User, ipAddress: string, gpsLocation?: string) {
     const { accessToken, refreshToken } = await this.generateTokens(user);
@@ -295,13 +294,25 @@ export class AuthService {
   async verifyRefreshToken(refreshToken: string): Promise<User | Client> {
     try {
       const payload = this.jwtService.verify(refreshToken);
-      const user = await this.userService.findById(payload.sub);
-      if (!user) throw new UnauthorizedException('Invalid refresh token');
-      return user;
+      let userOrClient;
+      
+      // Check if the token is for a user or a client
+      if (payload.clientId) {
+        userOrClient = await this.clientService.findOne(payload.clientId);
+      } else {
+        userOrClient = await this.userService.findById(payload.sub);
+      }
+      
+      if (!userOrClient) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+  
+      return userOrClient;
     } catch (err) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
+  
 
   // Method to check if user has permission to access a specific resource
   async checkUserPermissions(userId: string, resource: string, action: string): Promise<boolean> {
