@@ -125,13 +125,13 @@ export class ClientService {
   }
 
   async findAll(): Promise<Client[]> {
-    return this.clientsRepository.find({ relations: ['user'] });
+    return this.clientsRepository.find({ relations: ['user', 'userGroups'] });
   }
 
   async findOne(id: string): Promise<Client> {
     const client = await this.clientsRepository.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'userGroups'],
     });
     if (!client) {
       throw new NotFoundException('Client not found');
@@ -140,7 +140,7 @@ export class ClientService {
   }
 
   async findOneByEmail(email: string, options?: FindOneOptions<Client>): Promise<Client | null> {
-    return this.clientsRepository.findOne({ where: { email }, relations: ['user'], ...options });
+    return this.clientsRepository.findOne({ where: { email }, relations: ['user', 'userGroups'], ...options });
   }
   
 
