@@ -35,6 +35,8 @@ import { UserGroupModule } from './user-groups/user-group.module';
 import { PermissionModule } from './permissions/permission.module';
 import { QuickBooksOAuthService } from './auth/quickbooks-oauth.service';
 import { QuickBooksController } from './quickbooks.controller';
+import { Company } from './company/entities/company.entity';
+import { CompanyModule } from './company/company.module';
 
 @Module({
   imports: [
@@ -70,6 +72,7 @@ import { QuickBooksController } from './quickbooks.controller';
           UserGroupMembership,
           UserGroupPermission,
           Permission,
+          Company
         ],
         synchronize: true,
       }),
@@ -85,6 +88,7 @@ import { QuickBooksController } from './quickbooks.controller';
     InvoiceModule,
     UserGroupModule,
     PermissionModule,
+    CompanyModule,
   ],
   providers: [QuickBooksOAuthService], // Add the QuickBooks service as a provider
   controllers: [QuickBooksController],

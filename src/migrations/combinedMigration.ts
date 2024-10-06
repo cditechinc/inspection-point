@@ -10,18 +10,12 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "clients" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-        "name" character varying NOT NULL UNIQUE,
+        "first_name" character varying,
+        "last_name" character varying;
         "email" character varying NOT NULL UNIQUE,
         "phone" character varying,
         "address" character varying,
-        "billing_address" character varying,
-        "company_name" character varying,
-        "company_type" character varying,
-        "industry" character varying,
-        "company_logo" character varying,
-        "payment_method" character varying,
         "account_status" character varying CHECK (account_status IN ('Active', 'Disabled', 'Fraud', 'Inactive')) DEFAULT 'Active',
-        "custom_portal_url" character varying,
         "tax_exempt" boolean DEFAULT FALSE,
         "protected" boolean DEFAULT FALSE,
         "email_verified" boolean DEFAULT FALSE,
@@ -33,6 +27,8 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "quickbooksState" character varying,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        "company_id" uuid,
+        CONSTRAINT "FK_clients_company_id" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE
       );
     `);
 

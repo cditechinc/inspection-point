@@ -68,4 +68,8 @@ export class RegisterClientDto {
   @IsOptional()
   @IsBoolean()
   email_verified: boolean;
+
+  @IsOptional()
+  @IsString()
+  website: string;
 }

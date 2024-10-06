@@ -15,6 +15,7 @@ export enum Resource {
     ASSET_TYPES = 'asset-types',
     PHOTOS = 'photos',
     INSPECTION_SCORES = 'inspection-scores',
+    COMPANIES = 'companies',
     
     // USER_GROUPS = 'user-groups',
     // USER_GROUP_PERMISSIONS = 'user-group',

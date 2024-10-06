@@ -27,6 +27,8 @@ import { UserGroupMembership } from './user-groups/entities/user-group-membershi
 import { UserGroupPermission } from './user-groups/entities/user-group-permission.entity';
 import { Permission } from './permissions/entities/permission.entity';
 import { AddSecurityGroupsAndPermissions20240905123456 } from './migrations/securityGroupsAndPermissions';
+import { Company } from './company/entities/company.entity';
+import { CompanyMigration20241006123456 } from './migrations/companyModule';
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -57,6 +59,7 @@ const dataSourceOptions: DataSourceOptions = {
     UserGroupMembership,
     UserGroupPermission,
     Permission,
+    Company
   ],
   migrations: [
     AddNotNullToOverallScore1723316461538,
@@ -65,6 +68,7 @@ const dataSourceOptions: DataSourceOptions = {
     AddNameToInspections20240820143000,
     AddInvoicesTableWithQuickBooksFields20240901123456,
     AddSecurityGroupsAndPermissions20240905123456,
+    CompanyMigration20241006123456
   ],
   synchronize: false,
   logging: true,

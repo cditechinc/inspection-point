@@ -13,50 +13,20 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './../auth/dto/create-user.dto';
 import { UserGroupService } from './../user-groups/services/user-group.service';
 import { UserGroupPermissionService } from './../user-groups/services/user-group-permission.service';
-import { CreateUserGroupDto } from './../user-groups/dto/create-user-group.dto';
-import { CreateUserGroupPermissionDto } from './../user-groups/dto/create-user-group-permission.dto';
-import { AssignMultiplePermissionsDto } from './../user-groups/dto/assign-multiple-permissions.dto';
-import { Resource } from './../common/enums/resource.enum';
-import { Action } from './../common/enums/action.enum';
+import { Company } from './../company/entities/company.entity';
 
 @Injectable()
 export class ClientService {
   constructor(
     @InjectRepository(Client)
     private clientsRepository: Repository<Client>,
+    @InjectRepository(Company) 
+    private companyRepository: Repository<Company>,
     private readonly awsService: AwsService,
     private readonly userService: UserService,
     private readonly userGroupService: UserGroupService,
     private readonly userGroupPermissionService: UserGroupPermissionService,
   ) {}
-
-  // async create(registerClientDto: RegisterClientDto): Promise<Client> {
-  //   const hashedPassword = await bcrypt.hash(registerClientDto.password, 10);
-
-  //   // Create a User entity for the client
-  //   const userDto: CreateUserDto = {
-  //     username: registerClientDto.name,
-  //     email: registerClientDto.email,
-  //     password: registerClientDto.password,
-  //     password_hash: hashedPassword,
-  //     role: 'client',
-  //     is_client_admin: true,
-  //   };
-  //   const user = await this.userService.create(userDto);
-
-  //   const client = this.clientsRepository.create({
-  //     ...registerClientDto,
-  //     user: user,
-  //   });
-
-  //   try {
-  //     await this.clientsRepository.save(client);
-  //     await this.awsService.createClientFolders(client.id);
-  //     return client;
-  //   } catch (error) {
-  //     throw new InternalServerErrorException('Error creating client');
-  //   }
-  // }
 
   async create(registerClientDto: RegisterClientDto): Promise<Client> {
     const hashedPassword = await bcrypt.hash(registerClientDto.password, 10);
@@ -96,15 +66,26 @@ export class ClientService {
       // Step 4: Assign the user to 'Client Admins' group
       await this.userService.assignUserToGroup(user.id, clientAdminsGroup.id);
 
-      // Step 5: Define permissions for 'Client Admins' group
-    
+       // Step 5: Create the company entity
+    const createCompanyDto = {
+      company_name: registerClientDto.company_name, // Assuming these fields exist in the DTO
+      company_type: registerClientDto.company_type,
+      industry: registerClientDto.industry,
+      email: registerClientDto.email,
+      website: registerClientDto.website,
+      payment_method: registerClientDto.payment_method,
+      client: client, // Link the company to the client
+    };
 
-    // Step 6: Assign permissions to the 'Client Admins' group
-    await this.userGroupPermissionService.assignPermissions(
-      clientAdminsGroup.id,
-      { permissions: [] }, // Empty, as all permissions are assigned automatically in the function
-      true, 
-    );
+    const company = this.companyRepository.create(createCompanyDto);
+    await this.companyRepository.save(company);
+
+      // Step 6: Assign permissions to the 'Client Admins' group
+      await this.userGroupPermissionService.assignPermissions(
+        clientAdminsGroup.id,
+        { permissions: [] }, // Empty, as all permissions are assigned automatically in the function
+        true,
+      );
       // Update the client with user info and save
       client.user = user;
       await this.clientsRepository.save(client);
@@ -139,10 +120,16 @@ export class ClientService {
     return client;
   }
 
-  async findOneByEmail(email: string, options?: FindOneOptions<Client>): Promise<Client | null> {
-    return this.clientsRepository.findOne({ where: { email }, relations: ['user', 'userGroups'], ...options });
+  async findOneByEmail(
+    email: string,
+    options?: FindOneOptions<Client>,
+  ): Promise<Client | null> {
+    return this.clientsRepository.findOne({
+      where: { email },
+      relations: ['user', 'userGroups'],
+      ...options,
+    });
   }
-  
 
   async findOneByState(state: string): Promise<Client> {
     return this.clientsRepository.findOne({

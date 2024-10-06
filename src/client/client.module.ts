@@ -14,10 +14,11 @@ import { UserGroup } from './../user-groups/entities/user-group.entity';
 import { UserGroupMembership } from './../user-groups/entities/user-group-membership.entity';
 import { UserGroupPermission } from './../user-groups/entities/user-group-permission.entity';
 import { UserGroupModule } from './../user-groups/user-group.module';
+import { Company } from './../company/entities/company.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Client, User, UserGroup, UserGroupMembership, UserGroupPermission]),
+    TypeOrmModule.forFeature([Client, User, UserGroup, UserGroupMembership, UserGroupPermission, Company]),
     UserModule,
     AssetsModule,
     forwardRef(() => AuthModule),

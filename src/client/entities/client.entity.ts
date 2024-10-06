@@ -6,6 +6,7 @@ import { Photo } from './../../assets/entities/photo.entity';
 import { Inspection } from './../../inspection/entities/inspection.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
 import { UserGroup } from './../../user-groups/entities/user-group.entity';
+import { Company } from './../../company/entities/company.entity';
 
 
 @Entity('clients')
@@ -13,8 +14,11 @@ export class Client {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
-  name: string;
+  @Column({ nullable: true })
+  first_name: string; 
+
+  @Column({ nullable: true })
+  last_name: string; 
 
   @Column({ unique: true })
   email: string;
@@ -25,33 +29,12 @@ export class Client {
   @Column({ nullable: true })
   address: string;
 
-  @Column({ nullable: true })
-  billing_address: string;
-
-  @Column({ nullable: true })
-  company_name: string;
-
-  @Column({ nullable: true })
-  company_type: string;
-
-  @Column({ nullable: true })
-  industry: string;
-
-  @Column({ nullable: true })
-  company_logo: string;
-
-  @Column({ nullable: true })
-  payment_method: string;
-
   @Column({
     type: 'varchar',
     default: 'Active',
     enum: ['Active', 'Disabled', 'Fraud', 'Inactive'],
   })
   account_status: string;
-
-  @Column({ nullable: true })
-  custom_portal_url: string;
 
   @Column({ default: false })
   tax_exempt: boolean;
@@ -110,4 +93,7 @@ export class Client {
 
   @OneToMany(() => Invoice, invoice => invoice.client)
   invoices: Invoice[];
+
+  @OneToOne(() => Company, (company) => company.client, { cascade: true })
+  company: Company;
 }
