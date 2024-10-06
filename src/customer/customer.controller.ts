@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   InternalServerErrorException,
+  UploadedFiles,
 } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -21,6 +22,7 @@ import { CustomUser } from '../auth/interface/custom-user.interface';
 import { QuickBooksTokenInterceptor } from './../auth/interceptor/quickbooks-token.interceptor';
 import { PermissionsGuard } from './../auth/guards/permissions.guard';
 import { QuickBooksOAuthService } from './../auth/quickbooks-oauth.service';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @Controller('client/customers')
 @UseInterceptors(QuickBooksTokenInterceptor)
@@ -32,13 +34,17 @@ export class CustomerController {
   ) {}
 
   @Roles(Role.ClientAdmin)
-  @Post()
-  async create(@Body() createCustomerDto: CreateCustomerDto, @Request() req) {
-    const user: CustomUser = req.user;
-    if (!user.clientId) {
-      throw new Error('Client information is missing from the user object');
-    }
-    return this.customerService.create(createCustomerDto, user.clientId);
+  @Post(':clientId')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'photos', maxCount: 4 }]), // Allow up to 4 photos
+  )
+  async create(
+    @Param('clientId') clientId: string,
+    @Body() createCustomerDto: CreateCustomerDto,
+    @UploadedFiles() files: { photos?: Express.Multer.File[] },
+  ) {
+    const photos = files.photos || []; // Get the uploaded photos
+    return this.customerService.create(createCustomerDto, clientId, photos);
   }
 
   @Roles(Role.ClientAdmin)

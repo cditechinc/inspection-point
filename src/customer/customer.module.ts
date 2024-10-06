@@ -8,10 +8,11 @@ import { ClientModule } from '../client/client.module';
 import { AuthModule } from '../auth/auth.module';
 import { Client } from '../client/entities/client.entity';
 import { UserGroupModule } from './../user-groups/user-group.module';
+import { AwsService } from './../aws/aws.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Customer, Client]), ClientModule, AuthModule, UserGroupModule],
-  providers: [CustomerService],
+  providers: [CustomerService, AwsService],
   controllers: [CustomerController],
   exports: [CustomerService],
 })

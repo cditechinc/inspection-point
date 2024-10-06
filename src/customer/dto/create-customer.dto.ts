@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsEmail, IsOptional, IsString, IsArray } from 'class-validator';
 
 export class CreateCustomerDto {
   @IsNotEmpty()
@@ -44,4 +44,17 @@ export class CreateCustomerDto {
   @IsOptional()
   @IsString()
   service_contact?: string;
+
+  @IsOptional()
+  @IsString()
+  previousProvider?: string; // New field for Previous Provider
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  photos?: string[]; // New field for photo URLs
+
+  @IsOptional()
+  @IsEmail()
+  billingContactEmail?: string; // New field for Billing Contact Email
 }

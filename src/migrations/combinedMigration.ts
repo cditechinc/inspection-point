@@ -45,6 +45,9 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "status" VARCHAR(50) CHECK (status IN ('Active', 'Inactive')),
         "gate_code" VARCHAR(255),
         "previous_phone_number" VARCHAR(50),
+        "previousProvider" VARCHAR(255),
+        "photos" text[],
+        "billingContactEmail" VARCHAR(255);
         "service_contact" VARCHAR(255),
         "quickbooksCustomerId" character varying,
         "client_id" uuid REFERENCES "clients"("id") ON DELETE CASCADE,

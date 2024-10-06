@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Customer } from './entities/customer.entity';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { QuickBooksOAuthService } from './../auth/quickbooks-oauth.service';
+import { AwsService } from './../aws/aws.service';
 
 @Injectable()
 export class CustomerService {
@@ -12,20 +13,34 @@ export class CustomerService {
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
     private readonly quickBooksOAuthService: QuickBooksOAuthService,
+    private readonly awsService: AwsService,
   ) {}
 
-  async create(createCustomerDto: CreateCustomerDto, clientId: string): Promise<Customer> {
-    // Create customer in QuickBooks
-    const quickBooksCustomer = await this.createCustomerInQuickBooks(createCustomerDto, clientId);
+  async create(createCustomerDto: CreateCustomerDto, clientId: string, files: Express.Multer.File[]): Promise<Customer> {
+    try {
+      // Upload photos to S3 using your existing uploadFile function
+      const photoUrls: string[] = await Promise.all(
+        files.map(file =>
+          this.awsService.uploadFile(clientId, 'customer', 'image', file.buffer, file.originalname),
+        ),
+      );
 
-    // Store the QuickBooks customer ID in your database
-    const customer = this.customerRepository.create({
-      ...createCustomerDto,
-      client: { id: clientId },
-      quickbooksCustomerId: quickBooksCustomer.Customer.Id,
-    });
+      // Create customer in QuickBooks
+      const quickBooksCustomer = await this.createCustomerInQuickBooks(createCustomerDto, clientId);
 
-    return this.customerRepository.save(customer);
+      // Store the QuickBooks customer ID and photo URLs in the database
+      const customer = this.customerRepository.create({
+        ...createCustomerDto,
+        client: { id: clientId },
+        quickbooksCustomerId: quickBooksCustomer.Customer.Id,
+        photos: photoUrls, // Store S3 URLs of the uploaded photos
+      });
+
+      return this.customerRepository.save(customer);
+    } catch (error) {
+      console.error('Error creating customer with photos:', error);
+      throw new InternalServerErrorException('Failed to create customer with photos.');
+    }
   }
 
   async findAll(clientId: string): Promise<Customer[]> {

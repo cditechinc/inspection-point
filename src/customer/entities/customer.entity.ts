@@ -46,11 +46,20 @@ export class Customer {
   @Column({ nullable: true })
   quickbooksCustomerId: string;
 
+  @Column({ nullable: true })
+  previousProvider: string; 
+
+  @Column('text', { array: true, nullable: true })
+  photos: string[]; 
+
+  @Column({ nullable: true })
+  billingContactEmail: string;
+
   @ManyToOne(() => Client, client => client.customers, { onDelete: 'CASCADE' })
   client: Client;
 
   @OneToMany(() => Photo, photo => photo.customer)
-  photos: Photo[];
+  photosRelation: Photo[];
 
   @OneToMany(() => Asset, asset => asset.customer)
   assets: Asset[];
