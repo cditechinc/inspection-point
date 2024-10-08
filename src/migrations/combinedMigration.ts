@@ -11,7 +11,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
       CREATE TABLE IF NOT EXISTS "clients" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "first_name" character varying,
-        "last_name" character varying;
+        "last_name" character varying,
         "email" character varying NOT NULL UNIQUE,
         "phone" character varying,
         "address" character varying,
@@ -26,7 +26,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "quickbooksTokenExpiresIn" TIMESTAMP,
         "quickbooksState" character varying,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "company_id" uuid,
         CONSTRAINT "FK_clients_company_id" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE
       );
@@ -47,7 +47,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "previous_phone_number" VARCHAR(50),
         "previousProvider" VARCHAR(255),
         "photos" text[],
-        "billingContactEmail" VARCHAR(255);
+        "billingContactEmail" VARCHAR(255),
         "service_contact" VARCHAR(255),
         "quickbooksCustomerId" character varying,
         "client_id" uuid REFERENCES "clients"("id") ON DELETE CASCADE,
@@ -109,7 +109,6 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "location" character varying,
         "latitude" decimal(9,6),
         "longitude" decimal(9,6),
-        "description" text,
         "status" character varying CHECK (status IN ('active', 'inactive', 'maintenance')),
         "inspection_interval" character varying,
         "qr_code" character varying,
@@ -123,6 +122,8 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "rails" character varying,
         "float" decimal(9,6),
         "pumps" character varying,
+        "power" character varying,
+        "photos" text[],
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "FK_assets_client_id" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE CASCADE,

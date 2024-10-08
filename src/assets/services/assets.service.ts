@@ -52,7 +52,6 @@ export class AssetsService {
       location: createAssetDto.location,
       latitude: createAssetDto.latitude,
       longitude: createAssetDto.longitude,
-      description: createAssetDto.description,
       status: createAssetDto.status,
       inspectionInterval: createAssetDto.inspectionInterval,
       qrCode: createAssetDto.qrCode,
@@ -66,6 +65,7 @@ export class AssetsService {
       rails: createAssetDto.rails,
       float: createAssetDto.float,
       pumps: createAssetDto.pumps,
+      power: createAssetDto.power,
       client: client,
       customer: customer,
     });
@@ -75,13 +75,21 @@ export class AssetsService {
     if (files && files.length > 0) {
       for (const file of files) {
         const url = await this.awsService.uploadFile(client.id, 'asset', 'image', file.buffer, file.originalname);
+    
+        console.log(`Uploading photo for client with ID: ${client.id}`); // Debug log to ensure client ID is correct
+    
         const photo = this.photosRepository.create({
           url,
           asset: savedAsset,
+          client: client, // Explicitly setting the client object here
         });
+    
+        console.log('Photo object before saving:', photo); // Debug log for photo object
+    
         await this.photosRepository.save(photo);
       }
     }
+    
 
     return savedAsset;
   }
@@ -109,7 +117,6 @@ export class AssetsService {
       location: updateAssetDto.location,
       latitude: updateAssetDto.latitude,
       longitude: updateAssetDto.longitude,
-      description: updateAssetDto.description,
       status: updateAssetDto.status,
       inspectionInterval: updateAssetDto.inspectionInterval,
       qrCode: updateAssetDto.qrCode,
@@ -123,6 +130,7 @@ export class AssetsService {
       rails: updateAssetDto.rails,
       float: updateAssetDto.float,
       pumps: updateAssetDto.pumps,
+      power: updateAssetDto.power,
     });
 
     if (!asset) {
@@ -137,6 +145,7 @@ export class AssetsService {
         const photo = this.photosRepository.create({
           url,
           asset: savedAsset,
+          client: savedAsset.client,
         });
         await this.photosRepository.save(photo);
       }

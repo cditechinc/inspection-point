@@ -18,7 +18,7 @@ export class Photo {
   @Index()
   assetId?: string;
 
-  @ManyToOne(() => Asset, asset => asset.photos, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Asset, asset => asset.photosRelation, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'asset_id' })
   asset: Asset;
 

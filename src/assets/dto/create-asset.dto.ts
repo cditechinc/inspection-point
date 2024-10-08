@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEnum, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEnum, IsUUID, IsArray } from 'class-validator';
 
 export class CreateAssetDto {
   @IsUUID()
@@ -82,4 +82,13 @@ export class CreateAssetDto {
   @IsOptional()
   @IsString()
   deleteProtect?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  photos?: string[];
+
+  @IsOptional()
+  @IsString()
+  power?: string;
 }

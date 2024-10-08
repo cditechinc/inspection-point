@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CompanyMigration20241006123456 implements MigrationInterface {
-  name = 'CompanyMigration20241006123456';
+export class CompanyMigration20240721123456 implements MigrationInterface {
+  name = 'CompanyMigration20240721123456';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create the companies table
@@ -24,8 +24,7 @@ export class CompanyMigration20241006123456 implements MigrationInterface {
         "phone2" character varying,
         "payment_method" character varying,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT "FK_companies_client_id" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE CASCADE
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
   }

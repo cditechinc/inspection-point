@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, UseGuards } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { AssetsService } from './../services/assets.service';
 import { CreateAssetDto } from './../dto/create-asset.dto';
 import { UpdateAssetDto } from './../dto/update-asset.dto';
@@ -17,12 +17,14 @@ export class AssetsController {
 
   @Post()
   @Roles(Role.Client, Role.ClientAdmin)
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'photos', maxCount: 4 }]), // Allow up to 4 photos
+  )
   create(
     @Body() createAssetDto: CreateAssetDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files: { photos?: Express.Multer.File[] },
   ) {
-    return this.assetsService.create(createAssetDto, files);
+    return this.assetsService.create(createAssetDto, files?.photos || []);
   }
 
   @Get()

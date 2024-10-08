@@ -33,9 +33,6 @@ export class Asset {
   @Column('decimal', { precision: 9, scale: 6, nullable: true })
   longitude: number;
 
-  @Column({ nullable: true })
-  description: string;
-
   @Column({
     type: 'enum',
     enum: ['active', 'inactive', 'maintenance'],
@@ -79,8 +76,14 @@ export class Asset {
   @Column({ nullable: true })
   pumps: number;
 
+  @Column({ nullable: true })
+  power: string;
+
+  @Column('text', { array: true, nullable: true })
+  photos: string[]; 
+
   @OneToMany(() => Photo, photo => photo.asset)
-  photos: Photo[];
+  photosRelation: Photo[];
 
   @OneToMany(() => AssetPump, assetPump => assetPump.asset)
   assetPumps: AssetPump[];
