@@ -28,22 +28,37 @@ export class AssetsService {
     private readonly awsService: AwsService,
   ) {}
 
-  async create(createAssetDto: CreateAssetDto, files: Express.Multer.File[]): Promise<Asset> {
-    const client = await this.clientsRepository.findOne({ where: { id: createAssetDto.clientId } });
+  async create(
+    createAssetDto: CreateAssetDto,
+    files: Express.Multer.File[],
+  ): Promise<Asset> {
+    const client = await this.clientsRepository.findOne({
+      where: { id: createAssetDto.clientId },
+    });
     if (!client) {
-      throw new NotFoundException(`Client #${createAssetDto.clientId} not found`);
+      throw new NotFoundException(
+        `Client #${createAssetDto.clientId} not found`,
+      );
     }
 
-    const customer = await this.customerRepository.findOne({ where: { id: createAssetDto.customerId } });
+    const customer = await this.customerRepository.findOne({
+      where: { id: createAssetDto.customerId },
+    });
     if (!customer) {
-      throw new NotFoundException(`Customer #${createAssetDto.customerId} not found`);
+      throw new NotFoundException(
+        `Customer #${createAssetDto.customerId} not found`,
+      );
     }
 
-    const assetType = createAssetDto.assetType 
-      ? await this.assetTypeRepository.findOne({ where: { id: createAssetDto.assetType } })
+    const assetType = createAssetDto.assetType
+      ? await this.assetTypeRepository.findOne({
+          where: { id: createAssetDto.assetType },
+        })
       : undefined;
     if (createAssetDto.assetType && !assetType) {
-      throw new NotFoundException(`AssetType #${createAssetDto.assetType} not found`);
+      throw new NotFoundException(
+        `AssetType #${createAssetDto.assetType} not found`,
+      );
     }
 
     const asset = this.assetsRepository.create({
@@ -74,43 +89,63 @@ export class AssetsService {
 
     if (files && files.length > 0) {
       for (const file of files) {
-        const url = await this.awsService.uploadFile(client.id, 'asset', 'image', file.buffer, file.originalname);
-    
+        const url = await this.awsService.uploadFile(
+          client.id,
+          'asset',
+          'image',
+          file.buffer,
+          file.originalname,
+        );
+
         console.log(`Uploading photo for client with ID: ${client.id}`); // Debug log to ensure client ID is correct
-    
+
         const photo = this.photosRepository.create({
           url,
           asset: savedAsset,
           client: client, // Explicitly setting the client object here
         });
-    
+
         console.log('Photo object before saving:', photo); // Debug log for photo object
-    
+
         await this.photosRepository.save(photo);
       }
     }
-    
 
-    return savedAsset;
+    // Reload the asset including the photos and other relations
+    const assetWithPhotos = await this.assetsRepository.findOne({
+      where: { id: savedAsset.id },
+      relations: ['photos', 'client', 'customer', 'assetType'],
+    });
+
+    return assetWithPhotos;
   }
 
   async findAll(): Promise<Asset[]> {
-    return this.assetsRepository.find({ relations: ['photos', 'client', 'customer'] });
+    return this.assetsRepository.find({
+      relations: ['photos', 'client', 'customer'],
+    });
   }
 
   async findOne(id: string): Promise<Asset> {
     const asset = await this.assetsRepository.findOne({
       where: { id },
-      relations: ['photos', 'client', 'customer', 'assetType']
+      relations: ['photos', 'client', 'customer', 'assetType'],
     });
+
     if (!asset) {
       throw new NotFoundException(`Asset #${id} not found`);
     }
+
+    console.log('Asset photoss:', asset.photos);
+
     return asset;
   }
-  
 
-  async update(id: string, updateAssetDto: UpdateAssetDto, files: Express.Multer.File[]): Promise<Asset> {
+  async update(
+    id: string,
+    updateAssetDto: UpdateAssetDto,
+    files: Express.Multer.File[],
+  ): Promise<Asset> {
     const asset = await this.assetsRepository.preload({
       id,
       name: updateAssetDto.name,
@@ -141,7 +176,13 @@ export class AssetsService {
 
     if (files && files.length > 0) {
       for (const file of files) {
-        const url = await this.awsService.uploadFile(savedAsset.client.id, 'asset', 'image', file.buffer, file.originalname);
+        const url = await this.awsService.uploadFile(
+          savedAsset.client.id,
+          'asset',
+          'image',
+          file.buffer,
+          file.originalname,
+        );
         const photo = this.photosRepository.create({
           url,
           asset: savedAsset,

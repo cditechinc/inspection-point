@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEnum, IsUUID, IsArray } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEnum, IsUUID, IsArray, IsNumberString } from 'class-validator';
 
 export class CreateAssetDto {
   @IsUUID()
@@ -20,11 +20,11 @@ export class CreateAssetDto {
   location?: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumberString()
   latitude?: number;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumberString()
   longitude?: number;
 
   @IsOptional()
@@ -48,7 +48,7 @@ export class CreateAssetDto {
   nfcCode?: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumberString()
   pipeDia?: number;
 
   @IsOptional()

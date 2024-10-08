@@ -1,10 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, Index, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, Index, JoinColumn, RelationId } from 'typeorm';
 import { Asset } from './asset.entity';
 import { Pump } from './pump.entity';
 import { PumpBrand } from './pump-brand.entity';
 import { Client } from '../../client/entities/client.entity';
 import { Customer } from '../../customer/entities/customer.entity';
 import { Inspection } from './../../inspection/entities/inspection.entity';
+import { Expose } from 'class-transformer';
 
 @Entity('photos')
 export class Photo {
@@ -14,13 +15,13 @@ export class Photo {
   @Column()
   url: string;
 
-  @Column({ nullable: true })
-  @Index()
-  assetId?: string;
-
-  @ManyToOne(() => Asset, asset => asset.photosRelation, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Asset, asset => asset.photos, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'asset_id' })
+  @Expose()
   asset: Asset;
+
+  @RelationId((photo: Photo) => photo.asset)
+  assetId?: string;
 
   @Column({ nullable: true })
   @Index()
@@ -38,13 +39,12 @@ export class Photo {
   @JoinColumn({ name: 'pump_brand_id' })
   pumpBrand: PumpBrand;
 
-  @Column({ nullable: false })
-  @Index()
-  clientId: string;
-
   @ManyToOne(() => Client, client => client.photos, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'client_id' })
   client: Client;
+
+  @RelationId((photo: Photo) => photo.client)
+  clientId: string;
 
   @Column({ nullable: true })
   @Index()

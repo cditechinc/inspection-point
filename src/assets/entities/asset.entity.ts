@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Client } from '../../client/entities/client.entity';
 import { User } from '../../user/entities/user.entity';
 import { AssetType } from './asset-type.entity';
@@ -6,16 +14,19 @@ import { Photo } from './photo.entity';
 import { AssetPump } from './asset-pump.entity';
 import { Customer } from './../../customer/entities/customer.entity';
 import { Inspection } from './../../inspection/entities/inspection.entity';
+import { Expose, Type } from 'class-transformer';
 
 @Entity('assets')
 export class Asset {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Client, client => client.assets, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Client, (client) => client.assets, { onDelete: 'CASCADE' })
   client: Client;
 
-  @ManyToOne(() => Customer, customer => customer.assets, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Customer, (customer) => customer.assets, {
+    onDelete: 'CASCADE',
+  })
   customer: Customer;
 
   @Column()
@@ -36,7 +47,7 @@ export class Asset {
   @Column({
     type: 'enum',
     enum: ['active', 'inactive', 'maintenance'],
-    default: 'active'
+    default: 'active',
   })
   status: string;
 
@@ -79,13 +90,12 @@ export class Asset {
   @Column({ nullable: true })
   power: string;
 
-  @Column('text', { array: true, nullable: true })
-  photos: string[]; 
+  @Expose()
+  @OneToMany(() => Photo, (photo) => photo.asset)
+  @Type(() => Photo)
+  photos: Photo[];
 
-  @OneToMany(() => Photo, photo => photo.asset)
-  photosRelation: Photo[];
-
-  @OneToMany(() => AssetPump, assetPump => assetPump.asset)
+  @OneToMany(() => AssetPump, (assetPump) => assetPump.asset)
   assetPumps: AssetPump[];
 
   @OneToMany(() => Inspection, (inspection) => inspection.asset)
