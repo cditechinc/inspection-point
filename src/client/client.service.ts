@@ -68,13 +68,12 @@ export class ClientService {
 
        // Step 5: Create the company entity
     const createCompanyDto = {
-      company_name: registerClientDto.company_name, // Assuming these fields exist in the DTO
+      company_name: registerClientDto.company_name, 
       company_type: registerClientDto.company_type,
       industry: registerClientDto.industry,
-      email: registerClientDto.email,
       website: registerClientDto.website,
       payment_method: registerClientDto.payment_method,
-      client: client, // Link the company to the client
+      client: client, 
     };
 
     const company = this.companyRepository.create(createCompanyDto);

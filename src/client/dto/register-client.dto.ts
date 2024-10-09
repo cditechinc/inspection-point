@@ -2,6 +2,9 @@ import { IsNotEmpty, IsEmail, IsOptional, IsString, IsDateString, IsBoolean } fr
 
 export class RegisterClientDto {
   
+  @IsNotEmpty()
+  @IsString()
+  name: string;
 
   @IsNotEmpty()
   @IsString()
