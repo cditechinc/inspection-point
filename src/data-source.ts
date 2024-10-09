@@ -16,8 +16,6 @@ import { CombinedMigration20240722162333 } from './migrations/combinedMigration'
 import { InspectionModuleMigration20240804123456 } from './migrations/inspectionModule';
 import { Inspection } from './inspection/entities/inspection.entity';
 import { Checklist } from './inspection/entities/checklist.entity';
-import { ChecklistItem } from './inspection/entities/checklist-item.entity';
-import { InspectionScore } from './inspection/entities/inspection-score.entity';
 import { AddNameToInspections20240820143000 } from './migrations/AddNameToInspection';
 import { Invoice } from './invoice/entities/invoice.entity';
 import { AddInvoicesTableWithQuickBooksFields20240901123456 } from './migrations/invoicesModule';
@@ -52,8 +50,6 @@ const dataSourceOptions: DataSourceOptions = {
     AssetPump,
     Inspection,
     Checklist,
-    ChecklistItem,
-    InspectionScore,
     Invoice,
     UserGroup,
     UserGroupMembership,

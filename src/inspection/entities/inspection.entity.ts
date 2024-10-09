@@ -12,7 +12,6 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Checklist } from './checklist.entity';
-import { InspectionScore } from './inspection-score.entity';
 import { Customer } from './../../customer/entities/customer.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
 import { Photo } from './../../assets/entities/photo.entity';
@@ -31,8 +30,7 @@ export class Inspection {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('varchar', { length: 255 })
-    name: string;
+  
 
   @ManyToOne(() => Client, (client) => client.inspections, {
     onDelete: 'CASCADE',
@@ -58,25 +56,18 @@ export class Inspection {
   assignedTo: User;
 
   @Column('boolean', { default: false })
-  inspectionPassed: boolean; 
-
-  @Column('boolean', { default: false })
-  isRecurring: boolean; 
+  isReocurring: boolean; 
 
   @Column('int', { nullable: true })
-  intervalInDays: number; 
+  inspectionInterval: number; 
+  
   @Column('timestamp', { nullable: true })
-  recurrenceEndDate: Date;
+  reocurrenceEndDate: Date;
 
   @OneToMany(() => Checklist, (checklist) => checklist.inspection)
   checklists: Checklist[];
 
-  @OneToMany(
-    () => InspectionScore,
-    (inspectionScore) => inspectionScore.inspection,
-  )
-  scores: InspectionScore[];
-
+  
   @OneToMany(() => Invoice, invoice => invoice.inspection)
   invoices: Invoice[];
 
@@ -105,11 +96,6 @@ export class Inspection {
   @Column('jsonb')
   route: any;
 
-  @Column('text', { nullable: true })
-  comments: string;
-
-  @Column('decimal', { precision: 10, scale: 2 })
-  serviceFee: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

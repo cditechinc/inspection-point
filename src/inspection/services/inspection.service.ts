@@ -13,9 +13,8 @@ import {
   UpdateInspectionDTO,
 } from './../dto/inspection.dto';
 import { Checklist } from './../entities/checklist.entity';
-import { InspectionScore } from './../entities/inspection-score.entity';
 import { User } from './../../user/entities/user.entity';
-import { ChecklistItem } from './../entities/checklist-item.entity';
+
 import { Client } from './../../client/entities/client.entity';
 import { Asset } from './../../assets/entities/asset.entity';
 import { Customer } from './../../customer/entities/customer.entity';
@@ -31,20 +30,8 @@ export class InspectionService {
     private readonly inspectionRepository: Repository<Inspection>,
     @InjectRepository(Checklist)
     private readonly checklistRepository: Repository<Checklist>,
-    // @InjectRepository(ChecklistItem)
-    // private readonly checklistItemRepository: Repository<ChecklistItem>,
-    @InjectRepository(InspectionScore)
-    private readonly inspectionScoreRepository: Repository<InspectionScore>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    // @InjectRepository(Customer)
-    // private readonly customerRepository: Repository<Customer>,
-    // @InjectRepository(Client)
-    // private readonly clientRepository: Repository<Client>,
-    // @InjectRepository(Asset)
-    // private readonly assetRepository: Repository<Asset>,
-    // @InjectRepository(Invoice)
-    // private readonly invoiceRepository: Repository<Invoice>,
     private readonly invoiceService: InvoiceService,
     private readonly pdfService: PdfService,
   ) {}
@@ -88,48 +75,29 @@ export class InspectionService {
         const savedInspection =
           await transactionalEntityManager.save(inspection);
 
-        
-
         // Associate existing checklists
         if (createInspectionDto.checklists) {
-          const checklistIds = createInspectionDto.checklists.map(
-            (checklist) => checklist.id,
+          const checklists = createInspectionDto.checklists.map(
+            (checklistDto) =>
+              this.checklistRepository.create({
+                ...checklistDto,
+                inspection: savedInspection, // Associate the checklist with the inspection
+              }),
           );
 
-          // Fetch the existing checklists with their items
-          const checklists = await transactionalEntityManager.find(Checklist, {
-            where: { id: In(checklistIds) },
-            relations: ['items'], // Load items with the checklist
-          });
-
-          savedInspection.checklists = checklists;
-        }
-
-        // Fetch and associate the existing inspection scores by ID
-        if (createInspectionDto.score && createInspectionDto.score.scoreId) {
-          const existingScore = await transactionalEntityManager.findOne(
-            InspectionScore,
-            {
-              where: { id: createInspectionDto.score.scoreId },
-            },
-          );
-
-          if (!existingScore) {
-            throw new Error('Score not found');
-          }
-
-          savedInspection.scores = [existingScore]; // Associate existing score
+          savedInspection.checklists =
+            await transactionalEntityManager.save(checklists);
         }
 
         // Check if the inspection is recurring and schedule recurring inspections
         if (
-          createInspectionDto.isRecurring &&
-          createInspectionDto.intervalInDays
+          createInspectionDto.isReocurring &&
+          createInspectionDto.inspectionInterval
         ) {
           await this.scheduleRecurring(
             savedInspection,
-            createInspectionDto.intervalInDays,
-            createInspectionDto.recurrenceEndDate,
+            createInspectionDto.inspectionInterval,
+            createInspectionDto.reocurrenceEndDate,
             transactionalEntityManager,
           );
         }
@@ -138,7 +106,6 @@ export class InspectionService {
       },
     );
   }
-
 
   async scheduleRecurring(
     inspection: Inspection,
@@ -231,20 +198,28 @@ export class InspectionService {
 
     // Handle related entities if provided
     if (updateInspectionDto.checklists) {
-      const checklists = updateInspectionDto.checklists.map((checklist) =>
-        this.checklistRepository.create(checklist),
-      );
-      inspection.checklists = await this.checklistRepository.save(checklists);
-    }
+      const updatedChecklists = [];
+      for (const checklistDto of updateInspectionDto.checklists) {
+        const existingChecklist = await this.checklistRepository.findOne({
+          where: { id: checklistDto.id },
+        });
 
-    if (updateInspectionDto.score) {
-      const inspectionScore = this.inspectionScoreRepository.create({
-        ...updateInspectionDto.score,
-        inspection,
-      });
-      inspection.scores = [
-        await this.inspectionScoreRepository.save(inspectionScore),
-      ];
+        if (existingChecklist) {
+          this.checklistRepository.merge(existingChecklist, checklistDto);
+          updatedChecklists.push(
+            await this.checklistRepository.save(existingChecklist),
+          );
+        } else {
+          const newChecklist = this.checklistRepository.create({
+            ...checklistDto,
+            inspection,
+          });
+          updatedChecklists.push(
+            await this.checklistRepository.save(newChecklist),
+          );
+        }
+      }
+      inspection.checklists = updatedChecklists;
     }
 
     // Update the inspection with the remaining properties
@@ -311,7 +286,7 @@ export class InspectionService {
         clientId: inspection.client.id,
         customerId: inspection.customer.id,
         quickbooksCustomerId: inspection.customer.quickbooksCustomerId,
-        amountDue: inspection.serviceFee,
+        amountDue: 0,
         dueDate: new Date().toISOString(),
         pdfReportPath: pdfReportPath.toString(),
         imagePaths,
@@ -391,7 +366,7 @@ export class InspectionService {
     }
 
     // Use the service fee from the inspection
-    const serviceFee = Number(inspection.serviceFee);
+    const serviceFee = 0;
 
     // Add the inspection details and PDF report to the existing invoice
     const updatedInvoice = await this.invoiceService.addInspectionToInvoice(
@@ -430,8 +405,10 @@ export class InspectionService {
     }
 
     // If an invoice exists, add the service fee to this invoice
-    existingInvoice.amount_due += inspection.serviceFee;
-    existingInvoice.balance += inspection.serviceFee;
+    const incrementAmount = 0;
+
+    existingInvoice.amount_due += incrementAmount;
+    existingInvoice.balance += incrementAmount;
 
     // Update the invoice
     await this.invoiceService.update(existingInvoice.id, {
@@ -471,11 +448,7 @@ export class InspectionService {
     const currentDate = new Date();
 
     if (inspection.completedDate) {
-      if (inspection.serviceFee > 0) {
-        inspection.status = InspectionStatus.COMPLETE_BILLED;
-      } else {
-        inspection.status = InspectionStatus.COMPLETE_NOT_BILLED;
-      }
+      inspection.status = InspectionStatus.COMPLETE_NOT_BILLED;
     } else if (
       currentDate > inspection.scheduledDate &&
       inspection.status !== InspectionStatus.COMPLETE_BILLED &&
@@ -546,7 +519,7 @@ export class InspectionService {
       customerId: localCustomerId,
       quickbooksCustomerId: quickbooksCustomerId,
       inspectionId,
-      amountDue: inspection.serviceFee, // Use the service fee from the inspection
+      amountDue: 0, // Use the service fee from the inspection
       dueDate: new Date().toISOString(), // Set the due date to now, customize as needed
       pdfReportPath, // Attach the PDF report path
       imagePaths, // Attach the image paths
@@ -620,7 +593,7 @@ export class InspectionService {
       customerId: inspection.customer.id,
       quickbooksCustomerId: inspection.customer.quickbooksCustomerId,
       inspectionId,
-      amountDue: inspection.serviceFee,
+      amountDue: 0,
       dueDate: new Date().toISOString(), // Set a due date
       pdfReportPath: pdfReportPath.toString(),
       imagePaths: [], // No images for this invoice

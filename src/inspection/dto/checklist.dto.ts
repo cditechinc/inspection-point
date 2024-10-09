@@ -1,46 +1,121 @@
 import {
   IsUUID,
-  IsString,
-  IsNotEmpty,
   IsOptional,
-  ValidateNested,
-  IsArray,
+  IsString,
+  IsBoolean,
+  IsObject,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ChecklistItemDTO } from './checklist-item.dto';
 
 export class ChecklistDTO {
-
   @IsUUID()
   id: string;
 
   @IsUUID()
   inspectionId: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  name: string;
+  structureScore?: string;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => String)
-  @IsUUID(undefined, { each: true })
-  checklistItemIds: string[];
+  @IsOptional()
+  @IsString()
+  panelScore?: string;
+
+  @IsOptional()
+  @IsString()
+  pipesScore?: string;
+
+  @IsOptional()
+  @IsString()
+  alarmScore?: string;
+
+  @IsOptional()
+  @IsString()
+  alarmLightScore?: string;
+
+  @IsOptional()
+  @IsString()
+  wiresScore?: string;
+
+  @IsOptional()
+  @IsString()
+  breakersScore?: string;
+
+  @IsOptional()
+  @IsString()
+  contactorsScore?: string;
+
+  @IsOptional()
+  @IsString()
+  thermalsScore?: string;
+
+  @IsOptional()
+  @IsObject()
+  floatScores?: object;
+
+  @IsOptional()
+  @IsObject()
+  pumpScores?: object;
+
+  @IsOptional()
+  @IsString()
+  overallScore?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  cleaning?: boolean;
 }
 
 export class UpdateChecklistDTO {
-  @IsString()
   @IsOptional()
-  name?: string;
+  @IsString()
+  structureScore?: string;
 
- 
+  @IsOptional()
+  @IsString()
+  panelScore?: string;
+
+  @IsOptional()
+  @IsString()
+  pipesScore?: string;
+
+  @IsOptional()
+  @IsString()
+  alarmScore?: string;
+
+  @IsOptional()
+  @IsString()
+  alarmLightScore?: string;
+
+  @IsOptional()
+  @IsString()
+  wiresScore?: string;
+
+  @IsOptional()
+  @IsString()
+  breakersScore?: string;
+
+  @IsOptional()
+  @IsString()
+  contactorsScore?: string;
+
+  @IsOptional()
+  @IsString()
+  thermalsScore?: string;
+
+  @IsOptional()
+  @IsObject()
+  floatScores?: object;
+
+  @IsOptional()
+  @IsObject()
+  pumpScores?: object;
+
+  @IsOptional()
+  @IsString()
+  overallScore?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  cleaning?: boolean;
 }
-
-// export class ChecklistItemDTO {
-//   id: string;
-//   checklistId: string;
-//   description: string;
-//   isCompleted: boolean;
-//   createdAt: Date;
-//   updatedAt: Date;
-// }
