@@ -38,11 +38,11 @@ export class Asset {
   @Column({ nullable: true })
   location: string;
 
-  @Column('decimal', { precision: 9, scale: 6, nullable: true })
-  latitude: number;
+  @Column({ type: 'varchar', nullable: true })
+  latitude: string;
 
-  @Column('decimal', { precision: 9, scale: 6, nullable: true })
-  longitude: number;
+  @Column({ type: 'varchar', nullable: true })
+  longitude: string;
 
   @Column({
     type: 'enum',
@@ -60,8 +60,8 @@ export class Asset {
   @Column({ nullable: true })
   nfcCode: string;
 
-  @Column({ nullable: true })
-  pipeDia: number;
+  @Column({ type: 'varchar', nullable: true })
+  pipeDia: string;
 
   @Column({ nullable: true })
   smart: string;
@@ -81,11 +81,11 @@ export class Asset {
   @Column({ nullable: true })
   rails: string;
 
-  @Column({ nullable: true })
-  float: number;
+  @Column({ type: 'varchar', nullable: true })
+  float: string;
 
-  @Column({ nullable: true })
-  pumps: number;
+  @Column({ type: 'varchar', nullable: true })
+  pumps: string;
 
   @Column({ nullable: true })
   power: string;

@@ -8,10 +8,10 @@ import * as qrcode from 'qrcode';
 import { User } from '../user/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import { UserIP } from '../user/entities/user-ip.entity';
 import { UserSession } from '../user/entities/user-session.entity';
-import { Log } from '../user/entities/log.entity';
+import { Log } from '../logs/entities/log.entity';
 import { ClientService } from '../client/client.service';
 import { Client } from '../client/entities/client.entity';
 import { JwtPayload } from './interface/jwt-payload.interface';
@@ -216,20 +216,36 @@ export class AuthService {
   }
 
   async logAction(userId: string, action: string, details: any) {
-    const log = this.logRepository.create({
-      user: { id: userId } as User,
+    // Fetch the user entity based on the user ID to ensure proper type
+    const user = await this.userService.findById(userId);
+  
+    
+    const logEntry: DeepPartial<Log> = {
       action,
+      logLevel: 'INFO', 
       details,
-    });
+      timestamp: new Date(),
+      user: user, 
+    };
+  
+    const log = this.logRepository.create(logEntry);
     await this.logRepository.save(log);
   }
 
-  async logClientAction(userId: string, action: string, details: any) {
-    const log = this.logRepository.create({
-      user: { id: userId } as User,
+  async logClientAction(clientUserId: string, action: string, details: any) {
+    // Fetch the user entity based on the client user's ID to ensure proper type
+    const user = await this.userService.findById(clientUserId);
+  
+    // Create the log entry using a DeepPartial to ensure compatibility
+    const logEntry: DeepPartial<Log> = {
       action,
+      logLevel: 'INFO', // Adjust the log level if needed
       details,
-    });
+      timestamp: new Date(),
+      user: user, // Explicitly assign the user entity to the log entry
+    };
+  
+    const log = this.logRepository.create(logEntry);
     await this.logRepository.save(log);
   }
 
@@ -256,7 +272,6 @@ export class AuthService {
       quickbooksTokenExpiresIn: tokenExpirationDate,
     });
   }
-  
 
    // Generate both access and refresh tokens
    async generateTokens(userOrClient: User | Client): Promise<{ accessToken: string; refreshToken: string }> {
@@ -313,7 +328,6 @@ export class AuthService {
     }
   }
   
-
   // Method to check if user has permission to access a specific resource
   async checkUserPermissions(userId: string, resource: string, action: string): Promise<boolean> {
     // Step 1: Find the user by ID
