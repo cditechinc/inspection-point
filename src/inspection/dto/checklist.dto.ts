@@ -10,6 +10,7 @@ export class ChecklistDTO {
   @IsUUID()
   id: string;
 
+  @IsOptional()
   @IsUUID()
   inspectionId: string;
 

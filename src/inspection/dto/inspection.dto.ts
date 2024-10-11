@@ -19,13 +19,16 @@ export class CreateInspectionDTO {
 
   @IsEnum(InspectionStatus)
   status: InspectionStatus;
-
+ 
+  @IsOptional()
   @IsDate()
-  scheduledDate: Date;
+  @Type(() => Date)
+  scheduledDate?: Date;
 
   @IsOptional()
   @IsDate()
-  completedDate: Date;
+  @Type(() => Date)
+  completedDate?: Date;
 
   @IsOptional()
   @IsArray()
@@ -37,7 +40,7 @@ export class CreateInspectionDTO {
 
   @IsOptional()
   @IsInt()
-  inspectionInterval?: number; // The frequency of the inspection in days
+  inspectionInterval?: number; 
 
   @IsOptional()
   @IsDate()
@@ -69,14 +72,13 @@ export class UpdateInspectionDTO {
   @IsArray()
   route?: any[];
 
-  
-
   @IsBoolean()
   @IsOptional()
   isReocurring?: boolean;
 
   @IsOptional()
-  @IsInt()
+  @IsDate()
+  @Type(() => Date)
   inspectionInterval?: number;
 
   @IsOptional()
@@ -102,7 +104,6 @@ export class InspectionDTO {
   scheduledDate: Date;
   completedDate: Date;
   route: any[];
-  
   isReocurring: boolean;
   inspectionInterval: number;
   recurrenceEndDate: Date;

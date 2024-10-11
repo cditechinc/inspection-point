@@ -12,6 +12,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Checklist } from './checklist.entity';
+
 import { Customer } from './../../customer/entities/customer.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
 import { Photo } from './../../assets/entities/photo.entity';
@@ -58,8 +59,8 @@ export class Inspection {
   @Column('boolean', { default: false })
   isReocurring: boolean; 
 
-  @Column('timestamp', { nullable: true })
-  inspectionInterval: Date; 
+  @Column('int', { nullable: true })
+  inspectionInterval: number; 
   
   @Column('timestamp', { nullable: true })
   reocurrenceEndDate: Date;
@@ -74,6 +75,8 @@ export class Inspection {
   @OneToMany(() => Photo, (photo) => photo.inspection, { cascade: true })
   photos: Photo[];
 
+  // @Column('uuid', { nullable: true })
+  // assignedTo: string;
 
   @Column({
     type: 'enum',

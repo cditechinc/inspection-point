@@ -16,7 +16,6 @@ import { CombinedMigration20240722162333 } from './migrations/combinedMigration'
 import { InspectionModuleMigration20240804123456 } from './migrations/inspectionModule';
 import { Inspection } from './inspection/entities/inspection.entity';
 import { Checklist } from './inspection/entities/checklist.entity';
-import { AddNameToInspections20240820143000 } from './migrations/AddNameToInspection';
 import { Invoice } from './invoice/entities/invoice.entity';
 import { AddInvoicesTableWithQuickBooksFields20240901123456 } from './migrations/invoicesModule';
 import { UserGroup } from './user-groups/entities/user-group.entity';
@@ -61,7 +60,6 @@ const dataSourceOptions: DataSourceOptions = {
     CompanyMigration20240721123456,
     CombinedMigration20240722162333,
     InspectionModuleMigration20240804123456,
-    AddNameToInspections20240820143000,
     AddInvoicesTableWithQuickBooksFields20240901123456,
     AddSecurityGroupsAndPermissions20240905123456,
   ],

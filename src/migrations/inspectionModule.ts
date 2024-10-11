@@ -37,7 +37,7 @@ export class InspectionModuleMigration20240804123456
         "completed_date" TIMESTAMP,
         "route" jsonb,
         "is_reocurring" boolean DEFAULT FALSE, 
-        "inspection_interval" integer, 
+        "inspection_interval" TIMESTAMP, 
         "reocurrence_end_date" TIMESTAMP, 
         "pdf_file_path" varchar(255),
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

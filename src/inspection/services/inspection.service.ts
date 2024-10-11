@@ -109,7 +109,7 @@ export class InspectionService {
 
   async scheduleRecurring(
     inspection: Inspection,
-    intervalInDays: number,
+    inspectionInterval: number,
     recurrenceEndDate: Date,
     transactionalEntityManager: any,
   ): Promise<void> {
@@ -119,8 +119,7 @@ export class InspectionService {
     // Loop until the nextScheduledDate is beyond the recurrenceEndDate
     while (nextScheduledDate <= endDate) {
       nextScheduledDate = new Date(
-        nextScheduledDate.setDate(nextScheduledDate.getDate() + intervalInDays),
-      );
+        nextScheduledDate.setDate(nextScheduledDate.getDate() + inspectionInterval));
 
       // Ensure we don't create an inspection after the end date
       if (nextScheduledDate > endDate) break;
