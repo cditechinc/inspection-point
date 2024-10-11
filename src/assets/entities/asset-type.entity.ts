@@ -5,7 +5,7 @@ export class AssetType {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   @Index({ unique: true })
   name: string;
 
