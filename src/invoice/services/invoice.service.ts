@@ -8,20 +8,24 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Invoice } from './entities/invoice.entity';
-import { QuickBooksOAuthService } from '../auth/quickbooks-oauth.service';
-import { ClientService } from '../client/client.service';
-import { CustomerService } from '../customer/customer.service';
-import { InspectionService } from './../inspection/services/inspection.service';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
-import { UpdateInvoiceDto } from './dto/update-invoice.dto';
-import { Inspection } from './../inspection/entities/inspection.entity';
+import { Invoice } from './../entities/invoice.entity';
+import { QuickBooksOAuthService } from './../../auth/quickbooks-oauth.service';
+import { ClientService } from './../../client/client.service';
+import { CustomerService } from './../../customer/customer.service';
+import { InspectionService } from './../../inspection/services/inspection.service';
+import { CreateInvoiceDto } from './../dto/create-invoice.dto';
+import { UpdateInvoiceDto } from './../dto/update-invoice.dto';
+import { Inspection } from './../../inspection/entities/inspection.entity';
+import { InvoiceItem } from '../entities/invoice-item.entity';
+import { Services } from '../entities/services.entity';
 
 @Injectable()
 export class InvoiceService {
   constructor(
     @InjectRepository(Invoice)
     private readonly invoiceRepository: Repository<Invoice>,
+    @InjectRepository(InvoiceItem)
+    private readonly invoiceItemRepository: Repository<InvoiceItem>,
     private readonly quickBooksOAuthService: QuickBooksOAuthService,
     private readonly clientService: ClientService,
     private readonly customerService: CustomerService,
@@ -51,28 +55,41 @@ export class InvoiceService {
       throw new Error('Client is not authorized with QuickBooks');
     }
 
+    // Fetch the service fee associated with the inspection
+    const serviceFee = inspection.serviceFee;
+    if (!serviceFee) {
+      throw new BadRequestException(
+        'Service fee not found for this inspection',
+      );
+    }
+
+    // Create line items based on the service fee
     const lineItem = {
-      Amount: createInvoiceDto.amountDue,
+      Amount: serviceFee.price * 1, // Assuming quantity is 1
       DetailType: 'SalesItemLineDetail',
       SalesItemLineDetail: {
         ItemRef: {
-          value: '1', // The service item in QuickBooks
-          name: 'Inspection Service',
+          value: serviceFee.quickbooksServiceId, // Use QuickBooks Service ID
+          name: serviceFee.name,
         },
+        UnitPrice: serviceFee.price,
+        Qty: 1,
       },
+      Description: serviceFee.description,
     };
 
-    // Ensure the due date is converted to a string in ISO format
+    // Prepare invoice data for QuickBooks
     const invoiceData = {
       CustomerRef: {
         value: customer.quickbooksCustomerId,
       },
       Line: [lineItem],
-      DueDate: createInvoiceDto.dueDate, // Convert Date to ISO string
+      DueDate: createInvoiceDto.dueDate,
       PrivateNote: `Invoice for inspection #${inspectionId}`,
     };
 
     try {
+      // Create invoice in QuickBooks
       const qbInvoice = await this.quickBooksOAuthService
         .getClient()
         .makeApiCall({
@@ -92,6 +109,7 @@ export class InvoiceService {
 
       if (qbInvoice.json) {
         console.log('Invoice created in QuickBooks:', qbInvoice.json);
+        // Create Invoice entity
         const savedInvoice = this.invoiceRepository.create({
           quickbooks_invoice_id: qbInvoice.json.Invoice.Id,
           client: client,
@@ -108,14 +126,34 @@ export class InvoiceService {
           quickbooks_sync_status: 'synced',
         });
 
-        return await this.invoiceRepository.save(savedInvoice);
+        // Save the invoice
+        const invoice = await this.invoiceRepository.save(savedInvoice);
+
+        // Create InvoiceItem entity
+        const invoiceItem = this.invoiceItemRepository.create({
+          invoice: invoice,
+          serviceFee: serviceFee,
+          quantity: 1,
+          unitPrice: serviceFee.price,
+          totalPrice: serviceFee.price * 1,
+          description: serviceFee.description,
+        });
+
+        // Save the invoice item
+        await this.invoiceItemRepository.save(invoiceItem);
+
+        return invoice;
       } else {
         console.error('QuickBooks Invoice Creation Failed:', qbInvoice);
         throw new Error('Failed to create invoice in QuickBooks');
       }
     } catch (error) {
       console.error(
-        `QuickBooks API error: ${JSON.stringify(error.response?.data || error.message, null, 2)}`,
+        `QuickBooks API error: ${JSON.stringify(
+          error.response?.data || error.message,
+          null,
+          2,
+        )}`,
       );
       throw new InternalServerErrorException(
         `QuickBooks API error: ${error.message}`,
@@ -130,130 +168,57 @@ export class InvoiceService {
     });
   }
 
-  // async addInspectionToInvoice(
-  //   invoiceId: string,
-  //   {
-  //     inspectionId,
-  //     serviceFee,
-  //     pdfReportPath,
-  //   }: { inspectionId: string; serviceFee: number; pdfReportPath: string },
-  // ): Promise<Invoice> {
-  //   console.log('Adding inspection to invoice:', inspectionId, serviceFee);
-  //   const invoice = await this.findInvoiceById(invoiceId);
-
-  //   if (!invoice) {
-  //     throw new NotFoundException('Invoice not found');
-  //   }
-
-  //   // Ensure serviceFee is a number
-  //   const numericServiceFee = Number(serviceFee);
-  //   if (isNaN(numericServiceFee)) {
-  //     throw new BadRequestException('Invalid service fee');
-  //   }
-
-  //   // Ensure invoice.amount_due and invoice.balance are numbers
-  //   const amountDue = Number(invoice.amount_due);
-  //   const balance = Number(invoice.balance);
-  //   if (isNaN(amountDue) || isNaN(balance)) {
-  //     throw new InternalServerErrorException(
-  //       'Invalid amount_due or balance value',
-  //     );
-  //   }
-
-  //   // Assuming `invoice.items` is an array of line items. If it doesn't exist, initialize it.
-  //   if (!invoice.items) {
-  //     invoice.items = [];
-  //   }
-
-  //   // Add the new line item for the inspection service fee
-  //   invoice.items.push({
-  //     description: `Inspection Service Fee for Inspection ID ${inspectionId}`,
-  //     amount: serviceFee,
-  //   });
-
-  //   // Update the total amount due and balance
-  //   invoice.amount_due = amountDue + numericServiceFee;
-  //   invoice.balance = balance + numericServiceFee;
-
-  //   // Attach PDF report if applicable
-  //   if (pdfReportPath) {
-  //     invoice.quickbooks_invoice_url = pdfReportPath;
-  //   }
-
-  //   // Save and return the updated invoice
-  //   return this.invoiceRepository.save(invoice);
-  // }
-
+  // Update the addInspectionToInvoice method to handle invoice items
   async addInspectionToInvoice(
     invoiceId: string,
     {
       inspectionId,
-      serviceFee,
+      serviceFeeId,
       pdfReportPath,
-    }: { inspectionId: string; serviceFee: number; pdfReportPath: string },
-  ): Promise<any> {  // Use 'any' to allow custom response
-    console.log('Adding inspection to invoice:', inspectionId, serviceFee);
-    
+    }: { inspectionId: string; serviceFeeId: string; pdfReportPath: string },
+  ): Promise<any> {
+    console.log('Adding inspection to invoice:', inspectionId);
+
     const invoice = await this.findInvoiceById(invoiceId);
     if (!invoice) {
       throw new NotFoundException('Invoice not found');
     }
-  
-    // Ensure serviceFee is a number
-    const numericServiceFee = Number(serviceFee);
-    if (isNaN(numericServiceFee)) {
-      throw new BadRequestException('Invalid service fee');
+
+    const inspection = await this.inspectionService.findOne(inspectionId);
+    if (!inspection) {
+      throw new NotFoundException('Inspection not found');
     }
-  
-    // Ensure invoice.amount_due and invoice.balance are numbers
-    const amountDue = Number(invoice.amount_due);
-    const balance = Number(invoice.balance);
-    if (isNaN(amountDue) || isNaN(balance)) {
-      throw new InternalServerErrorException('Invalid amount_due or balance value');
+
+    const serviceFee = await this.invoiceItemRepository.manager
+      .getRepository(Services)
+      .findOne({ where: { id: serviceFeeId } });
+    if (!serviceFee) {
+      throw new NotFoundException('Service fee not found');
     }
-  
-    // Initialize items if not already present
-    if (!invoice.items) {
-      invoice.items = [];
-    }
-  
-    // Add the new inspection line item to the invoice
-    invoice.items.push({
-      description: `Inspection Service Fee for Inspection ID ${inspectionId}`,
-      amount: numericServiceFee,
-      inspectionId,  // Associate the inspection ID
-      pdfReportPath,  // Attach the PDF report path
+
+    // Create a new InvoiceItem
+    const invoiceItem = this.invoiceItemRepository.create({
+      invoice: invoice,
+      serviceFee: serviceFee,
+      quantity: 1,
+      unitPrice: serviceFee.price,
+      totalPrice: serviceFee.price * 1,
+      description: serviceFee.description,
     });
-  
+
+    // Save the invoice item
+    await this.invoiceItemRepository.save(invoiceItem);
+
     // Update the total amount due and balance
-    invoice.amount_due = amountDue + numericServiceFee;
-    invoice.balance = balance + numericServiceFee;
-  
-    // Attach PDF report if applicable
-    if (pdfReportPath) {
-      invoice.quickbooks_invoice_url = pdfReportPath;
-    }
-  
+    invoice.amount_due += serviceFee.price;
+    invoice.balance += serviceFee.price;
+
     // Save the updated invoice
     const updatedInvoice = await this.invoiceRepository.save(invoice);
-  
-    // Fetch all inspections related to this invoice
-    const inspections = invoice.items.map(item => ({
-      inspectionId: item.inspectionId,
-      description: item.description,
-      serviceFee: item.amount,
-      pdfReportPath: item.pdfReportPath,
-    }));
-  
-    // Return a custom object containing the invoice and the inspection details
-    return {
-      invoice: updatedInvoice, // Full updated invoice
-      inspections,  // Include inspection details in the custom response
-    };
+
+    // Return the updated invoice with items
+    return updatedInvoice;
   }
-  
-  
-  
 
   async findInvoiceByInspectionId(
     inspectionId: string,

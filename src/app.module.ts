@@ -35,6 +35,8 @@ import { QuickBooksOAuthService } from './auth/quickbooks-oauth.service';
 import { QuickBooksController } from './quickbooks.controller';
 import { Company } from './company/entities/company.entity';
 import { CompanyModule } from './company/company.module';
+import { InvoiceItem } from './invoice/entities/invoice-item.entity';
+import { Services } from './invoice/entities/services.entity';
 
 @Module({
   imports: [
@@ -63,8 +65,9 @@ import { CompanyModule } from './company/company.module';
           AssetPump,
           Inspection,
           Checklist,
-         
           Invoice,
+          InvoiceItem,
+          Services,
           UserGroup,
           UserGroupMembership,
           UserGroupPermission,

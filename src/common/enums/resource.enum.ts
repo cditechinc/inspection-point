@@ -16,6 +16,7 @@ export enum Resource {
     PHOTOS = 'photos',
     INSPECTION_SCORES = 'inspection-scores',
     COMPANIES = 'companies',
+    SERVICES = 'services'
     
     // USER_GROUPS = 'user-groups',
     // USER_GROUP_PERMISSIONS = 'user-group',

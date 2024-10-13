@@ -177,6 +177,8 @@ export class RolesGuard implements CanActivate {
       requiredPermission = 'manage_inspection-scores';
     } else if (route.includes('companies')) {
       requiredPermission = 'manage_companies';
+    } else if (route.includes('services')) {
+      requiredPermission = 'manage_services';
     }
     // Add more cases as needed
 

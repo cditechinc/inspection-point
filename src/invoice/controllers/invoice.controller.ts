@@ -1,11 +1,11 @@
 import { Controller, Post, Body, Param, UseGuards, Get, ParseUUIDPipe, Patch, Delete } from '@nestjs/common';
-import { InvoiceService } from './invoice.service';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
-import { JwtAuthGuard } from './../auth/guards/jwt-auth.guard';
-import { RolesGuard } from './../auth/guards/roles.guard';
-import { Roles } from './../auth/decorators/roles.decorator';
-import { Role } from './../auth/role.enum';
-import { UpdateInvoiceDto } from './dto/update-invoice.dto';
+import { InvoiceService } from './../services/invoice.service';
+import { CreateInvoiceDto } from '../dto/create-invoice.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { Role } from '../../auth/role.enum';
+import { UpdateInvoiceDto } from '../dto/update-invoice.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('invoices')

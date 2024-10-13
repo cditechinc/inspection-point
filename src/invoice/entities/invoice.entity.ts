@@ -1,14 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { Client } from '../../client/entities/client.entity';
 import { Customer } from '../../customer/entities/customer.entity';
 import { Inspection } from '../../inspection/entities/inspection.entity';
+import { InvoiceItem } from './invoice-item.entity';
 
-interface InvoiceItem {
-  description: string;
-  amount: number;
-  inspectionId?: string;  // Optional inspectionId field
-  pdfReportPath?: string; // Optional pdfReportPath field
-}
 @Entity('invoices')
 export class Invoice {
   @PrimaryGeneratedColumn('uuid')
@@ -18,15 +19,19 @@ export class Invoice {
   quickbooks_invoice_id: string;
 
   // Many invoices can belong to one client
-  @ManyToOne(() => Client, client => client.invoices, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Client, (client) => client.invoices, { onDelete: 'CASCADE' })
   client: Client;
 
   // Many invoices can belong to one customer
-  @ManyToOne(() => Customer, customer => customer.invoices, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Customer, (customer) => customer.invoices, {
+    onDelete: 'CASCADE',
+  })
   customer: Customer;
 
   // Many invoices can belong to one inspection
-  @ManyToOne(() => Inspection, inspection => inspection.invoices, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Inspection, (inspection) => inspection.invoices, {
+    onDelete: 'CASCADE',
+  })
   inspection: Inspection;
 
   @Column({ type: 'varchar', length: 50 })
@@ -56,12 +61,18 @@ export class Invoice {
   @Column({ type: 'varchar', length: 50 })
   quickbooks_sync_status: string;
 
-  @Column('jsonb', { nullable: true })  // Use JSONB type in PostgreSQL, or adjust based on your DB.
-  items: InvoiceItem[];
+  @OneToMany(() => InvoiceItem, (invoiceItem) => invoiceItem.invoice, {
+    cascade: true,
+  })
+  invoiceItems: InvoiceItem[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
   updated_at: Date;
 }

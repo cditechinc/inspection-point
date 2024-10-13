@@ -1,7 +1,7 @@
 import { IsUUID, IsString, IsNotEmpty, IsOptional, IsEnum, IsDecimal, IsDate, IsArray, ValidateNested, IsBoolean, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ChecklistDTO } from './checklist.dto';
-import { InspectionStatus } from '../entities/inspection.entity';
+import { InspectionStatus, IntervalType } from '../entities/inspection.entity';
 
 export class CreateInspectionDTO {
   @IsUUID()
@@ -38,9 +38,9 @@ export class CreateInspectionDTO {
   @IsOptional()
   isReocurring?: boolean; // Whether the inspection is recurring
 
+  @IsEnum(IntervalType)
   @IsOptional()
-  @IsInt()
-  inspectionInterval?: number; 
+  inspectionInterval?: IntervalType;
 
   @IsOptional()
   @IsDate()
@@ -50,6 +50,10 @@ export class CreateInspectionDTO {
   @ValidateNested({ each: true })
   @Type(() => ChecklistDTO)
   checklists: ChecklistDTO[];
+
+  @IsUUID()
+@IsOptional()
+serviceFeeId?: string;
 
   
 }
@@ -76,10 +80,9 @@ export class UpdateInspectionDTO {
   @IsOptional()
   isReocurring?: boolean;
 
+  @IsEnum(IntervalType)
   @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  inspectionInterval?: number;
+  inspectionInterval?: IntervalType;
 
   @IsOptional()
   @IsDate()
@@ -91,7 +94,10 @@ export class UpdateInspectionDTO {
   @IsOptional()
   checklists?: ChecklistDTO[];
 
-  
+  @IsUUID()
+@IsOptional()
+serviceFeeId?: string;
+
 }
 
 export class InspectionDTO {
@@ -102,9 +108,10 @@ export class InspectionDTO {
   assignedTo: string;
   status: string;
   scheduledDate: Date;
+  serviceFeeId: string;
   completedDate: Date;
   route: any[];
-  isReocurring: boolean;
+  isReocurring: boolean; 
   inspectionInterval: number;
   recurrenceEndDate: Date;
   checklists: ChecklistDTO[];

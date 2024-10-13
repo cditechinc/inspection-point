@@ -25,6 +25,8 @@ import { Permission } from './permissions/entities/permission.entity';
 import { AddSecurityGroupsAndPermissions20240905123456 } from './migrations/securityGroupsAndPermissions';
 import { Company } from './company/entities/company.entity';
 import { CompanyMigration20240721123456 } from './migrations/companyModule';
+import { InvoiceItem } from './invoice/entities/invoice-item.entity';
+import { Services } from './invoice/entities/services.entity';
 
 
 const dataSourceOptions: DataSourceOptions = {
@@ -50,6 +52,8 @@ const dataSourceOptions: DataSourceOptions = {
     Inspection,
     Checklist,
     Invoice,
+    InvoiceItem,
+    Services,
     UserGroup,
     UserGroupMembership,
     UserGroupPermission,

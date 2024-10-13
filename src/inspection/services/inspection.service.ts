@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThan, Repository } from 'typeorm';
-import { Inspection, InspectionStatus } from './../entities/inspection.entity';
+import { Inspection, InspectionStatus, IntervalType } from './../entities/inspection.entity';
 import {
   CreateInspectionDTO,
   UpdateInspectionDTO,
@@ -19,9 +19,10 @@ import { Client } from './../../client/entities/client.entity';
 import { Asset } from './../../assets/entities/asset.entity';
 import { Customer } from './../../customer/entities/customer.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
-import { InvoiceService } from './../../invoice/invoice.service';
+import { InvoiceService } from './../../invoice/services/invoice.service';
 import { PdfService } from './../../reports/services/pdf.service';
 import { CreateInvoiceDto } from './../../invoice/dto/create-invoice.dto';
+import { Services } from '../../invoice/entities/services.entity';
 
 @Injectable()
 export class InspectionService {
@@ -50,10 +51,17 @@ export class InspectionService {
           where: { id: createInspectionDto.assetId },
         });
         let assignedToUser: User | null = null;
+        let serviceFee: Services | null = null;
 
         if (createInspectionDto.assignedTo) {
           assignedToUser = await transactionalEntityManager.findOne(User, {
             where: { id: createInspectionDto.assignedTo },
+          });
+        }
+
+        if (createInspectionDto.serviceFeeId) {
+          serviceFee = await transactionalEntityManager.findOne(Services, {
+            where: { id: createInspectionDto.serviceFeeId },
           });
         }
 
@@ -68,6 +76,7 @@ export class InspectionService {
           customer,
           asset,
           assignedTo: assignedToUser,
+          serviceFee: serviceFee,
           status: InspectionStatus.NOT_DONE,
         });
 
@@ -107,9 +116,10 @@ export class InspectionService {
     );
   }
 
+  // Update scheduleRecurring method to handle different intervals
   async scheduleRecurring(
     inspection: Inspection,
-    inspectionInterval: number,
+    inspectionInterval: IntervalType, 
     recurrenceEndDate: Date,
     transactionalEntityManager: any,
   ): Promise<void> {
@@ -118,8 +128,30 @@ export class InspectionService {
 
     // Loop until the nextScheduledDate is beyond the recurrenceEndDate
     while (nextScheduledDate <= endDate) {
-      nextScheduledDate = new Date(
-        nextScheduledDate.setDate(nextScheduledDate.getDate() + inspectionInterval));
+      switch (inspectionInterval) {
+        case 'Daily':
+          nextScheduledDate.setDate(nextScheduledDate.getDate() + 1);
+          break;
+        case 'Bi-Monthly':
+          nextScheduledDate.setDate(nextScheduledDate.getDate() + 15);
+          break;
+        case 'Monthly':
+          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 1);
+          break;
+        case 'Quarterly':
+          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 3);
+          break;
+        case 'Bi-Annual':
+          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 6);
+          break;
+        case 'Annual':
+          nextScheduledDate.setFullYear(nextScheduledDate.getFullYear() + 1);
+          break;
+        default:
+          // For 'One-Time' or unknown intervals, exit the loop
+          nextScheduledDate = endDate;
+          break;
+      }
 
       // Ensure we don't create an inspection after the end date
       if (nextScheduledDate > endDate) break;
@@ -128,7 +160,7 @@ export class InspectionService {
       const newInspection = transactionalEntityManager.create(Inspection, {
         ...inspection,
         id: undefined, // New ID for the new inspection
-        scheduledDate: nextScheduledDate,
+        scheduledDate: new Date(nextScheduledDate),
         status: InspectionStatus.NOT_DONE, // Reset status for the new inspection
         createdAt: undefined, // Reset timestamps
         updatedAt: undefined,
@@ -372,7 +404,7 @@ export class InspectionService {
       invoiceId,
       {
         inspectionId,
-        serviceFee, // Using serviceFee from inspection
+        serviceFeeId: inspection.serviceFee.id,
         pdfReportPath,
       },
     );
@@ -460,10 +492,10 @@ export class InspectionService {
   }
 
   async submitAndBillCustomer(inspectionId: string) {
-    // Fetch the inspection by its ID, including relations with client, customer, and photos
+    // Fetch the inspection by its ID, including relations with client, customer, serviceFee, and photos
     const inspection = await this.inspectionRepository.findOne({
       where: { id: inspectionId },
-      relations: ['client', 'customer', 'photos'], // Include photos relation here
+      relations: ['client', 'customer', 'photos', 'serviceFee'],
     });
 
     // Check if the inspection exists
@@ -512,13 +544,21 @@ export class InspectionService {
       throw new InternalServerErrorException('Error fetching PDF report');
     }
 
+    // Use the service fee price as the amount due
+    const serviceFee = inspection.serviceFee;
+    if (!serviceFee) {
+      throw new BadRequestException('Service fee not associated with inspection');
+    }
+
+    const amountDue = serviceFee.price;
+
     // Create the invoice in QuickBooks using the InvoiceService
     const invoiceData: CreateInvoiceDto = {
       clientId: inspection.client.id,
       customerId: localCustomerId,
       quickbooksCustomerId: quickbooksCustomerId,
       inspectionId,
-      amountDue: 0, // Use the service fee from the inspection
+      amountDue: amountDue, // Use the service fee price
       dueDate: new Date().toISOString(), // Set the due date to now, customize as needed
       pdfReportPath, // Attach the PDF report path
       imagePaths, // Attach the image paths
@@ -540,15 +580,6 @@ export class InspectionService {
           ...inspection,
           customerId: localCustomerId, // Use UUID here for PostgreSQL
         });
-
-        // Send the invoice via QuickBooks, including the PDF and images as attachments
-        // await this.invoiceService.sendInvoiceWithAttachments(
-        //   invoice.quickbooks_invoice_id,
-        //   inspection.client.id,
-        //   inspection.id,
-        //   pdfReportPath,
-        //   imagePaths,
-        // );
 
         return invoice; // Return the created invoice
       } else {

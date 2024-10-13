@@ -16,6 +16,7 @@ import { Checklist } from './checklist.entity';
 import { Customer } from './../../customer/entities/customer.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
 import { Photo } from './../../assets/entities/photo.entity';
+import { Services } from '../../invoice/entities/services.entity';
 
 export enum InspectionStatus {
   NOT_DONE = 'Not-Done',
@@ -26,12 +27,21 @@ export enum InspectionStatus {
   ON_HOLD = 'On-Hold',
   CANCELED = 'Canceled',
 }
+
+export enum IntervalType {
+  DAILY = 'Daily',
+  BI_MONTHLY = 'Bi-Monthly',
+  MONTHLY = 'Monthly',
+  QUARTERLY = 'Quarterly',
+  BI_ANNUAL = 'Bi-Annual',
+  ANNUAL = 'Annual',
+  ONE_TIME = 'One-Time',
+}
+
 @Entity('inspections')
 export class Inspection {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  
 
   @ManyToOne(() => Client, (client) => client.inspections, {
     onDelete: 'CASCADE',
@@ -57,26 +67,30 @@ export class Inspection {
   assignedTo: User;
 
   @Column('boolean', { default: false })
-  isReocurring: boolean; 
+  isReocurring: boolean;
 
-  @Column('int', { nullable: true })
-  inspectionInterval: number; 
-  
+  @Column({
+    type: 'enum',
+    enum: IntervalType,
+    nullable: true,
+  })
+  inspectionInterval: IntervalType;  
+
   @Column('timestamp', { nullable: true })
   reocurrenceEndDate: Date;
 
   @OneToMany(() => Checklist, (checklist) => checklist.inspection)
   checklists: Checklist[];
 
-  
-  @OneToMany(() => Invoice, invoice => invoice.inspection)
+  @OneToMany(() => Invoice, (invoice) => invoice.inspection)
   invoices: Invoice[];
 
   @OneToMany(() => Photo, (photo) => photo.inspection, { cascade: true })
   photos: Photo[];
 
-  // @Column('uuid', { nullable: true })
-  // assignedTo: string;
+  @ManyToOne(() => Services, { nullable: true })
+  @JoinColumn({ name: 'service_fee_id' })
+  serviceFee: Services;
 
   @Column({
     type: 'enum',
@@ -96,7 +110,6 @@ export class Inspection {
 
   @Column('jsonb')
   route: any;
-
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

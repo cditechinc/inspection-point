@@ -7,6 +7,7 @@ import { Inspection } from './../../inspection/entities/inspection.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
 import { UserGroup } from './../../user-groups/entities/user-group.entity';
 import { Company } from './../../company/entities/company.entity';
+import { Services } from '../../invoice/entities/services.entity';
 
 
 @Entity('clients')
@@ -96,4 +97,7 @@ export class Client {
 
   @OneToOne(() => Company, (company) => company.client, { cascade: true })
   company: Company;
+
+  @OneToMany(() => Services, (serviceFee) => serviceFee.client)
+  serviceFees: Services[];
 }
