@@ -25,13 +25,50 @@ import {
       createServiceFeeDto: CreateServiceFeeDto,
     ): Promise<Services> {
       const client = await this.clientService.findOne(clientId);
-  
-      const serviceFee = this.serviceFeeRepository.create({
-        ...createServiceFeeDto,
-        client: client,
-      });
-  
-      return this.serviceFeeRepository.save(serviceFee);
+    
+      await this.quickBooksService.refreshTokenIfNeeded(clientId);
+    
+      const quickBooksServiceData = {
+        Name: createServiceFeeDto.name,
+        Description: createServiceFeeDto.description,
+        UnitPrice: createServiceFeeDto.price,
+        IncomeAccountRef: { value: '41' },  // Example income account reference
+        Taxable: createServiceFeeDto.isTaxable,
+      };
+    
+      try {
+        // Log the service data we're about to send to QuickBooks
+        console.log('Creating service in QuickBooks with data:', quickBooksServiceData);
+    
+        const createdQuickBooksService = await this.quickBooksService.createService(
+          client.quickbooksRealmId,
+          client.quickbooksAccessToken,
+          quickBooksServiceData
+        );
+    
+        console.log('Service created in QuickBooks:', createdQuickBooksService);
+    
+        // Use the ID returned from QuickBooks to create the service locally
+        const quickbooksServiceId = createdQuickBooksService.Id;
+        const serviceFee = this.serviceFeeRepository.create({
+          ...createServiceFeeDto,
+          quickbooksServiceId,
+          client,
+          billingIo: createServiceFeeDto.billingIo,
+        });
+    
+        // Log the data being saved to the database
+        console.log('Saving service fee to database:', serviceFee);
+    
+        return this.serviceFeeRepository.save(serviceFee);
+    
+      } catch (error) {
+        // Log any error that occurs during service creation
+        console.error('Error during service creation:', error.message);
+        throw new InternalServerErrorException(
+          'Failed to create service in QuickBooks or save in database: ' + error.message,
+        );
+      }
     }
   
     async findAll(clientId: string): Promise<Services[]> {
@@ -71,39 +108,43 @@ import {
     }
   
     async syncServiceFees(clientId: string): Promise<void> {
-      // Refresh QuickBooks token if needed and get the OAuth client
       await this.quickBooksService.refreshTokenIfNeeded(clientId);
       const client = await this.clientService.findOne(clientId);
   
-      // Fetch service fees from QuickBooks
-      const serviceFees = await this.quickBooksService.fetchServiceFees(
-        client.quickbooksRealmId,
-        client.quickbooksAccessToken,
-      );
+      try {
+        // Fetch service fees from QuickBooks
+        const serviceFees = await this.quickBooksService.fetchServiceFees(
+          client.quickbooksRealmId,
+          client.quickbooksAccessToken,
+        );
   
-      // Upsert service fees into the database
-      for (const fee of serviceFees) {
-        const existingServiceFee = await this.serviceFeeRepository.findOne({
-          where: { quickbooksServiceId: fee.Id, client: { id: clientId } },
-        });
+        for (const fee of serviceFees) {
+          const existingServiceFee = await this.serviceFeeRepository.findOne({
+            where: { quickbooksServiceId: fee.Id, client: { id: clientId } },
+          });
   
-        const serviceFeeData = {
-          quickbooksServiceId: fee.Id,
-          name: fee.Name,
-          description: fee.Description || '',
-          price: parseFloat(fee.UnitPrice),
-          isTaxable: fee.Taxable || false,
-          client: client,
-        };
+          const serviceFeeData = {
+            quickbooksServiceId: fee.Id,
+            name: fee.Name,
+            description: fee.Description || '',
+            price: parseFloat(fee.UnitPrice),
+            isTaxable: fee.Taxable || false,
+            client: client,
+          };
   
-        if (existingServiceFee) {
-          // Update existing service fee
-          await this.serviceFeeRepository.update(existingServiceFee.id, serviceFeeData);
-        } else {
-          // Create new service fee
-          const newServiceFee = this.serviceFeeRepository.create(serviceFeeData);
-          await this.serviceFeeRepository.save(newServiceFee);
+          if (existingServiceFee) {
+            // Update the existing service fee
+            await this.serviceFeeRepository.update(existingServiceFee.id, serviceFeeData);
+          } else {
+            // Create a new service fee
+            const newServiceFee = this.serviceFeeRepository.create(serviceFeeData);
+            await this.serviceFeeRepository.save(newServiceFee);
+          }
         }
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Failed to sync service fees from QuickBooks: ' + error.message,
+        );
       }
     }
   }

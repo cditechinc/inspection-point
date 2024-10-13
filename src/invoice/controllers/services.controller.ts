@@ -17,12 +17,15 @@ import {
   import { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from './../../auth/decorators/roles.decorator';
+import { Role } from './../../auth/role.enum';
   
   @Controller('services')
   @UseGuards(JwtAuthGuard, RolesGuard)
   export class ServiceFeeController {
     constructor(private readonly servicesService: ServicesService) {}
   
+    @Roles(Role.ClientAdmin)
     @Post()
     async create(
       @Req() req: Request,
@@ -36,6 +39,7 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
       return serviceFee;
     }
   
+    @Roles(Role.ClientAdmin)
     @Get()
     async findAll(@Req() req: Request) {
       const clientId = req.user['client_id'];
@@ -43,6 +47,7 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
       return serviceFees;
     }
   
+    @Roles(Role.ClientAdmin)
     @Get(':id')
     async findOne(@Req() req: Request, @Param('id') id: string) {
       const clientId = req.user['client_id'];
@@ -50,6 +55,7 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
       return serviceFee;
     }
   
+    @Roles(Role.ClientAdmin)
     @Put(':id')
     async update(
       @Req() req: Request,
@@ -65,6 +71,7 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
       return serviceFee;
     }
   
+    @Roles(Role.ClientAdmin)
     @Delete(':id')
     @HttpCode(204)
     async remove(@Req() req: Request, @Param('id') id: string) {

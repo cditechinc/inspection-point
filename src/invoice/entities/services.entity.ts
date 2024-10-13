@@ -33,7 +33,7 @@ import {
     isTaxable: boolean;
 
     @Column({ nullable: true })
-    billing_io: string;
+    billingIo: string;
   
     @ManyToOne(() => Client, (client) => client.serviceFees, { onDelete: 'CASCADE' })
     client: Client;

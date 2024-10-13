@@ -1,9 +1,9 @@
-import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsDecimal } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsNumber } from 'class-validator';
 
 export class CreateServiceFeeDto {
   @IsString()
-  @IsNotEmpty()
-  quickbooksServiceId: string;
+  @IsOptional() 
+  quickbooksServiceId?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -13,11 +13,15 @@ export class CreateServiceFeeDto {
   @IsString()
   description?: string;
 
-  @IsDecimal()
+  @IsNumber({}, { message: 'Price must be a valid number' })
   @IsNotEmpty()
   price: number;
 
   @IsOptional()
   @IsBoolean()
-  isTaxable?: boolean;
+  isTaxable?: boolean; // Updated to match the payload field name
+
+  @IsOptional()
+  @IsString()
+  billingIo?: string; // Added billing_io to match your payload
 }

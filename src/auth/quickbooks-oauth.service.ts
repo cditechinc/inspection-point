@@ -313,4 +313,59 @@ export class QuickBooksOAuthService {
     }
   }  
 
+  // Add the createService method
+  async createService(realmId: string, accessToken: string, serviceData: any) {
+    try {
+      const quickBooksBaseUrl = this.oauthClient.environment === 'sandbox'
+        ? 'https://sandbox-quickbooks.api.intuit.com'
+        : 'https://quickbooks.api.intuit.com';
+  
+      const response = await this.oauthClient.makeApiCall({
+        url: `${quickBooksBaseUrl}/v3/company/${realmId}/item`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          Name: serviceData.Name,
+          Description: serviceData.Description,
+          UnitPrice: serviceData.UnitPrice,
+          IncomeAccountRef: serviceData.IncomeAccountRef,
+          Type: 'Service',
+          Taxable: serviceData.Taxable || false, 
+        }),
+      });
+  
+      if (response.json) {
+        return response.json.Item;
+      } else {
+        throw new InternalServerErrorException('Failed to create service in QuickBooks');
+      }
+  
+    } catch (error) {
+      // Capture QuickBooks-specific errors
+      if (error.response && error.response.data && error.response.data.Fault) {
+        const fault = error.response.data.Fault;
+        const quickBooksErrorMessage = fault.Error[0].Message;
+  
+        // Example of catching duplicate service errors (Code 6240)
+        if (fault.Error[0].code === '6240') {
+          console.error(`Duplicate service error: ${quickBooksErrorMessage}`);
+          throw new ConflictException(`Service with name "${serviceData.Name}" already exists in QuickBooks.`);
+        }
+  
+        // Log the error for debugging purposes
+        console.error(`QuickBooks Error: ${quickBooksErrorMessage}`);
+        throw new InternalServerErrorException(`QuickBooks API error: ${quickBooksErrorMessage}`);
+      }
+  
+      // Log generic errors or unexpected issues
+      console.error('Error creating service in QuickBooks:', error.message);
+      throw new InternalServerErrorException(`QuickBooks API error: ${error.message}`);
+    }
+  }
+  
+
 }
