@@ -16,7 +16,9 @@ export enum Resource {
     PHOTOS = 'photos',
     INSPECTION_SCORES = 'inspection-scores',
     COMPANIES = 'companies',
-    SERVICES = 'services'
+    SERVICES = 'services',
+    CHECKLIST_TEMPLATES = 'checklist-templates',
+    INSPECTION_CHECKLISTS = 'inspection-checklists',
     
     // USER_GROUPS = 'user-groups',
     // USER_GROUP_PERMISSIONS = 'user-group',

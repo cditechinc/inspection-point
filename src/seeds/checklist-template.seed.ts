@@ -19,6 +19,7 @@ export class ChecklistTemplateSeed {
     };
 
     console.log(`Looking for checklist template in the checklist_templates table`);
+    
     // Check if the checklist template already exists
     const existingTemplate = await this.checklistTemplateRepository.findOne({
       where: { name: checklistTemplateData.name },
@@ -31,6 +32,7 @@ export class ChecklistTemplateSeed {
 
       // Define the checklist questions
       const questions = [
+        // Existing questions
         { question_text: 'Structure', question_type: QuestionType.TEXT, is_required: false },
         { question_text: 'Panel', question_type: QuestionType.TEXT, is_required: false },
         { question_text: 'Pipes', question_type: QuestionType.TEXT, is_required: false },
@@ -52,6 +54,25 @@ export class ChecklistTemplateSeed {
         { question_text: 'Overall Score', question_type: QuestionType.TEXT, is_required: false },
         // Cleaning Question
         { question_text: 'Station needs cleaning?', question_type: QuestionType.BOOLEAN, is_required: false },
+        // Pump-related questions
+        { question_text: 'Pump 1# Runs?', question_type: QuestionType.BOOLEAN, is_required: true },
+        { question_text: 'Pump 1# Amps', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 1# Contactors', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 2# Runs?', question_type: QuestionType.BOOLEAN, is_required: true },
+        { question_text: 'Pump 2# Amps', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 2# Contactors', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 3# Runs?', question_type: QuestionType.BOOLEAN, is_required: true },
+        { question_text: 'Pump 3# Amps', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 3# Contactors', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 4# Runs?', question_type: QuestionType.BOOLEAN, is_required: true },
+        { question_text: 'Pump 4# Amps', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 4# Contactors', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 5# Runs?', question_type: QuestionType.BOOLEAN, is_required: true },
+        { question_text: 'Pump 5# Amps', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 5# Contactors', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 6# Runs?', question_type: QuestionType.BOOLEAN, is_required: true },
+        { question_text: 'Pump 6# Amps', question_type: QuestionType.TEXT, is_required: true },
+        { question_text: 'Pump 6# Contactors', question_type: QuestionType.TEXT, is_required: true },
       ];
 
       // Create and save all the questions associated with the checklist template
@@ -69,3 +90,4 @@ export class ChecklistTemplateSeed {
     }
   }
 }
+

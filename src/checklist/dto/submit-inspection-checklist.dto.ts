@@ -18,5 +18,6 @@ export class SubmitInspectionChecklistDTO {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => AnswerDTO)
-  answers: AnswerDTO[];
+  @IsOptional()
+  answers?: AnswerDTO[];
 }

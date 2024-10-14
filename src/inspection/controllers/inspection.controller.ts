@@ -9,6 +9,8 @@ import {
   ParseUUIDPipe,
   UseGuards,
   Patch,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { InspectionService } from './../services/inspection.service';
 import {
@@ -19,6 +21,7 @@ import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from './../../auth/guards/roles.guard';
 import { Roles } from './../../auth/decorators/roles.decorator';
 import { Role } from './../../auth/role.enum';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('inspections')
@@ -27,8 +30,12 @@ export class InspectionController {
 
   @Roles(Role.ClientAdmin, Role.Client)
   @Post()
-  create(@Body() createInspectionDto: CreateInspectionDTO) {
-    return this.inspectionService.create(createInspectionDto);
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'photos', maxCount: 10 }]))
+  create(
+    @Body() createInspectionDto: CreateInspectionDTO,
+    @UploadedFiles() files: { photos?: Express.Multer.File[] },
+  ) {
+    return this.inspectionService.create(createInspectionDto, files?.photos || []);
   }
 
   @Roles(Role.ClientAdmin, Role.Client)

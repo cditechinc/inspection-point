@@ -30,6 +30,8 @@ import { InspectionChecklist } from './../../checklist/entities/inspection-check
 import { ChecklistQuestion } from './../../checklist/entities/checklist-question.entity';
 import { ChecklistTemplate } from './../../checklist/entities/checklist-template.entity';
 import { InspectionChecklistAnswer } from './../../checklist/entities/inspection-checklist-answer.entity';
+import { AwsService } from './../../aws/aws.service';
+import { Photo } from './../../assets/entities/photo.entity';
 
 @Injectable()
 export class InspectionService {
@@ -48,9 +50,10 @@ export class InspectionService {
     private readonly userRepository: Repository<User>,
     private readonly invoiceService: InvoiceService,
     private readonly pdfService: PdfService,
+    private readonly awsService: AwsService,
   ) {}
 
-  async create(createInspectionDto: CreateInspectionDTO): Promise<Inspection> {
+  async create(createInspectionDto: CreateInspectionDTO, files: Express.Multer.File[]): Promise<Inspection> {
     return await this.inspectionRepository.manager.transaction(
       async (transactionalEntityManager) => {
         // Fetch the related entities (Client, Customer, Asset)
@@ -97,54 +100,54 @@ export class InspectionService {
         const savedInspection =
           await transactionalEntityManager.save(inspection);
 
-         // Associate and save checklists if provided
-      if (createInspectionDto.checklists) {
-        const checklists = [];
+        // Handle photos upload
+      if (files && files.length > 0) {
+        const photos = [];
+        for (const file of files) {
+          const s3Path = await this.awsService.uploadFile(
+            client.id,
+            'inspection',
+            'image',
+            file.buffer,
+            file.originalname,
+          );
+          const photo = transactionalEntityManager.create(Photo, { url: s3Path, inspection: savedInspection });
+          photos.push(await transactionalEntityManager.save(photo));
+        }
+        savedInspection.photos = photos;
+      }
 
-        for (const checklistDto of createInspectionDto.checklists) {
-          // Fetch the checklist template
-          const template = await this.checklistTemplateRepository.findOne({
-            where: { id: checklistDto.templateId },
-            relations: ['questions'],
-          });
+        // Associate and save checklists if provided
+        // Associate checklist templates without answers
+        if (createInspectionDto.checklists) {
+          const checklists = [];
 
-          if (!template) {
-            throw new NotFoundException(`Checklist Template with ID ${checklistDto.templateId} not found`);
-          }
-
-          // Create the InspectionChecklist
-          const inspectionChecklist = this.inspectionChecklistRepository.create({
-            inspection: savedInspection,
-            template,
-          });
-
-          // Save the InspectionChecklist
-          const savedChecklist = await transactionalEntityManager.save(inspectionChecklist);
-
-          // Save the answers
-          for (const answerDto of checklistDto.answers) {
-            const question = await this.checklistQuestionRepository.findOne({
-              where: { id: answerDto.questionId },
+          for (const checklistDto of createInspectionDto.checklists) {
+            const template = await this.checklistTemplateRepository.findOne({
+              where: { id: checklistDto.templateId },
+              relations: ['questions'],
             });
 
-            if (!question) {
-              throw new NotFoundException(`Question with ID ${answerDto.questionId} not found`);
+            if (!template) {
+              throw new NotFoundException(
+                `Checklist Template with ID ${checklistDto.templateId} not found`,
+              );
             }
 
-            const answer = this.inspectionChecklistAnswerRepository.create({
-              inspectionChecklist: savedChecklist,
-              question,
-              answer: answerDto.answer,
-            });
+            // Create the InspectionChecklist without answers
+            const inspectionChecklist =
+              this.inspectionChecklistRepository.create({
+                inspection: savedInspection,
+                template,
+              });
 
-            await transactionalEntityManager.save(answer);
+            const savedChecklist =
+              await transactionalEntityManager.save(inspectionChecklist);
+            checklists.push(savedChecklist);
           }
 
-          checklists.push(savedChecklist);
+          savedInspection.checklists = checklists;
         }
-
-        savedInspection.checklists = checklists;
-      }
 
         // Check if the inspection is recurring and schedule recurring inspections
         if (
@@ -224,7 +227,7 @@ export class InspectionService {
     return this.inspectionRepository.find({
       relations: [
         'checklists',
-        'scores',
+        'checklists.template',
         'client',
         'customer',
         'assignedTo',
@@ -238,14 +241,15 @@ export class InspectionService {
     const inspection = await this.inspectionRepository.findOne({
       where: { id },
       relations: [
-        'checklists',
-        'checklists.items',
-        'scores',
-        'client',
-        'customer',
-        'assignedTo',
-        'asset',
-        'invoices',
+        'checklists', // Fetch checklists associated with the inspection
+        'checklists.template', // Fetch the template associated with the checklist
+        'checklists.answers', // If required, fetch the answers tied to each checklist
+        'checklists.answers.question', // If required, fetch the related question for each answer
+        'client', // Fetch the associated client
+        'customer', // Fetch the associated customer
+        'assignedTo', // Fetch the user assigned to the inspection
+        'asset', // Fetch the asset being inspected
+        'invoices', // Fetch any related invoices
       ],
     });
     if (!inspection) {
@@ -275,73 +279,80 @@ export class InspectionService {
       inspection.assignedTo = assignedToUser;
     }
 
-    // Handle checklists
-  if (updateInspectionDto.checklists) {
-    const updatedChecklists = [];
+    // Handle checklists and answers during update
+    if (updateInspectionDto.checklists) {
+      const updatedChecklists = [];
 
-    for (const checklistDto of updateInspectionDto.checklists) {
-      let inspectionChecklist = await this.inspectionChecklistRepository.findOne({
-        where: { id: checklistDto.id },
-        relations: ['answers'],
-      });
-
-      if (!inspectionChecklist) {
-        // If the checklist doesn't exist, create a new one
-        const template = await this.checklistTemplateRepository.findOne({
-          where: { id: checklistDto.templateId },
-        });
-
-        if (!template) {
-          throw new NotFoundException(`Checklist Template with ID ${checklistDto.templateId} not found`);
-        }
-
-        inspectionChecklist = this.inspectionChecklistRepository.create({
-          inspection,
-          template,
-        });
-      }
-
-      // Update answers
-      for (const answerDto of checklistDto.answers) {
-        let answer = inspectionChecklist.answers.find(
-          (a) => a.question.id === answerDto.questionId,
-        );
-
-        if (answer) {
-          // Update existing answer
-          answer.answer = answerDto.answer;
-        } else {
-          // Create new answer
-          const question = await this.checklistQuestionRepository.findOne({
-            where: { id: answerDto.questionId },
+      for (const checklistDto of updateInspectionDto.checklists) {
+        let inspectionChecklist =
+          await this.inspectionChecklistRepository.findOne({
+            where: { id: checklistDto.id },
+            relations: ['answers'],
           });
 
-          if (!question) {
-            throw new NotFoundException(`Question with ID ${answerDto.questionId} not found`);
+        if (!inspectionChecklist) {
+          // Create a new checklist if it doesn't exist
+          const template = await this.checklistTemplateRepository.findOne({
+            where: { id: checklistDto.templateId },
+          });
+
+          if (!template) {
+            throw new NotFoundException(
+              `Checklist Template with ID ${checklistDto.templateId} not found`,
+            );
           }
 
-          answer = this.inspectionChecklistAnswerRepository.create({
-            inspectionChecklist,
-            question,
-            answer: answerDto.answer,
+          inspectionChecklist = this.inspectionChecklistRepository.create({
+            inspection,
+            template,
           });
-
-          inspectionChecklist.answers.push(answer);
         }
+
+        // Add or update answers for the checklist
+        if (checklistDto.answers && checklistDto.answers.length > 0) {
+          for (const answerDto of checklistDto.answers) {
+            let answer = inspectionChecklist.answers.find(
+              (a) => a.question.id === answerDto.questionId,
+            );
+
+            if (answer) {
+              // Update existing answer
+              answer.answer = answerDto.answer;
+            } else {
+              // Create a new answer
+              const question = await this.checklistQuestionRepository.findOne({
+                where: { id: answerDto.questionId },
+              });
+
+              if (!question) {
+                throw new NotFoundException(
+                  `Question with ID ${answerDto.questionId} not found`,
+                );
+              }
+
+              answer = this.inspectionChecklistAnswerRepository.create({
+                inspectionChecklist,
+                question,
+                answer: answerDto.answer,
+              });
+
+              inspectionChecklist.answers.push(answer);
+            }
+          }
+        }
+
+        await this.inspectionChecklistRepository.save(inspectionChecklist);
+        updatedChecklists.push(inspectionChecklist);
       }
 
-      await this.inspectionChecklistRepository.save(inspectionChecklist);
-      updatedChecklists.push(inspectionChecklist);
+      inspection.checklists = updatedChecklists;
     }
 
-    inspection.checklists = updatedChecklists;
-  }
-
-    // Update the inspection with the remaining properties
+    // Merge other properties and save the inspection
     const { assignedTo, ...rest } = updateInspectionDto;
     this.inspectionRepository.merge(inspection, rest);
 
-    // Apply status change logic based on the updated fields
+    // Update inspection status based on new data
     await this.updateInspectionStatus(inspection);
 
     return this.inspectionRepository.save(inspection);

@@ -19,6 +19,7 @@ import { ChecklistQuestion } from './../checklist/entities/checklist-question.en
 import { ChecklistTemplate } from './../checklist/entities/checklist-template.entity';
 import { InspectionChecklistAnswer } from './../checklist/entities/inspection-checklist-answer.entity';
 import { ChecklistModule } from './../checklist/checklist.module';
+import { AwsModule } from './../aws/aws.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ChecklistModule } from './../checklist/checklist.module';
     UserModule,
     UserGroupModule,
     ChecklistModule,
+    AwsModule,
     forwardRef(() => InvoiceModule),
     forwardRef(() => AuthModule),
     forwardRef(() => ReportModule),

@@ -5,6 +5,7 @@ import {
     ManyToOne,
     CreateDateColumn,
     UpdateDateColumn,
+    JoinColumn,
   } from 'typeorm';
   import { ChecklistTemplate } from './checklist-template.entity';
   
@@ -23,6 +24,7 @@ import {
     @ManyToOne(() => ChecklistTemplate, (template) => template.questions, {
       onDelete: 'CASCADE',
     })
+    @JoinColumn({ name: 'templateId' })
     template: ChecklistTemplate;
   
     @Column('text')
