@@ -11,12 +11,13 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from 'typeorm';
-import { Checklist } from './checklist.entity';
+
 
 import { Customer } from './../../customer/entities/customer.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
 import { Photo } from './../../assets/entities/photo.entity';
 import { Services } from '../../invoice/entities/services.entity';
+import { InspectionChecklist } from './../../checklist/entities/inspection-checklist.entity';
 
 export enum InspectionStatus {
   NOT_DONE = 'Not-Done',
@@ -79,8 +80,10 @@ export class Inspection {
   @Column('timestamp', { nullable: true })
   reocurrenceEndDate: Date;
 
-  @OneToMany(() => Checklist, (checklist) => checklist.inspection)
-  checklists: Checklist[];
+  @OneToMany(() => InspectionChecklist, (checklist) => checklist.inspection, {
+    cascade: true, 
+  })
+  checklists: InspectionChecklist[];
 
   @OneToMany(() => Invoice, (invoice) => invoice.inspection)
   invoices: Invoice[];

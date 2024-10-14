@@ -7,12 +7,15 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThan, Repository } from 'typeorm';
-import { Inspection, InspectionStatus, IntervalType } from './../entities/inspection.entity';
+import {
+  Inspection,
+  InspectionStatus,
+  IntervalType,
+} from './../entities/inspection.entity';
 import {
   CreateInspectionDTO,
   UpdateInspectionDTO,
 } from './../dto/inspection.dto';
-import { Checklist } from './../entities/checklist.entity';
 import { User } from './../../user/entities/user.entity';
 
 import { Client } from './../../client/entities/client.entity';
@@ -23,14 +26,24 @@ import { InvoiceService } from './../../invoice/services/invoice.service';
 import { PdfService } from './../../reports/services/pdf.service';
 import { CreateInvoiceDto } from './../../invoice/dto/create-invoice.dto';
 import { Services } from '../../invoice/entities/services.entity';
+import { InspectionChecklist } from './../../checklist/entities/inspection-checklist.entity';
+import { ChecklistQuestion } from './../../checklist/entities/checklist-question.entity';
+import { ChecklistTemplate } from './../../checklist/entities/checklist-template.entity';
+import { InspectionChecklistAnswer } from './../../checklist/entities/inspection-checklist-answer.entity';
 
 @Injectable()
 export class InspectionService {
   constructor(
     @InjectRepository(Inspection)
     private readonly inspectionRepository: Repository<Inspection>,
-    @InjectRepository(Checklist)
-    private readonly checklistRepository: Repository<Checklist>,
+    @InjectRepository(InspectionChecklist)
+    private readonly inspectionChecklistRepository: Repository<InspectionChecklist>,
+    @InjectRepository(ChecklistQuestion)
+    private readonly checklistQuestionRepository: Repository<ChecklistQuestion>,
+    @InjectRepository(ChecklistTemplate)
+    private readonly checklistTemplateRepository: Repository<ChecklistTemplate>,
+    @InjectRepository(InspectionChecklistAnswer)
+    private readonly inspectionChecklistAnswerRepository: Repository<InspectionChecklistAnswer>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly invoiceService: InvoiceService,
@@ -84,19 +97,54 @@ export class InspectionService {
         const savedInspection =
           await transactionalEntityManager.save(inspection);
 
-        // Associate existing checklists
-        if (createInspectionDto.checklists) {
-          const checklists = createInspectionDto.checklists.map(
-            (checklistDto) =>
-              this.checklistRepository.create({
-                ...checklistDto,
-                inspection: savedInspection, // Associate the checklist with the inspection
-              }),
-          );
+         // Associate and save checklists if provided
+      if (createInspectionDto.checklists) {
+        const checklists = [];
 
-          savedInspection.checklists =
-            await transactionalEntityManager.save(checklists);
+        for (const checklistDto of createInspectionDto.checklists) {
+          // Fetch the checklist template
+          const template = await this.checklistTemplateRepository.findOne({
+            where: { id: checklistDto.templateId },
+            relations: ['questions'],
+          });
+
+          if (!template) {
+            throw new NotFoundException(`Checklist Template with ID ${checklistDto.templateId} not found`);
+          }
+
+          // Create the InspectionChecklist
+          const inspectionChecklist = this.inspectionChecklistRepository.create({
+            inspection: savedInspection,
+            template,
+          });
+
+          // Save the InspectionChecklist
+          const savedChecklist = await transactionalEntityManager.save(inspectionChecklist);
+
+          // Save the answers
+          for (const answerDto of checklistDto.answers) {
+            const question = await this.checklistQuestionRepository.findOne({
+              where: { id: answerDto.questionId },
+            });
+
+            if (!question) {
+              throw new NotFoundException(`Question with ID ${answerDto.questionId} not found`);
+            }
+
+            const answer = this.inspectionChecklistAnswerRepository.create({
+              inspectionChecklist: savedChecklist,
+              question,
+              answer: answerDto.answer,
+            });
+
+            await transactionalEntityManager.save(answer);
+          }
+
+          checklists.push(savedChecklist);
         }
+
+        savedInspection.checklists = checklists;
+      }
 
         // Check if the inspection is recurring and schedule recurring inspections
         if (
@@ -119,7 +167,7 @@ export class InspectionService {
   // Update scheduleRecurring method to handle different intervals
   async scheduleRecurring(
     inspection: Inspection,
-    inspectionInterval: IntervalType, 
+    inspectionInterval: IntervalType,
     recurrenceEndDate: Date,
     transactionalEntityManager: any,
   ): Promise<void> {
@@ -227,31 +275,67 @@ export class InspectionService {
       inspection.assignedTo = assignedToUser;
     }
 
-    // Handle related entities if provided
-    if (updateInspectionDto.checklists) {
-      const updatedChecklists = [];
-      for (const checklistDto of updateInspectionDto.checklists) {
-        const existingChecklist = await this.checklistRepository.findOne({
-          where: { id: checklistDto.id },
+    // Handle checklists
+  if (updateInspectionDto.checklists) {
+    const updatedChecklists = [];
+
+    for (const checklistDto of updateInspectionDto.checklists) {
+      let inspectionChecklist = await this.inspectionChecklistRepository.findOne({
+        where: { id: checklistDto.id },
+        relations: ['answers'],
+      });
+
+      if (!inspectionChecklist) {
+        // If the checklist doesn't exist, create a new one
+        const template = await this.checklistTemplateRepository.findOne({
+          where: { id: checklistDto.templateId },
         });
 
-        if (existingChecklist) {
-          this.checklistRepository.merge(existingChecklist, checklistDto);
-          updatedChecklists.push(
-            await this.checklistRepository.save(existingChecklist),
-          );
+        if (!template) {
+          throw new NotFoundException(`Checklist Template with ID ${checklistDto.templateId} not found`);
+        }
+
+        inspectionChecklist = this.inspectionChecklistRepository.create({
+          inspection,
+          template,
+        });
+      }
+
+      // Update answers
+      for (const answerDto of checklistDto.answers) {
+        let answer = inspectionChecklist.answers.find(
+          (a) => a.question.id === answerDto.questionId,
+        );
+
+        if (answer) {
+          // Update existing answer
+          answer.answer = answerDto.answer;
         } else {
-          const newChecklist = this.checklistRepository.create({
-            ...checklistDto,
-            inspection,
+          // Create new answer
+          const question = await this.checklistQuestionRepository.findOne({
+            where: { id: answerDto.questionId },
           });
-          updatedChecklists.push(
-            await this.checklistRepository.save(newChecklist),
-          );
+
+          if (!question) {
+            throw new NotFoundException(`Question with ID ${answerDto.questionId} not found`);
+          }
+
+          answer = this.inspectionChecklistAnswerRepository.create({
+            inspectionChecklist,
+            question,
+            answer: answerDto.answer,
+          });
+
+          inspectionChecklist.answers.push(answer);
         }
       }
-      inspection.checklists = updatedChecklists;
+
+      await this.inspectionChecklistRepository.save(inspectionChecklist);
+      updatedChecklists.push(inspectionChecklist);
     }
+
+    inspection.checklists = updatedChecklists;
+  }
 
     // Update the inspection with the remaining properties
     const { assignedTo, ...rest } = updateInspectionDto;
@@ -547,7 +631,9 @@ export class InspectionService {
     // Use the service fee price as the amount due
     const serviceFee = inspection.serviceFee;
     if (!serviceFee) {
-      throw new BadRequestException('Service fee not associated with inspection');
+      throw new BadRequestException(
+        'Service fee not associated with inspection',
+      );
     }
 
     const amountDue = serviceFee.price;

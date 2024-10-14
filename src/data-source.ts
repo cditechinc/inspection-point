@@ -15,7 +15,6 @@ import { AssetPump } from './assets/entities/asset-pump.entity';
 import { CombinedMigration20240722162333 } from './migrations/combinedMigration';
 import { InspectionModuleMigration20240804123456 } from './migrations/inspectionModule';
 import { Inspection } from './inspection/entities/inspection.entity';
-import { Checklist } from './inspection/entities/checklist.entity';
 import { Invoice } from './invoice/entities/invoice.entity';
 import { AddInvoicesTableWithQuickBooksFields20240901123456 } from './migrations/invoicesModule';
 import { UserGroup } from './user-groups/entities/user-group.entity';
@@ -27,6 +26,10 @@ import { Company } from './company/entities/company.entity';
 import { CompanyMigration20240721123456 } from './migrations/companyModule';
 import { InvoiceItem } from './invoice/entities/invoice-item.entity';
 import { Services } from './invoice/entities/services.entity';
+import { ChecklistTemplate } from './checklist/entities/checklist-template.entity';
+import { ChecklistQuestion } from './checklist/entities/checklist-question.entity';
+import { InspectionChecklist } from './checklist/entities/inspection-checklist.entity';
+import { InspectionChecklistAnswer } from './checklist/entities/inspection-checklist-answer.entity';
 
 
 const dataSourceOptions: DataSourceOptions = {
@@ -50,7 +53,6 @@ const dataSourceOptions: DataSourceOptions = {
     AssetType,
     AssetPump,
     Inspection,
-    Checklist,
     Invoice,
     InvoiceItem,
     Services,
@@ -58,7 +60,11 @@ const dataSourceOptions: DataSourceOptions = {
     UserGroupMembership,
     UserGroupPermission,
     Permission,
-    Company
+    Company,
+    ChecklistTemplate,
+    ChecklistQuestion,
+    InspectionChecklist,
+    InspectionChecklistAnswer,
   ],
   migrations: [
     CompanyMigration20240721123456,
@@ -67,7 +73,7 @@ const dataSourceOptions: DataSourceOptions = {
     AddInvoicesTableWithQuickBooksFields20240901123456,
     AddSecurityGroupsAndPermissions20240905123456,
   ],
-  synchronize: false,
+  synchronize: true,
   logging: true,
   extra: {
     ssl:

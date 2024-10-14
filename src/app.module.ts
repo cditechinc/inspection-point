@@ -20,7 +20,6 @@ import { PumpBrand } from './assets/entities/pump-brand.entity';
 import { AssetType } from './assets/entities/asset-type.entity';
 import { AssetPump } from './assets/entities/asset-pump.entity';
 import { Inspection } from './inspection/entities/inspection.entity';
-import { Checklist } from './inspection/entities/checklist.entity';
 import { InspectionModule } from './inspection/inspection.module';
 import { ReportModule } from './reports/report.module';
 import { Invoice } from './invoice/entities/invoice.entity';
@@ -37,6 +36,11 @@ import { Company } from './company/entities/company.entity';
 import { CompanyModule } from './company/company.module';
 import { InvoiceItem } from './invoice/entities/invoice-item.entity';
 import { Services } from './invoice/entities/services.entity';
+import { ChecklistTemplate } from './checklist/entities/checklist-template.entity';
+import { ChecklistQuestion } from './checklist/entities/checklist-question.entity';
+import { InspectionChecklist } from './checklist/entities/inspection-checklist.entity';
+import { InspectionChecklistAnswer } from './checklist/entities/inspection-checklist-answer.entity';
+import { ChecklistModule } from './checklist/checklist.module';
 
 @Module({
   imports: [
@@ -64,7 +68,6 @@ import { Services } from './invoice/entities/services.entity';
           AssetType,
           AssetPump,
           Inspection,
-          Checklist,
           Invoice,
           InvoiceItem,
           Services,
@@ -72,7 +75,11 @@ import { Services } from './invoice/entities/services.entity';
           UserGroupMembership,
           UserGroupPermission,
           Permission,
-          Company
+          Company,
+          ChecklistTemplate,
+          ChecklistQuestion,
+          InspectionChecklist,
+          InspectionChecklistAnswer,
         ],
         synchronize: true,
       }),
@@ -89,6 +96,7 @@ import { Services } from './invoice/entities/services.entity';
     UserGroupModule,
     PermissionModule,
     CompanyModule,
+    ChecklistModule,
   ],
   providers: [QuickBooksOAuthService], // Add the QuickBooks service as a provider
   controllers: [QuickBooksController],

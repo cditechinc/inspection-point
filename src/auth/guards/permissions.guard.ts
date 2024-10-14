@@ -103,6 +103,12 @@ export class PermissionsGuard implements CanActivate {
       requiredPermission = 'manage_companies';
     } else if (route.includes('services')) {
       requiredPermission = 'manage_services';
+    } else if (route.includes('invoice-items')) {
+      requiredPermission = 'manage_invoice-items';
+    } else if (route.includes('checklist-templates')) {
+      requiredPermission = 'manage_checklist-templates';
+    } else if (route.includes('inspection-checklists')) {
+      requiredPermission = 'manage_inspection-checklists';
     }
     // Add more cases as needed
 

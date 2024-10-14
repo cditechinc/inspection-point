@@ -1,7 +1,20 @@
-import { IsUUID, IsString, IsNotEmpty, IsOptional, IsEnum, IsDecimal, IsDate, IsArray, ValidateNested, IsBoolean, IsInt } from 'class-validator';
+import {
+  IsUUID,
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsDecimal,
+  IsDate,
+  IsArray,
+  ValidateNested,
+  IsBoolean,
+  IsInt,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { ChecklistDTO } from './checklist.dto';
-import { InspectionStatus, IntervalType } from '../entities/inspection.entity';
+
+import { Inspection, InspectionStatus, IntervalType } from '../entities/inspection.entity';
+import { SubmitInspectionChecklistDTO } from './../../checklist/dto/submit-inspection-checklist.dto';
 
 export class CreateInspectionDTO {
   @IsUUID()
@@ -19,7 +32,7 @@ export class CreateInspectionDTO {
 
   @IsEnum(InspectionStatus)
   status: InspectionStatus;
- 
+
   @IsOptional()
   @IsDate()
   @Type(() => Date)
@@ -48,14 +61,12 @@ export class CreateInspectionDTO {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ChecklistDTO)
-  checklists: ChecklistDTO[];
+  @Type(() => SubmitInspectionChecklistDTO)
+  checklists: SubmitInspectionChecklistDTO[];
 
   @IsUUID()
-@IsOptional()
-serviceFeeId?: string;
-
-  
+  @IsOptional()
+  serviceFeeId?: string;
 }
 
 export class UpdateInspectionDTO {
@@ -63,11 +74,10 @@ export class UpdateInspectionDTO {
   @IsOptional()
   assignedTo?: string;
 
-
   @IsEnum(InspectionStatus)
   @IsOptional()
   status?: InspectionStatus;
-  
+
   @IsOptional()
   @IsDate()
   completedDate?: Date;
@@ -90,14 +100,13 @@ export class UpdateInspectionDTO {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ChecklistDTO)
+  @Type(() => SubmitInspectionChecklistDTO)
   @IsOptional()
-  checklists?: ChecklistDTO[];
+  checklists?: SubmitInspectionChecklistDTO[];
 
   @IsUUID()
-@IsOptional()
-serviceFeeId?: string;
-
+  @IsOptional()
+  serviceFeeId?: string;
 }
 
 export class InspectionDTO {
@@ -111,10 +120,10 @@ export class InspectionDTO {
   serviceFeeId: string;
   completedDate: Date;
   route: any[];
-  isReocurring: boolean; 
+  isReocurring: boolean;
   inspectionInterval: number;
   recurrenceEndDate: Date;
-  checklists: ChecklistDTO[];
+  checklists: SubmitInspectionChecklistDTO[];
   invoiceId?: string;
   createdAt: Date;
   updatedAt: Date;
