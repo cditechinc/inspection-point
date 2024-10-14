@@ -22,5 +22,5 @@ export class CreatePumpBrandDto {
   address?: string;
 
   @IsOptional()
-  madeInUSA?: boolean;
+  madeInUsa?: boolean;
 }

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChecklistTemplate } from './../checklist/entities/checklist-template.entity';
 import { ChecklistQuestion } from './../checklist/entities/checklist-question.entity';
@@ -8,9 +7,7 @@ import { QuestionType } from './../checklist/entities/checklist-question.entity'
 @Injectable()
 export class ChecklistTemplateSeed {
   constructor(
-    @InjectRepository(ChecklistTemplate)
     private readonly checklistTemplateRepository: Repository<ChecklistTemplate>,
-    @InjectRepository(ChecklistQuestion)
     private readonly checklistQuestionRepository: Repository<ChecklistQuestion>,
   ) {}
 

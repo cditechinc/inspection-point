@@ -6,7 +6,6 @@ import { AssetType } from './../assets/entities/asset-type.entity';
 @Injectable()
 export class AssetTypeSeed {
   constructor(
-    @InjectRepository(AssetType)
     private readonly assetTypeRepository: Repository<AssetType>,
   ) {}
 

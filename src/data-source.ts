@@ -73,7 +73,7 @@ const dataSourceOptions: DataSourceOptions = {
     AddInvoicesTableWithQuickBooksFields20240901123456,
     AddSecurityGroupsAndPermissions20240905123456,
   ],
-  synchronize: true,
+  synchronize: false,
   logging: true,
   extra: {
     ssl:
