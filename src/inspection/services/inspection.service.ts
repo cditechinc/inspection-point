@@ -228,11 +228,15 @@ export class InspectionService {
       relations: [
         'checklists',
         'checklists.template',
+        'checklists.template.questions',
+        'checklists.answers', // If required, fetch the answers tied to each checklist
+        'checklists.answers.question',
         'client',
         'customer',
         'assignedTo',
         'asset',
         'invoices',
+        'serviceFee',
       ],
     });
   }
