@@ -24,7 +24,7 @@ import {
     @ManyToOne(() => ChecklistTemplate, (template) => template.questions, {
       onDelete: 'CASCADE',
     })
-    @JoinColumn({ name: 'templateId' })
+    @JoinColumn({ name: 'template_id' })
     template: ChecklistTemplate;
   
     @Column('text')

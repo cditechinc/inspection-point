@@ -32,10 +32,23 @@ export class InspectionController {
   @Post()
   @UseInterceptors(FileFieldsInterceptor([{ name: 'photos', maxCount: 10 }]))
   create(
-    @Body() createInspectionDto: CreateInspectionDTO,
+    @Body() createInspectionDto: any,
     @UploadedFiles() files: { photos?: Express.Multer.File[] },
   ) {
-    return this.inspectionService.create(createInspectionDto, files?.photos || []);
+
+    if (typeof createInspectionDto.route === 'string') {
+      createInspectionDto.route = JSON.parse(createInspectionDto.route);
+    }
+  
+    if (typeof createInspectionDto.checklists === 'string') {
+      createInspectionDto.checklists = JSON.parse(createInspectionDto.checklists);
+    }
+    console.log('Request body:', createInspectionDto); // Log the parsed body
+    console.log('Files:', files);
+    return this.inspectionService.create(
+      createInspectionDto,
+      files?.photos || [],
+    );
   }
 
   @Roles(Role.ClientAdmin, Role.Client)

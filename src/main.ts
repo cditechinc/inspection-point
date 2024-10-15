@@ -34,6 +34,7 @@ async function bootstrap() {
       transform: true,
       whitelist: true, // Optional
       forbidNonWhitelisted: true, // Optional
+      forbidUnknownValues: true
     }),
   );
 

@@ -13,8 +13,17 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-import { Inspection, InspectionStatus, IntervalType } from '../entities/inspection.entity';
+import { InspectionStatus, IntervalType } from '../entities/inspection.entity';
 import { SubmitInspectionChecklistDTO } from './../../checklist/dto/submit-inspection-checklist.dto';
+
+class Route {
+  @IsDecimal()
+  latitude: number;
+
+  @IsDecimal()
+  longitude: number;
+}
+
 
 export class CreateInspectionDTO {
   @IsUUID()
@@ -43,13 +52,15 @@ export class CreateInspectionDTO {
   @Type(() => Date)
   completedDate?: Date;
 
-  @IsOptional()
+  
   @IsArray()
-  route: any[];
+  @ValidateNested({ each: true })
+  @Type(() => Route)
+  route: Route[];
 
-  @IsBoolean()
+  @IsString()
   @IsOptional()
-  isReocurring?: boolean; // Whether the inspection is recurring
+  isReocurring?: boolean; 
 
   @IsEnum(IntervalType)
   @IsOptional()
@@ -96,7 +107,7 @@ export class UpdateInspectionDTO {
 
   @IsOptional()
   @IsDate()
-  recurrenceEndDate?: Date;
+  reocurrenceEndDate?: Date;
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -122,7 +133,7 @@ export class InspectionDTO {
   route: any[];
   isReocurring: boolean;
   inspectionInterval: number;
-  recurrenceEndDate: Date;
+  reocurrenceEndDate: Date;
   checklists: SubmitInspectionChecklistDTO[];
   invoiceId?: string;
   createdAt: Date;
