@@ -17,7 +17,6 @@ import { JwtAuthGuard } from './../auth/guards/jwt-auth.guard';
 import { Roles } from './../auth/decorators/roles.decorator';
 import { Role } from './../auth/role.enum';
 import { CreateAssociatedUserDto } from './dto/create-associated-user.dto';
-import { LocalAuthGuard } from './../auth/guards/local-auth.guard';
 import { UpdateAssociatedUserDto } from './dto/update-associated-user.dto';
 import { RolesGuard } from './../auth/guards/roles.guard';
 

@@ -14,15 +14,15 @@ export class CreatePumpDto {
   name: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsString()
   avgAmps?: number;
 
   @IsOptional()
-  @IsNumber()
+  @IsString()
   maxAmps?: number;
 
   @IsOptional()
-  @IsNumber()
+  @IsString()
   hp?: number;
 
   @IsOptional()

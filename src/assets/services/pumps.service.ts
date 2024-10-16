@@ -24,13 +24,23 @@ export class PumpsService {
     private readonly awsService: AwsService,
   ) {}
 
-  async create(createPumpDto: CreatePumpDto, files: Express.Multer.File[]): Promise<Pump> {
-    const asset = await this.assetsRepository.findOne({ where: { id: createPumpDto.assetId } });
+  async create(
+    createPumpDto: CreatePumpDto,
+    files: Express.Multer.File[],
+  ): Promise<Pump> {
+    const asset = await this.assetsRepository.findOne({
+      where: { id: createPumpDto.assetId },
+      relations: ['client'],
+    });
     if (!asset) {
       throw new NotFoundException(`Asset #${createPumpDto.assetId} not found`);
     }
 
-    const brand = createPumpDto.brandId ? await this.pumpBrandsRepository.findOne({ where: { id: createPumpDto.brandId } }) : null;
+    const brand = createPumpDto.brandId
+      ? await this.pumpBrandsRepository.findOne({
+          where: { id: createPumpDto.brandId },
+        })
+      : null;
     if (createPumpDto.brandId && !brand) {
       throw new NotFoundException(`Brand #${createPumpDto.brandId} not found`);
     }
@@ -56,18 +66,27 @@ export class PumpsService {
   }
 
   async findAll(): Promise<Pump[]> {
-    return this.pumpsRepository.find({ relations: ['photos', 'asset', 'brand'] });
+    return this.pumpsRepository.find({
+      relations: ['photos', 'asset', 'brand'],
+    });
   }
 
   async findOne(id: string): Promise<Pump> {
-    const pump = await this.pumpsRepository.findOne({ where: { id }, relations: ['photos', 'asset', 'brand'] });
+    const pump = await this.pumpsRepository.findOne({
+      where: { id },
+      relations: ['photos', 'asset', 'brand'],
+    });
     if (!pump) {
       throw new NotFoundException(`Pump #${id} not found`);
     }
     return pump;
   }
 
-  async update(id: string, updatePumpDto: UpdatePumpDto, files: Express.Multer.File[]): Promise<Pump> {
+  async update(
+    id: string,
+    updatePumpDto: UpdatePumpDto,
+    files: Express.Multer.File[],
+  ): Promise<Pump> {
     const pump = await this.pumpsRepository.preload({
       id,
       ...updatePumpDto,
@@ -77,17 +96,25 @@ export class PumpsService {
     }
 
     if (updatePumpDto.assetId) {
-      const asset = await this.assetsRepository.findOne({ where: { id: updatePumpDto.assetId } });
+      const asset = await this.assetsRepository.findOne({
+        where: { id: updatePumpDto.assetId },
+      });
       if (!asset) {
-        throw new NotFoundException(`Asset #${updatePumpDto.assetId} not found`);
+        throw new NotFoundException(
+          `Asset #${updatePumpDto.assetId} not found`,
+        );
       }
       pump.asset = asset;
     }
 
     if (updatePumpDto.brandId) {
-      const brand = await this.pumpBrandsRepository.findOne({ where: { id: updatePumpDto.brandId } });
+      const brand = await this.pumpBrandsRepository.findOne({
+        where: { id: updatePumpDto.brandId },
+      });
       if (!brand) {
-        throw new NotFoundException(`Brand #${updatePumpDto.brandId} not found`);
+        throw new NotFoundException(
+          `Brand #${updatePumpDto.brandId} not found`,
+        );
       }
       pump.brand = brand;
     }
@@ -108,11 +135,11 @@ export class PumpsService {
     const photos: Photo[] = pump.photos || [];
     for (const file of files) {
       const url = await this.awsService.uploadFile(
-        pump.asset.client.id, 
-        'pump', 
-        'image', 
-        file.buffer, 
-        file.originalname
+        pump.asset.client.id,
+        'pump',
+        'image',
+        file.buffer,
+        file.originalname,
       );
       const photo = this.photosRepository.create({ url, pump });
       await this.photosRepository.save(photo);

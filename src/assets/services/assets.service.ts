@@ -122,7 +122,7 @@ export class AssetsService {
 
   async findAll(): Promise<Asset[]> {
     return this.assetsRepository.find({
-      relations: ['photos', 'client', 'customer'],
+      relations: ['photos', 'client', 'customer', 'assetType'],
     });
   }
 
