@@ -247,6 +247,7 @@ export class InspectionService {
       relations: [
         'checklists', // Fetch checklists associated with the inspection
         'checklists.template', // Fetch the template associated with the checklist
+        'checklists.template.questions',
         'checklists.answers', // If required, fetch the answers tied to each checklist
         'checklists.answers.question', // If required, fetch the related question for each answer
         'client', // Fetch the associated client
