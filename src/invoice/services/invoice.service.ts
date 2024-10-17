@@ -114,7 +114,7 @@ export class InvoiceService {
           quickbooks_invoice_id: qbInvoice.json.Invoice.Id,
           client: client,
           customer: customer,
-          inspection: inspection,
+          inspections: [inspection],
           status: qbInvoice.json.Invoice.Balance === 0 ? 'paid' : 'pending',
           amount_due: qbInvoice.json.Invoice.TotalAmt,
           amount_paid:
@@ -223,9 +223,11 @@ export class InvoiceService {
   async findInvoiceByInspectionId(
     inspectionId: string,
   ): Promise<Invoice | null> {
-    return this.invoiceRepository.findOne({
-      where: { inspection: { id: inspectionId } },
-    });
+    return this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.inspections', 'inspection')
+      .where('inspection.id = :inspectionId', { inspectionId })
+      .getOne();
   }
 
   // Find all invoices with relations (client, customer, inspection)

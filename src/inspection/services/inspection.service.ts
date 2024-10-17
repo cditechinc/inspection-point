@@ -375,9 +375,16 @@ export class InspectionService {
     }
 
     // Check if there's already an invoice for this inspection
-    const existingInvoice = inspection.invoices?.find(
-      (invoice) => invoice.status === 'pending' || invoice.status === 'paid',
-    );
+    const existingInvoice = inspection.invoice;
+if (
+  existingInvoice &&
+  (existingInvoice.status === 'pending' || existingInvoice.status === 'paid')
+) {
+  console.error(
+    `Invoice ${existingInvoice.id} already exists for Inspection ${inspectionId}`,
+  );
+  throw new InternalServerErrorException('Invoice already exists for this inspection.');
+}
 
     if (existingInvoice) {
       console.error(
