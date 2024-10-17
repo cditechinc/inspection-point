@@ -162,9 +162,9 @@ export class AddInvoicesTableWithQuickBooksFields20240901123456 implements Migra
       CREATE INDEX IF NOT EXISTS "idx_invoices_customer_id" ON "invoices" ("customer_id");
     `);
 
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_invoices_inspection_id" ON "invoices" ("inspection_id");
-    `);
+    // await queryRunner.query(`
+    //   CREATE INDEX IF NOT EXISTS "idx_invoices_inspection_id" ON "invoices" ("inspection_id");
+    // `);
 
     // Create the invoice_items table
     await queryRunner.query(`
@@ -188,10 +188,38 @@ export class AddInvoicesTableWithQuickBooksFields20240901123456 implements Migra
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "idx_invoice_items_service_id" ON "invoice_items" ("service_id");
     `);
+
+    // Add invoice_id column to inspections table
+    await queryRunner.query(`
+      ALTER TABLE "inspections" ADD COLUMN "invoice_id" uuid;
+    `);
+
+    // Add foreign key constraint on invoice_id
+    await queryRunner.query(`
+      ALTER TABLE "inspections" ADD CONSTRAINT "fk_inspections_invoice_id" FOREIGN KEY ("invoice_id") REFERENCES "invoices"("id") ON DELETE SET NULL;
+    `);
+
+    // Create index on invoice_id
+    await queryRunner.query(`
+      CREATE INDEX IF NOT EXISTS "idx_inspections_invoice_id" ON "inspections" ("invoice_id");
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop indexes and tables in reverse order to prevent foreign key constraint issues
+
+    // Drop index on invoice_id in inspections table
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_inspections_invoice_id";`);
+
+    // Drop foreign key constraint on invoice_id
+    await queryRunner.query(`
+      ALTER TABLE "inspections" DROP CONSTRAINT "fk_inspections_invoice_id";
+    `);
+
+    // Drop invoice_id column from inspections table
+    await queryRunner.query(`
+      ALTER TABLE "inspections" DROP COLUMN "invoice_id";
+    `);
 
     // Drop invoice_items table
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_invoice_items_service_id";`);

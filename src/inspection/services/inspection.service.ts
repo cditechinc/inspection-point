@@ -245,16 +245,16 @@ export class InspectionService {
     const inspection = await this.inspectionRepository.findOne({
       where: { id },
       relations: [
-        'checklists', // Fetch checklists associated with the inspection
-        'checklists.template', // Fetch the template associated with the checklist
+        'checklists', 
+        'checklists.template', 
         'checklists.template.questions',
-        'checklists.answers', // If required, fetch the answers tied to each checklist
-        'checklists.answers.question', // If required, fetch the related question for each answer
-        'client', // Fetch the associated client
-        'customer', // Fetch the associated customer
-        'assignedTo', // Fetch the user assigned to the inspection
-        'asset', // Fetch the asset being inspected
-        'invoices', // Fetch any related invoices
+        'checklists.answers', 
+        'checklists.answers.question', 
+        'client', 
+        'customer', 
+        'assignedTo', 
+        'asset', 
+        'invoices',
       ],
     });
     if (!inspection) {

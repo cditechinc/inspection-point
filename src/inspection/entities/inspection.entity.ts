@@ -12,7 +12,6 @@ import {
   JoinColumn,
 } from 'typeorm';
 
-
 import { Customer } from './../../customer/entities/customer.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
 import { Photo } from './../../assets/entities/photo.entity';
@@ -75,18 +74,21 @@ export class Inspection {
     enum: IntervalType,
     nullable: true,
   })
-  inspectionInterval: IntervalType;  
+  inspectionInterval: IntervalType;
 
   @Column('timestamp', { nullable: true })
   reocurrenceEndDate: Date;
 
   @OneToMany(() => InspectionChecklist, (checklist) => checklist.inspection, {
-    cascade: true, 
+    cascade: true,
   })
   checklists: InspectionChecklist[];
 
-  @OneToMany(() => Invoice, (invoice) => invoice.inspection)
-  invoices: Invoice[];
+  @ManyToOne(() => Invoice, (invoice) => invoice.inspections, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'invoice_id' })
+  invoice: Invoice;
 
   @OneToMany(() => Photo, (photo) => photo.inspection, { cascade: true })
   photos: Photo[];

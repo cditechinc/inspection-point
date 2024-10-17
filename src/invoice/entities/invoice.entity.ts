@@ -28,11 +28,10 @@ export class Invoice {
   })
   customer: Customer;
 
-  // Many invoices can belong to one inspection
-  @ManyToOne(() => Inspection, (inspection) => inspection.invoices, {
-    onDelete: 'CASCADE',
+  @OneToMany(() => Inspection, (inspection) => inspection.invoice, {
+    cascade: true,
   })
-  inspection: Inspection;
+  inspections: Inspection[];
 
   @Column({ type: 'varchar', length: 50 })
   status: string;
