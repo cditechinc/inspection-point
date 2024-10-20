@@ -20,12 +20,13 @@ import { ChecklistTemplate } from './../checklist/entities/checklist-template.en
 import { InspectionChecklistAnswer } from './../checklist/entities/inspection-checklist-answer.entity';
 import { ChecklistModule } from './../checklist/checklist.module';
 import { AwsModule } from './../aws/aws.module';
+import { Services } from './../invoice/entities/services.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Inspection, InspectionChecklist, ChecklistQuestion,
       ChecklistTemplate,
-      InspectionChecklistAnswer, Customer, Client, Asset]),
+      InspectionChecklistAnswer, Customer, Client, Asset, Services]),
     UserModule,
     UserGroupModule,
     ChecklistModule,

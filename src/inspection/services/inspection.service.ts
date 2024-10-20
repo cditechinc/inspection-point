@@ -32,6 +32,7 @@ import { ChecklistTemplate } from './../../checklist/entities/checklist-template
 import { InspectionChecklistAnswer } from './../../checklist/entities/inspection-checklist-answer.entity';
 import { AwsService } from './../../aws/aws.service';
 import { Photo } from './../../assets/entities/photo.entity';
+import { ServicesService } from './../../invoice/services/services.service';
 
 @Injectable()
 export class InspectionService {
@@ -48,12 +49,18 @@ export class InspectionService {
     private readonly inspectionChecklistAnswerRepository: Repository<InspectionChecklistAnswer>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Services)
+    private readonly serviceFeeRepository: Repository<Services>,
+    private readonly servicesService: ServicesService,
     private readonly invoiceService: InvoiceService,
     private readonly pdfService: PdfService,
     private readonly awsService: AwsService,
   ) {}
 
-  async create(createInspectionDto: CreateInspectionDTO, files: Express.Multer.File[]): Promise<Inspection> {
+  async create(
+    createInspectionDto: CreateInspectionDTO,
+    files: Express.Multer.File[],
+  ): Promise<Inspection> {
     return await this.inspectionRepository.manager.transaction(
       async (transactionalEntityManager) => {
         // Fetch the related entities (Client, Customer, Asset)
@@ -101,21 +108,24 @@ export class InspectionService {
           await transactionalEntityManager.save(inspection);
 
         // Handle photos upload
-      if (files && files.length > 0) {
-        const photos = [];
-        for (const file of files) {
-          const s3Path = await this.awsService.uploadFile(
-            client.id,
-            'inspection',
-            'image',
-            file.buffer,
-            file.originalname,
-          );
-          const photo = transactionalEntityManager.create(Photo, { url: s3Path, inspection: savedInspection });
-          photos.push(await transactionalEntityManager.save(photo));
+        if (files && files.length > 0) {
+          const photos = [];
+          for (const file of files) {
+            const s3Path = await this.awsService.uploadFile(
+              client.id,
+              'inspection',
+              'image',
+              file.buffer,
+              file.originalname,
+            );
+            const photo = transactionalEntityManager.create(Photo, {
+              url: s3Path,
+              inspection: savedInspection,
+            });
+            photos.push(await transactionalEntityManager.save(photo));
+          }
+          savedInspection.photos = photos;
         }
-        savedInspection.photos = photos;
-      }
 
         // Associate and save checklists if provided
         // Associate checklist templates without answers
@@ -235,8 +245,9 @@ export class InspectionService {
         'customer',
         'assignedTo',
         'asset',
-        'invoices',
+        'invoice',
         'serviceFee',
+        'photos',
       ],
     });
   }
@@ -245,16 +256,18 @@ export class InspectionService {
     const inspection = await this.inspectionRepository.findOne({
       where: { id },
       relations: [
-        'checklists', 
-        'checklists.template', 
+        'checklists',
+        'checklists.template',
         'checklists.template.questions',
-        'checklists.answers', 
-        'checklists.answers.question', 
-        'client', 
-        'customer', 
-        'assignedTo', 
-        'asset', 
-        'invoices',
+        'checklists.answers',
+        'checklists.answers.question',
+        'client',
+        'customer',
+        'assignedTo',
+        'asset',
+        'invoice',
+        'photos',
+        'serviceFee',
       ],
     });
     if (!inspection) {
@@ -376,15 +389,18 @@ export class InspectionService {
 
     // Check if there's already an invoice for this inspection
     const existingInvoice = inspection.invoice;
-if (
-  existingInvoice &&
-  (existingInvoice.status === 'pending' || existingInvoice.status === 'paid')
-) {
-  console.error(
-    `Invoice ${existingInvoice.id} already exists for Inspection ${inspectionId}`,
-  );
-  throw new InternalServerErrorException('Invoice already exists for this inspection.');
-}
+    if (
+      existingInvoice &&
+      (existingInvoice.status === 'pending' ||
+        existingInvoice.status === 'paid')
+    ) {
+      console.error(
+        `Invoice ${existingInvoice.id} already exists for Inspection ${inspectionId}`,
+      );
+      throw new InternalServerErrorException(
+        'Invoice already exists for this inspection.',
+      );
+    }
 
     if (existingInvoice) {
       console.error(
@@ -598,7 +614,7 @@ if (
     await this.inspectionRepository.save(inspection);
   }
 
-  async submitAndBillCustomer(inspectionId: string) {
+  async submitAndBillCustomer(inspectionId: string, serviceFeeAmount: number) {
     // Fetch the inspection by its ID, including relations with client, customer, serviceFee, and photos
     const inspection = await this.inspectionRepository.findOne({
       where: { id: inspectionId },
@@ -609,6 +625,36 @@ if (
     if (!inspection) {
       throw new NotFoundException('Inspection not found');
     }
+
+    const clientId = inspection.client.id;
+
+    // Create or fetch the ServiceFee using ServicesService
+    let serviceFeeEntity = await this.serviceFeeRepository.findOne({
+      where: {
+        price: serviceFeeAmount,
+        client: { id: clientId },
+      },
+    });
+
+    if (!serviceFeeEntity) {
+      const createServiceFeeDto = {
+        name: `Service Fee for Inspection ${inspectionId}`,
+        description: `Service fee for inspection ${inspectionId}`,
+        price: serviceFeeAmount,
+        isTaxable: false, // Set according to your needs
+        billingIo: '', // Set if applicable
+      };
+
+      // Create the service fee using ServicesService
+      serviceFeeEntity = await this.servicesService.createServiceFee(
+        clientId,
+        createServiceFeeDto,
+      );
+    }
+
+    // Associate the service fee with the inspection
+    inspection.serviceFee = serviceFeeEntity;
+    await this.inspectionRepository.save(inspection);
 
     const quickbooksCustomerId = inspection.customer.quickbooksCustomerId;
     const localCustomerId = inspection.customer.id;
@@ -685,6 +731,10 @@ if (
       // If QuickBooks responds successfully, mark the inspection as billed
       if (invoice.quickbooks_invoice_id) {
         inspection.status = InspectionStatus.COMPLETE_BILLED;
+
+        // Associate the invoice with the inspection
+        inspection.invoice = invoice;
+
         await this.inspectionRepository.save({
           ...inspection,
           customerId: localCustomerId, // Use UUID here for PostgreSQL

@@ -78,7 +78,7 @@ export class InspectionController {
     @Param('id') inspectionId: string,
     @Body() { serviceFee }: { serviceFee: number },
   ) {
-    return this.inspectionService.submitAndBillCustomer(inspectionId);
+    return this.inspectionService.submitAndBillCustomer(inspectionId, serviceFee);
   }
 
   // @Roles(Role.Client)

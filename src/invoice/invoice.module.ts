@@ -26,6 +26,6 @@ import { Services } from './entities/services.entity';
   ],
   controllers: [InvoiceController, ServiceFeeController],
   providers: [InvoiceService, ServicesService, QuickBooksOAuthService],
-  exports: [InvoiceService],
+  exports: [InvoiceService, ServicesService],
 })
 export class InvoiceModule {}
