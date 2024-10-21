@@ -34,12 +34,13 @@ import { InspectionChecklistAnswer } from './checklist/entities/inspection-check
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
-  host: process.env.DATABASE_HOST || 'localhost',
+  host: process.env.DATABASE_HOST || '172.31.23.247',
+  // host: process.env.DATABASE_HOST || 'localhost',
   port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
-  username: process.env.DATABASE_USER || 'postgres',
-  password: process.env.DATABASE_PASSWORD || 'postgres',
+  username: process.env.DATABASE_USER || 'utilitypointuser',
+  password: process.env.DATABASE_PASSWORD || 'UtilityPointApp',
   // database: process.env.DATABASE_NAME || 'inspection',
-  database: process.env.DATABASE_NAME || 'utilityPoint',
+  database: process.env.DATABASE_NAME || 'utilitypoint',
   entities: [
     Client,
     Customer,
