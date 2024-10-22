@@ -1,88 +1,4 @@
-// // import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
-// // import { Reflector } from '@nestjs/core';
-// // import { ROLES_KEY } from '../decorators/roles.decorator';
-// // import { Role } from '../role.enum';
-// // import { AuthService } from '../auth.service'; // Inject authService for permission checks
 
-// // @Injectable()
-// // export class RolesGuard implements CanActivate {
-// //   constructor(
-// //     private readonly reflector: Reflector,
-// //     @Inject(forwardRef(() => AuthService))
-// //     private readonly authService: AuthService, // Inject AuthService to access user permissions
-// //   ) {}
-
-// //   async canActivate(context: ExecutionContext): Promise<boolean> {
-// //     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
-// //       context.getHandler(),
-// //       context.getClass(),
-// //     ]);
-
-// //     if (!requiredRoles) {
-// //       return true;
-// //     }
-
-// //     const { user, route, method } = context.switchToHttp().getRequest();
-
-// //     // Check if the user has the required role
-// //     // const hasRole = requiredRoles.some((role) => user.role === role);
-
-// //     const hasRole = requiredRoles.some((role) => user.roles?.includes(role));
-
-// //     if (!hasRole) {
-// //       throw new ForbiddenException('You do not have the required role to access this resource');
-// //     }
-
-// //     // Check if the user has the required permission for the resource/action
-// //     const hasPermission = await this.authService.checkUserPermissions(user.id, route.path, method);
-
-// //     if (!hasPermission) {
-// //       throw new ForbiddenException('You do not have permission to access this resource');
-// //     }
-
-// //     return true;
-// //   }
-// // }
-
-// import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
-// import { Reflector } from '@nestjs/core';
-// import { ROLES_KEY } from '../decorators/roles.decorator';
-// import { Role } from '../role.enum';
-// import { AuthService } from '../auth.service'; // Inject authService for permission checks
-
-// @Injectable()
-// export class RolesGuard implements CanActivate {
-//   constructor(
-//     private readonly reflector: Reflector,
-//     @Inject(forwardRef(() => AuthService))
-//     private readonly authService: AuthService,
-//   ) {}
-
-//   async canActivate(context: ExecutionContext): Promise<boolean> {
-//     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
-//       context.getHandler(),
-//       context.getClass(),
-//     ]);
-
-//     if (!requiredRoles) {
-//       return true;
-//     }
-
-//     const { user } = context.switchToHttp().getRequest();
-
-//     console.log('User Role:', user.role);  // Log user role
-//     console.log('Required Roles:', requiredRoles);  // Log required roles
-
-//     // Check if the user has the required role
-//     const hasRole = requiredRoles.some((role) => user.role === role);
-
-//     if (!hasRole) {
-//       throw new ForbiddenException('You do not have the required role to access this resource');
-//     }
-
-//     return true;
-//   }
-// }
 
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -173,8 +89,6 @@ export class RolesGuard implements CanActivate {
       requiredPermission = 'manage_asset-types';
     } else if (route.includes('photos')) {
       requiredPermission = 'manage_photos';
-    } else if (route.includes('inspection-scores')) {
-      requiredPermission = 'manage_inspection-scores';
     } else if (route.includes('companies')) {
       requiredPermission = 'manage_companies';
     } else if (route.includes('services')) {

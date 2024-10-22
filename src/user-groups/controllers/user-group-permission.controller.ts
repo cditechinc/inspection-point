@@ -34,17 +34,17 @@ export class UserGroupPermissionController {
   }
 
   // Assign permissions to a group
-  // @Post()
-  // @Roles(Role.ClientAdmin)
-  // async assignPermissions(
-  //   @Param('groupId') groupId: string,
-  //   @Body() assignMultiplePermissionsDto: AssignMultiplePermissionsDto,
-  // ): Promise<UserGroupPermission[]> {
-  //   return this.permissionService.assignPermissions(
-  //     groupId,
-  //     assignMultiplePermissionsDto,
-  //   );
-  // }
+  @Post()
+  @Roles(Role.ClientAdmin)
+  async assignPermissions(
+    @Param('groupId') groupId: string,
+    @Body() assignMultiplePermissionsDto: AssignMultiplePermissionsDto,
+  ): Promise<UserGroupPermission[]> {
+    return this.permissionService.assignPermissions(
+      groupId,
+      assignMultiplePermissionsDto,
+    );
+  }
 
   @Post('/custom-assign')
   @Roles(Role.ClientAdmin) // Only client admins can assign permissions to user groups

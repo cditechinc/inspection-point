@@ -1,25 +1,4 @@
-// import { Injectable, CanActivate, ExecutionContext, ForbiddenException, forwardRef, Inject } from '@nestjs/common';
-// import { AuthService } from '../auth.service'; // Assuming you have a service to fetch user data
 
-// @Injectable()
-// export class PermissionsGuard implements CanActivate {
-//   constructor(
-//     @Inject(forwardRef(() => AuthService))
-//     private readonly authService: AuthService) {}
-
-//   async canActivate(context: ExecutionContext): Promise<boolean> {
-//     const { user, route, method } = context.switchToHttp().getRequest();
-
-//     // Check if the user has permission to access the resource based on their group permissions
-//     const hasPermission = await this.authService.checkUserPermissions(user.id, route.path, method);
-
-//     if (!hasPermission) {
-//       throw new ForbiddenException('You do not have permission to access this resource');
-//     }
-
-//     return true;
-//   }
-// }
 
 import {
   Injectable,
@@ -97,8 +76,6 @@ export class PermissionsGuard implements CanActivate {
       requiredPermission = 'manage_asset-types';
     } else if (route.includes('photos')) {
       requiredPermission = 'manage_photos';
-    } else if (route.includes('inspection-scores')) {
-      requiredPermission = 'manage_inspection-scores';
     } else if (route.includes('companies')) {
       requiredPermission = 'manage_companies';
     } else if (route.includes('services')) {
