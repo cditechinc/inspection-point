@@ -762,12 +762,20 @@ export class InspectionService {
   async submitAndDontBillCustomer(inspectionId: string) {
     const inspection = await this.inspectionRepository.findOne({
       where: { id: inspectionId },
-      relations: ['client', 'customer'],
+      relations: ['client', 'customer', 'serviceFee'],
     });
 
     if (!inspection) {
       throw new NotFoundException('Inspection not found');
     }
+
+    // Ensure the service fee is associated with the inspection
+  const serviceFee = inspection.serviceFee;
+  if (!serviceFee) {
+    throw new BadRequestException(
+      'Service fee not associated with this inspection',
+    );
+  }
 
     // Fetch the PDF report from the S3 bucket
     const pdfReportPath = await this.pdfService.fetchPdfReport(inspection.id);
@@ -782,7 +790,7 @@ export class InspectionService {
       customerId: inspection.customer.id,
       quickbooksCustomerId: inspection.customer.quickbooksCustomerId,
       inspectionId,
-      amountDue: 0,
+      amountDue: serviceFee.price,
       dueDate: new Date().toISOString(), // Set a due date
       pdfReportPath: pdfReportPath.toString(),
       imagePaths: [], // No images for this invoice
@@ -797,6 +805,7 @@ export class InspectionService {
     // Mark the inspection as Complete Not Billed
     if (invoice.quickbooks_invoice_id) {
       inspection.status = InspectionStatus.COMPLETE_NOT_BILLED;
+      inspection.invoice = invoice;
       await this.inspectionRepository.save(inspection);
     } else {
       throw new BadRequestException('Failed to create invoice in QuickBooks');

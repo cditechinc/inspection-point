@@ -8,6 +8,10 @@ export class CreateAssociatedUserDto {
   @IsString()
   lastName: string;
 
+  @IsOptional()
+  @IsString()
+  username?: string;
+
   @IsEmail()
   email: string;
 

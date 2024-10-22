@@ -41,6 +41,7 @@ import { ChecklistQuestion } from './checklist/entities/checklist-question.entit
 import { InspectionChecklist } from './checklist/entities/inspection-checklist.entity';
 import { InspectionChecklistAnswer } from './checklist/entities/inspection-checklist-answer.entity';
 import { ChecklistModule } from './checklist/checklist.module';
+import { LogsModule } from './logs/logs.module';
 
 @Module({
   imports: [
@@ -97,6 +98,7 @@ import { ChecklistModule } from './checklist/checklist.module';
     PermissionModule,
     CompanyModule,
     ChecklistModule,
+    LogsModule,
   ],
   providers: [QuickBooksOAuthService], // Add the QuickBooks service as a provider
   controllers: [QuickBooksController],

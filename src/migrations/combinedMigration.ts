@@ -60,6 +60,8 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
       CREATE TABLE IF NOT EXISTS "users" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "username" character varying NOT NULL UNIQUE,
+        "first_name" character varying NOT NULL,
+        "last_name" character varying NOT NULL,
         "password_hash" character varying NOT NULL,
         "email" character varying NOT NULL UNIQUE,
         "role" character varying CHECK (role IN ('admin', 'client_admin', 'customer_admin', 'client', 'customer', 'employee')),
