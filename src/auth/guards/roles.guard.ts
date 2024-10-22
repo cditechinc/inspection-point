@@ -71,8 +71,6 @@ export class RolesGuard implements CanActivate {
       requiredPermission = 'manage_users';
     } else if (route.includes('assets')) {
       requiredPermission = 'manage_assets';
-    } else if (route.includes('checklist-items')) {
-      requiredPermission = 'manage_checklist-items';
     } else if (route.includes('checklists')) {
       requiredPermission = 'manage_checklists';
     } else if (route.includes('permissions')) {

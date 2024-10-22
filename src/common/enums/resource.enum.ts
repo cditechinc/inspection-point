@@ -7,7 +7,6 @@ export enum Resource {
     USERS = 'users',
     INVOICES = 'invoices',
     CHECKLISTS = 'checklists',
-    CHECKLIST_ITEMS = 'checklist-items',
     PERMISSIONS = 'permissions',
     CLIENTS = 'clients',
     PUMP_BRANDS = 'pump-brands',
