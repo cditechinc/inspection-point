@@ -307,7 +307,7 @@ export class InspectionService {
         let inspectionChecklist =
           await this.inspectionChecklistRepository.findOne({
             where: { id: checklistDto.id },
-            relations: ['answers'],
+            relations: ['answers', 'answers.question'],
           });
 
         if (!inspectionChecklist) {
@@ -325,6 +325,7 @@ export class InspectionService {
           inspectionChecklist = this.inspectionChecklistRepository.create({
             inspection,
             template,
+            answers: [],
           });
         }
 
@@ -332,12 +333,14 @@ export class InspectionService {
         if (checklistDto.answers && checklistDto.answers.length > 0) {
           for (const answerDto of checklistDto.answers) {
             let answer = inspectionChecklist.answers.find(
-              (a) => a.question.id === answerDto.questionId,
+              (a) => a.question && a.question.id === answerDto.questionId,
             );
 
             if (answer) {
               // Update existing answer
               answer.answer = answerDto.answer;
+
+              await this.inspectionChecklistAnswerRepository.save(answer);
             } else {
               // Create a new answer
               const question = await this.checklistQuestionRepository.findOne({
@@ -368,9 +371,18 @@ export class InspectionService {
       inspection.checklists = updatedChecklists;
     }
 
+
     // Merge other properties and save the inspection
     const { assignedTo, ...rest } = updateInspectionDto;
-    this.inspectionRepository.merge(inspection, rest);
+
+    // Filter out undefined values from rest
+    const filteredRest = Object.fromEntries(
+      Object.entries(rest).filter(([_, v]) => v !== undefined),
+    );
+
+    console.log('Before merge, scheduledDate:', inspection.scheduledDate);
+    this.inspectionRepository.merge(inspection, filteredRest);
+    console.log('After merge, scheduledDate:', inspection.scheduledDate);
 
     // Update inspection status based on new data
     await this.updateInspectionStatus(inspection);
@@ -603,6 +615,20 @@ export class InspectionService {
   private async updateInspectionStatus(inspection: Inspection): Promise<void> {
     const currentDate = new Date();
 
+    console.log('Updating status for inspection:', inspection);
+    console.log(
+      'Current date:',
+      currentDate,
+      'Scheduled date:',
+      inspection.scheduledDate,
+    );
+    console.log(
+      'Current status:',
+      inspection.status,
+      'Completed date:',
+      inspection.completedDate,
+    );
+
     if (inspection.completedDate) {
       inspection.status = InspectionStatus.COMPLETE_NOT_BILLED;
     } else if (
@@ -613,7 +639,7 @@ export class InspectionService {
       inspection.status = InspectionStatus.PAST_DUE;
     }
 
-    await this.inspectionRepository.save(inspection);
+    // await this.inspectionRepository.save(inspection);
   }
 
   async submitAndBillCustomer(inspectionId: string, serviceFeeAmount: number) {
@@ -730,8 +756,24 @@ export class InspectionService {
 
       console.log('Invoice created:', invoice);
 
-      // If QuickBooks responds successfully, mark the inspection as billed
+      // If QuickBooks responds successfully, send the invoice with attachments
       if (invoice.quickbooks_invoice_id) {
+        // Send the invoice with attachments
+        try {
+          await this.invoiceService.sendInvoiceWithAttachments(
+            invoice.quickbooks_invoice_id,
+            clientId,
+            inspectionId,
+            pdfReportPath,
+            imagePaths,
+          );
+        } catch (error) {
+          console.error('Error sending invoice with attachments:', error);
+          throw new InternalServerErrorException(
+            'Failed to send invoice with attachments',
+          );
+        }
+
         inspection.status = InspectionStatus.COMPLETE_BILLED;
 
         // Associate the invoice with the inspection
@@ -739,7 +781,7 @@ export class InspectionService {
 
         await this.inspectionRepository.save({
           ...inspection,
-          customerId: localCustomerId, // Use UUID here for PostgreSQL
+          customerId: localCustomerId,
         });
 
         return invoice; // Return the created invoice
@@ -772,12 +814,12 @@ export class InspectionService {
     }
 
     // Ensure the service fee is associated with the inspection
-  const serviceFee = inspection.serviceFee;
-  if (!serviceFee) {
-    throw new BadRequestException(
-      'Service fee not associated with this inspection',
-    );
-  }
+    const serviceFee = inspection.serviceFee;
+    if (!serviceFee) {
+      throw new BadRequestException(
+        'Service fee not associated with this inspection',
+      );
+    }
 
     // Fetch the PDF report from the S3 bucket
     const pdfReportPath = await this.pdfService.fetchPdfReport(inspection.id);

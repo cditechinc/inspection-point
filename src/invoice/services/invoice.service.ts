@@ -18,6 +18,10 @@ import { UpdateInvoiceDto } from './../dto/update-invoice.dto';
 import { Inspection } from './../../inspection/entities/inspection.entity';
 import { InvoiceItem } from '../entities/invoice-item.entity';
 import { Services } from '../entities/services.entity';
+import { AwsService } from './../../aws/aws.service';
+
+import axios from 'axios';
+import * as FormData from 'form-data';
 
 @Injectable()
 export class InvoiceService {
@@ -33,6 +37,7 @@ export class InvoiceService {
     private readonly inspectionService: InspectionService,
     @InjectRepository(Inspection)
     private inspectionRepository: Repository<Inspection>,
+    private readonly awsService: AwsService,
   ) {}
 
   async createInvoice(
@@ -289,6 +294,7 @@ export class InvoiceService {
 
     const inspection = await this.inspectionRepository.findOne({
       where: { id: inspectionId },
+      relations: ['customer'],
     });
     if (!inspection) {
       throw new InternalServerErrorException('Inspection not found');
@@ -312,64 +318,178 @@ export class InvoiceService {
       throw new InternalServerErrorException('Customer email not available');
     }
 
-    // Set the absolute URL for the PDF from the S3 bucket
-    const s3Url = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${pdfReportPath}`;
-
-    // Payload for sending invoice with attachment
-    const payload = {
-      Attachments: [
-        {
-          ContentRef: s3Url,
-          FileName: 'InspectionReport.pdf',
-          MimeType: 'application/pdf',
-        },
-        ...imagePaths.map((path, index) => ({
-          ContentRef: path,
-          FileName: `InspectionImage${index + 1}.jpg`,
-          MimeType: 'image/jpeg',
-        })),
-      ],
-      SendTo: customerEmail,
-    };
-
-    // Prepare QuickBooks OAuth token and headers using QuickBooksOAuthService
-    await this.quickBooksOAuthService.getClient().setToken({
+    // Set up QuickBooks client
+    const qbClient = this.quickBooksOAuthService.getClient();
+    qbClient.setToken({
       token_type: 'bearer',
       access_token: client.quickbooksAccessToken,
       refresh_token: client.quickbooksRefreshToken,
       realmId: client.quickbooksRealmId,
     });
 
-    // Send the invoice via QuickBooks API
-    try {
-      const response = await this.quickBooksOAuthService
-        .getClient()
-        .makeApiCall({
-          url: `${this.quickBooksOAuthService.getClient().environment === 'sandbox' ? 'https://sandbox-quickbooks.api.intuit.com' : 'https://quickbooks.api.intuit.com'}/v3/company/${client.quickbooksRealmId}/invoice/${invoice.quickbooks_invoice_id}/send`,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
+    const realmId = client.quickbooksRealmId;
 
-      if (response.json) {
-        return response.json;
-      } else {
-        throw new InternalServerErrorException(
-          'Failed to send invoice in QuickBooks',
+    const environment = qbClient.environment || 'sandbox';
+    const baseUrl =
+      environment === 'sandbox'
+        ? 'https://sandbox-quickbooks.api.intuit.com'
+        : 'https://quickbooks.api.intuit.com';
+
+    // Download attachments from S3 or wherever they are stored
+    const pdfBuffer = await this.awsService.downloadFile(pdfReportPath);
+    const imageBuffers = await Promise.all(
+      imagePaths.map((path) => this.awsService.downloadFile(path)),
+    );
+
+    // Upload PDF attachment
+    const pdfAttachable = await this.uploadAttachment(
+      qbClient,
+      realmId,
+      pdfBuffer,
+      'InspectionReport.pdf',
+      'application/pdf',
+    );
+
+    // Upload image attachments
+    const imageAttachables = [];
+    for (let i = 0; i < imageBuffers.length; i++) {
+      const imageAttachable = await this.uploadAttachment(
+        qbClient,
+        realmId,
+        imageBuffers[i],
+        `InspectionImage${i + 1}.jpg`,
+        'image/jpeg',
+      );
+      imageAttachables.push(imageAttachable);
+    }
+
+    // Link attachments to the invoice
+    const allAttachables = [pdfAttachable, ...imageAttachables];
+    for (const attachable of allAttachables) {
+      if (
+        attachable &&
+        attachable.AttachableResponse &&
+        attachable.AttachableResponse[0] &&
+        attachable.AttachableResponse[0].Attachable
+      )
+        await this.linkAttachmentToInvoice(
+          qbClient,
+          realmId,
+          attachable.AttachableResponse[0].Attachable.Id,
+          invoiceId,
         );
-      }
+    }
+
+    // Send the invoice via email
+    const sendInvoiceUrl = `${baseUrl}/v3/company/${realmId}/invoice/${invoiceId}/send?sendTo=${customerEmail}`;
+    const response = await qbClient.makeApiCall({
+      url: sendInvoiceUrl,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({}),
+    });
+
+    if (response.json) {
+      return response.json;
+    } else {
+      throw new InternalServerErrorException(
+        'Failed to send invoice in QuickBooks',
+      );
+    }
+  }
+
+  async uploadAttachment(
+    client: any,
+    realmId: string,
+    fileBuffer: Buffer,
+    fileName: string,
+    mimeType: string,
+  ) {
+    const environment = process.env.QUICKBOOKS_ENV || 'sandbox';
+    const baseUrl =
+      environment === 'sandbox'
+        ? 'https://sandbox-quickbooks.api.intuit.com'
+        : 'https://quickbooks.api.intuit.com';
+
+    const url = `${baseUrl}/v3/company/${realmId}/upload`;
+
+    const formData = new FormData();
+    formData.append('file', fileBuffer, {
+      filename: fileName,
+      contentType: mimeType,
+    });
+
+    const accessToken = client.getToken().access_token;
+
+    const headers = {
+      ...formData.getHeaders(),
+      Accept: 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    try {
+      const response = await axios.post(url, formData, { headers });
+      console.log('Upload Attachment Response:', response.data);
+      return response.data;
     } catch (error) {
       console.error(
-        'Error sending invoice:',
-        error.response
-          ? JSON.stringify(error.response.data, null, 2)
-          : error.message,
+        'Error uploading attachment:',
+        error.response?.data || error.message,
+      );
+      throw new InternalServerErrorException('Failed to upload attachment');
+    }
+  }
+
+  async linkAttachmentToInvoice(
+    client: any,
+    realmId: string,
+    attachableId: string,
+    invoiceId: string,
+  ) {
+    const environment = process.env.QUICKBOOKS_ENV || 'sandbox';
+    const baseUrl =
+      environment === 'sandbox'
+        ? 'https://sandbox-quickbooks.api.intuit.com'
+        : 'https://quickbooks.api.intuit.com';
+
+    const url = `${baseUrl}/v3/company/${realmId}/attachable`;
+
+    const accessToken = client.getToken().access_token;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const attachableRef = {
+      AttachableRef: [
+        {
+          IncludeOnSend: true,
+          EntityRef: {
+            type: 'Invoice',
+            value: invoiceId,
+          },
+        },
+      ],
+      SyncToken: '0',
+      Id: attachableId,
+    };
+
+    try {
+      const response = await axios.post(url, attachableRef, { headers });
+      console.log('Link Attachment Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        'Error linking attachment:',
+        error.response?.data || error.message,
       );
       throw new InternalServerErrorException(
-        `QuickBooks API error: ${error.message}`,
+        'Failed to link attachment to invoice',
       );
     }
   }

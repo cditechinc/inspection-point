@@ -111,5 +111,16 @@ export class AwsService {
       });
     });
   }
+
+  async downloadFile(filePath: string): Promise<Buffer> {
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: filePath,
+    };
+  
+    const data = await this.s3.getObject(params).promise();
+    return data.Body as Buffer;
+  }
+  
   
 }

@@ -14,13 +14,16 @@ import { ServiceFeeController } from './controllers/services.controller';
 import { ServicesService } from './services/services.service';
 import { InvoiceItem } from './entities/invoice-item.entity';
 import { Services } from './entities/services.entity';
+import { AwsService } from './../aws/aws.service';
+import { AwsModule } from './../aws/aws.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Invoice, Inspection, InvoiceItem, Services]),
+    TypeOrmModule.forFeature([Invoice, Inspection, InvoiceItem, Services, AwsService]),
     ClientModule,
     CustomerModule,
     UserGroupModule,
+    AwsModule,
     forwardRef(() => InspectionModule), 
     forwardRef(() => AuthModule)
   ],

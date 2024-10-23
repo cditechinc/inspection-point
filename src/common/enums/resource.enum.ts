@@ -17,4 +17,5 @@ export enum Resource {
     SERVICES = 'services',
     CHECKLIST_TEMPLATES = 'checklist-templates',
     INSPECTION_CHECKLISTS = 'inspection-checklists',
+    LOGS = 'logs',
   }
