@@ -382,19 +382,26 @@ export class InvoiceService {
 
     // Send the invoice via email
     const sendInvoiceUrl = `${baseUrl}/v3/company/${realmId}/invoice/${invoiceId}/send?sendTo=${customerEmail}`;
-    const response = await qbClient.makeApiCall({
-      url: sendInvoiceUrl,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({}),
-    });
+    const sendHeaders = {
+      'Content-Type': 'application/octet-stream',
+      Accept: 'application/json',
+      Authorization: `Bearer ${client.quickbooksAccessToken}`,
+    };
 
-    if (response.json) {
-      return response.json;
-    } else {
+    try {
+      const response = await axios.post(sendInvoiceUrl, null, {
+        headers: sendHeaders,
+      });
+      console.log(
+        'Send Invoice Response:',
+        JSON.stringify(response.data, null, 2),
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        'Error sending invoice:',
+        error.response?.data || error.message,
+      );
       throw new InternalServerErrorException(
         'Failed to send invoice in QuickBooks',
       );
@@ -417,10 +424,13 @@ export class InvoiceService {
     const url = `${baseUrl}/v3/company/${realmId}/upload`;
 
     const formData = new FormData();
-    formData.append('file', fileBuffer, {
-      filename: fileName,
-      contentType: mimeType,
-    });
+  formData.append('file_content_0', fileBuffer, {
+    filename: fileName,
+    contentType: mimeType,
+  });
+  formData.append('file_name_0', fileName);
+  formData.append('content_type_0', mimeType);
+  formData.append('entity', JSON.stringify({}));
 
     const accessToken = client.getToken().access_token;
 
@@ -432,7 +442,17 @@ export class InvoiceService {
 
     try {
       const response = await axios.post(url, formData, { headers });
-      console.log('Upload Attachment Response:', response.data);
+      console.log(
+        'Upload Attachment Response:',
+        JSON.stringify(response.data, null, 2),
+      );
+      if (response.data.Fault) {
+        console.error(
+          'Upload Fault:',
+          JSON.stringify(response.data.Fault, null, 2),
+        );
+        throw new InternalServerErrorException('Failed to upload attachment');
+      }
       return response.data;
     } catch (error) {
       console.error(
@@ -455,7 +475,7 @@ export class InvoiceService {
         ? 'https://sandbox-quickbooks.api.intuit.com'
         : 'https://quickbooks.api.intuit.com';
 
-    const url = `${baseUrl}/v3/company/${realmId}/attachable`;
+    const url = `${baseUrl}/v3/company/${realmId}/attachable?minorversion=65`;
 
     const accessToken = client.getToken().access_token;
 
@@ -481,7 +501,19 @@ export class InvoiceService {
 
     try {
       const response = await axios.post(url, attachableRef, { headers });
-      console.log('Link Attachment Response:', response.data);
+      console.log(
+        'Link Attachment Response:',
+        JSON.stringify(response.data, null, 2),
+      );
+      if (response.data.Fault) {
+        console.error(
+          'Link Fault:',
+          JSON.stringify(response.data.Fault, null, 2),
+        );
+        throw new InternalServerErrorException(
+          'Failed to link attachment to invoice',
+        );
+      }
       return response.data;
     } catch (error) {
       console.error(
