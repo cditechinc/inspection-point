@@ -63,13 +63,23 @@ export class CustomerController {
 
   @Roles(Role.ClientAdmin)
   @Patch(':id')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'photos', maxCount: 4 }]), // Allow up to 4 photos
+  )
   async update(
     @Param('id') id: string,
     @Body() updateCustomerDto: Partial<CreateCustomerDto>,
     @Request() req,
+    @UploadedFiles() files: { photos?: Express.Multer.File[] },
   ) {
     const user: CustomUser = req.user;
-    return this.customerService.update(id, updateCustomerDto, user.clientId);
+    const photos = files.photos || []; // Get the uploaded photos
+    return this.customerService.update(
+      id,
+      updateCustomerDto,
+      user.clientId,
+      photos,
+    );
   }
 
   @Roles(Role.ClientAdmin)

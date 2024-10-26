@@ -10,6 +10,11 @@ import {
   ValidateNested,
   IsBoolean,
   IsInt,
+  ValidateIf,
+  IsIn,
+  ValidationOptions,
+  registerDecorator,
+  ValidationArguments,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -24,6 +29,25 @@ class Route {
   longitude: number;
 }
 
+export function IsFifteenthDay(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      name: 'isFifteenthDay',
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          const day = (value as Date).getDate();
+          return day === 15;
+        },
+        defaultMessage(args: ValidationArguments) {
+          return 'For Bi-Monthly intervals, the first scheduled date must be on the 15th.';
+        },
+      },
+    });
+  };
+}
 
 export class CreateInspectionDTO {
   @IsUUID()
@@ -39,36 +63,39 @@ export class CreateInspectionDTO {
   @IsOptional()
   assignedTo: string;
 
-  @IsEnum(InspectionStatus)
-  status: InspectionStatus;
-
-  @IsOptional()
+  @ValidateIf((o) => o.inspectionInterval === IntervalType.BI_MONTHLY)
   @IsDate()
   @Type(() => Date)
-  scheduledDate?: Date;
+  @IsFifteenthDay({
+    message:
+      'For Bi-Monthly intervals, the first scheduled date must be on the 15th.',
+  })
+  scheduledDate: Date;
 
   @IsOptional()
   @IsDate()
   @Type(() => Date)
   completedDate?: Date;
 
-  
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => Route)
   route: Route[];
 
-  @IsString()
-  @IsOptional()
-  isReocurring?: boolean; 
-
   @IsEnum(IntervalType)
-  @IsOptional()
   inspectionInterval?: IntervalType;
 
-  @IsOptional()
+  @ValidateIf((o) => o.inspectionInterval !== IntervalType.ONE_TIME)
   @IsDate()
-  reocurrenceEndDate?: Date;
+  @Type(() => Date)
+  reocurrenceEndDate: Date;
+
+  @ValidateIf((o) => o.inspectionInterval === IntervalType.BI_MONTHLY)
+  @IsIn([15])
+  get isValidFirstDateForBiMonthly() {
+    const day = this.scheduledDate.getDate();
+    return day === 15;
+  }
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -97,10 +124,6 @@ export class UpdateInspectionDTO {
   @IsArray()
   route?: any[];
 
-  @IsBoolean()
-  @IsOptional()
-  isReocurring?: boolean;
-
   @IsEnum(IntervalType)
   @IsOptional()
   inspectionInterval?: IntervalType;
@@ -118,6 +141,10 @@ export class UpdateInspectionDTO {
   @IsUUID()
   @IsOptional()
   serviceFeeId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  invoiceId?: string;
 }
 
 export class InspectionDTO {
@@ -131,7 +158,6 @@ export class InspectionDTO {
   serviceFeeId: string;
   completedDate: Date;
   route: any[];
-  isReocurring: boolean;
   inspectionInterval: number;
   reocurrenceEndDate: Date;
   checklists: SubmitInspectionChecklistDTO[];

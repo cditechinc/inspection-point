@@ -100,7 +100,7 @@ export class InspectionService {
           asset,
           assignedTo: assignedToUser,
           serviceFee: serviceFee,
-          status: InspectionStatus.NOT_DONE,
+          status: InspectionStatus.NOT_COMPLETE,
         });
 
         // Save the inspection entity first to get the ID
@@ -161,7 +161,6 @@ export class InspectionService {
 
         // Check if the inspection is recurring and schedule recurring inspections
         if (
-          createInspectionDto.isReocurring &&
           createInspectionDto.inspectionInterval
         ) {
           await this.scheduleRecurring(
@@ -184,52 +183,77 @@ export class InspectionService {
     recurrenceEndDate: Date,
     transactionalEntityManager: any,
   ): Promise<void> {
-    let nextScheduledDate = new Date(inspection.scheduledDate);
+    const firstScheduledDate = new Date(inspection.scheduledDate);
+    let nextScheduledDate = new Date(firstScheduledDate);
+
     const endDate = new Date(recurrenceEndDate);
 
-    // Loop until the nextScheduledDate is beyond the recurrenceEndDate
     while (nextScheduledDate <= endDate) {
-      switch (inspectionInterval) {
-        case 'Daily':
-          nextScheduledDate.setDate(nextScheduledDate.getDate() + 1);
-          break;
-        case 'Bi-Monthly':
-          nextScheduledDate.setDate(nextScheduledDate.getDate() + 15);
-          break;
-        case 'Monthly':
-          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 1);
-          break;
-        case 'Quarterly':
-          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 3);
-          break;
-        case 'Bi-Annual':
-          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 6);
-          break;
-        case 'Annual':
-          nextScheduledDate.setFullYear(nextScheduledDate.getFullYear() + 1);
-          break;
-        default:
-          // For 'One-Time' or unknown intervals, exit the loop
-          nextScheduledDate = endDate;
-          break;
-      }
-
       // Ensure we don't create an inspection after the end date
       if (nextScheduledDate > endDate) break;
 
-      // Create the new recurring inspection entity
-      const newInspection = transactionalEntityManager.create(Inspection, {
-        ...inspection,
-        id: undefined, // New ID for the new inspection
-        scheduledDate: new Date(nextScheduledDate),
-        status: InspectionStatus.NOT_DONE, // Reset status for the new inspection
-        createdAt: undefined, // Reset timestamps
-        updatedAt: undefined,
-        completedDate: null, // Reset completed date
-      });
+      // Skip the first date since it's already created
+      if (nextScheduledDate.getTime() !== firstScheduledDate.getTime()) {
+        // Create the new recurring inspection entity
+        const newInspection = transactionalEntityManager.create(Inspection, {
+          ...inspection,
+          id: undefined, // New ID for the new inspection
+          scheduledDate: new Date(nextScheduledDate),
+          status: InspectionStatus.NOT_COMPLETE, // Reset status for the new inspection
+          createdAt: undefined, // Reset timestamps
+          updatedAt: undefined,
+          completedDate: null, // Reset completed date
+        });
 
-      // Save the new recurring inspection
-      await transactionalEntityManager.save(newInspection);
+        // Save the new recurring inspection
+        await transactionalEntityManager.save(newInspection);
+      }
+
+      // Calculate the next scheduled date based on the interval
+      switch (inspectionInterval) {
+        case IntervalType.DAILY:
+          nextScheduledDate.setDate(nextScheduledDate.getDate() + 1);
+          break;
+        case IntervalType.BI_MONTHLY:
+          // Schedule on the 15th and 28th
+          if (nextScheduledDate.getDate() === 15) {
+            nextScheduledDate.setDate(28);
+          } else {
+            // Move to the next month's 15th
+            nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 1);
+            nextScheduledDate.setDate(15);
+          }
+          break;
+        case IntervalType.MONTHLY:
+          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 1);
+          break;
+        case IntervalType.QUARTERLY:
+          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 3);
+          break;
+        case IntervalType.BI_ANNUAL:
+          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 6);
+          break;
+        case IntervalType.ANNUAL:
+          nextScheduledDate.setFullYear(nextScheduledDate.getFullYear() + 1);
+          break;
+        case IntervalType.TRI_ANNUAL:
+          nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 4);
+          break;
+        default:
+          // For 'One-Time' or unknown intervals, exit the loop
+          nextScheduledDate = new Date(endDate.getTime() + 1); // Exit the loop
+          break;
+      }
+
+      // Adjust for months with fewer days
+      const day = nextScheduledDate.getDate();
+      const month = nextScheduledDate.getMonth();
+      const year = nextScheduledDate.getFullYear();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      if (day > daysInMonth) {
+        nextScheduledDate.setDate(daysInMonth);
+      }
     }
   }
 
@@ -298,6 +322,19 @@ export class InspectionService {
 
       inspection.assignedTo = assignedToUser;
     }
+
+    // Update invoice association if provided
+  if (updateInspectionDto.invoiceId) {
+    const invoice = await this.invoiceService.findInvoiceById(
+      updateInspectionDto.invoiceId,
+    );
+    if (!invoice) {
+      throw new NotFoundException(
+        `Invoice with ID ${updateInspectionDto.invoiceId} not found`,
+      );
+    }
+    inspection.invoice = invoice;
+  }
 
     // Handle checklists and answers during update
     if (updateInspectionDto.checklists) {
@@ -371,9 +408,8 @@ export class InspectionService {
       inspection.checklists = updatedChecklists;
     }
 
-
     // Merge other properties and save the inspection
-    const { assignedTo, ...rest } = updateInspectionDto;
+    const { assignedTo, checklists, invoiceId, ...rest } = updateInspectionDto;
 
     // Filter out undefined values from rest
     const filteredRest = Object.fromEntries(
@@ -390,11 +426,52 @@ export class InspectionService {
     return this.inspectionRepository.save(inspection);
   }
 
+
+  async reSendInvoice(inspectionId: string): Promise<void> {
+    const inspection = await this.findOne(inspectionId);
+  
+    if (!inspection.invoice || !inspection.invoice.quickbooks_invoice_id) {
+      throw new NotFoundException('No invoice associated with this inspection');
+    }
+  
+    try {
+      // Fetch the PDF report path from S3
+      const pdfReportPath = await this.pdfService.fetchPdfReport(inspection.id);
+      if (!pdfReportPath) {
+        throw new NotFoundException('PDF report not found in S3 bucket');
+      }
+  
+      // Collect image paths from inspection photos
+      const imagePaths: string[] = inspection.photos
+        ? inspection.photos.map((photo) => photo.url)
+        : [];
+  
+      // Resend the invoice with attachments
+      await this.invoiceService.sendInvoiceWithAttachments(
+        inspection.invoice.quickbooks_invoice_id,
+        inspection.client.id,
+        inspection.id,
+        pdfReportPath.toString(),
+        imagePaths,
+      );
+  
+      // Optionally, update the inspection status if needed
+      // For example, set the status to 'Completed Billed' if appropriate
+      // inspection.status = InspectionStatus.COMPLETED_BILLED;
+      // await this.inspectionRepository.save(inspection);
+    } catch (error) {
+      console.error('Error resending invoice:', error);
+      throw new InternalServerErrorException('Failed to resend invoice');
+    }
+  }
+  
+  
+
   async completeAndBillInspection(inspectionId: string): Promise<any> {
     const inspection = await this.findOne(inspectionId);
 
     // Prevent re-billing if the inspection is already marked as COMPLETE_BILLED
-    if (inspection.status === InspectionStatus.COMPLETE_BILLED) {
+    if (inspection.status === InspectionStatus.COMPLETED_BILLED) {
       console.error(
         `Inspection ${inspectionId} is already marked as COMPLETE_BILLED.`,
       );
@@ -429,7 +506,7 @@ export class InspectionService {
       inspection.status !== InspectionStatus.ON_HOLD
     ) {
       // Update the inspection status to COMPLETE_BILLED
-      inspection.status = InspectionStatus.COMPLETE_BILLED;
+      inspection.status = InspectionStatus.COMPLETED_BILLED;
       inspection.completedDate = new Date();
 
       // Save the updated inspection status
@@ -518,13 +595,10 @@ export class InspectionService {
       await this.invoiceService.findInvoiceById(invoiceId);
     console.log('Invoice Status:', existingInvoice?.status); // Log the status of the invoice
 
-    if (
-      !existingInvoice ||
-      (existingInvoice.status !== 'pending' &&
-        existingInvoice.status !== 'Not Sent')
-    ) {
-      throw new BadRequestException('Invalid invoice or invoice already sent');
+    if (!existingInvoice || existingInvoice.status !== 'Not-Sent') {
+      throw new BadRequestException('Cannot add to an invoice that has been sent');
     }
+    
 
     // Fetch the PDF report from the S3 bucket
     const pdfReportPath = await this.pdfService.fetchPdfReport(inspection.id);
@@ -548,7 +622,7 @@ export class InspectionService {
 
     // Mark the inspection as Complete Billed
     if (updatedInvoice) {
-      inspection.status = InspectionStatus.COMPLETE_BILLED;
+      inspection.status = InspectionStatus.COMPLETED_BILLED;
       await this.inspectionRepository.save(inspection);
     }
 
@@ -559,7 +633,7 @@ export class InspectionService {
     const inspection = await this.findOne(inspectionId);
 
     // Prevent re-billing if the inspection is already marked as COMPLETE_BILLED
-    if (inspection.status === InspectionStatus.COMPLETE_BILLED) {
+    if (inspection.status === InspectionStatus.COMPLETED_BILLED) {
       throw new Error('This inspection has already been billed.');
     }
 
@@ -585,7 +659,7 @@ export class InspectionService {
     });
 
     // Mark the inspection as COMPLETE_BILLED and update the completed date
-    inspection.status = InspectionStatus.COMPLETE_BILLED;
+    inspection.status = InspectionStatus.COMPLETED_BILLED;
     inspection.completedDate = new Date();
 
     // Save the inspection and return the updated inspection with invoice information
@@ -602,11 +676,11 @@ export class InspectionService {
   ): Promise<Inspection> {
     const inspection = await this.findOne(inspectionId);
 
-    if (inspection.status === InspectionStatus.COMPLETE_BILLED) {
+    if (inspection.status === InspectionStatus.COMPLETED_BILLED) {
       throw new Error('This inspection has already been billed.');
     }
 
-    inspection.status = InspectionStatus.COMPLETE_NOT_BILLED;
+    inspection.status = InspectionStatus.COMPLETED_NOT_BILLED;
     inspection.completedDate = new Date();
 
     return this.inspectionRepository.save(inspection);
@@ -615,31 +689,45 @@ export class InspectionService {
   private async updateInspectionStatus(inspection: Inspection): Promise<void> {
     const currentDate = new Date();
 
-    console.log('Updating status for inspection:', inspection);
-    console.log(
-      'Current date:',
-      currentDate,
-      'Scheduled date:',
-      inspection.scheduledDate,
-    );
-    console.log(
-      'Current status:',
-      inspection.status,
-      'Completed date:',
-      inspection.completedDate,
-    );
-
-    if (inspection.completedDate) {
-      inspection.status = InspectionStatus.COMPLETE_NOT_BILLED;
-    } else if (
-      currentDate > inspection.scheduledDate &&
-      inspection.status !== InspectionStatus.COMPLETE_BILLED &&
-      inspection.status !== InspectionStatus.COMPLETE_NOT_BILLED
+    if (
+      inspection.status !== InspectionStatus.COMPLETED_BILLED &&
+      inspection.status !== InspectionStatus.COMPLETED_NOT_BILLED &&
+      inspection.status !== InspectionStatus.CANCELED &&
+      inspection.status !== InspectionStatus.ON_HOLD
     ) {
-      inspection.status = InspectionStatus.PAST_DUE;
+      if (inspection.completedDate) {
+        // Set status based on billing
+        if (inspection.invoice && inspection.invoice.status === 'Sent') {
+          inspection.status = InspectionStatus.COMPLETED_BILLED;
+        } else {
+          inspection.status = InspectionStatus.COMPLETED_NOT_BILLED;
+        }
+      } else if (currentDate > inspection.scheduledDate) {
+        inspection.status = InspectionStatus.PAST_DUE;
+      } else if (inspection.status === InspectionStatus.NOT_COMPLETE) {
+        // Do nothing, remains as Not-Complete
+      } else if (inspection.status === InspectionStatus.IN_PROGRESS) {
+        // Do nothing, remains as In-Progress
+      }
     }
 
-    // await this.inspectionRepository.save(inspection);
+    // Save the updated status
+    await this.inspectionRepository.save(inspection);
+  }
+
+  async beginInspection(inspectionId: string): Promise<Inspection> {
+    const inspection = await this.findOne(inspectionId);
+
+    if (!inspection) {
+      throw new NotFoundException(
+        `Inspection with ID ${inspectionId} not found`,
+      );
+    }
+
+    inspection.status = InspectionStatus.IN_PROGRESS;
+    await this.inspectionRepository.save(inspection);
+
+    return inspection;
   }
 
   async submitAndBillCustomer(inspectionId: string, serviceFeeAmount: number) {
@@ -774,7 +862,7 @@ export class InspectionService {
           );
         }
 
-        inspection.status = InspectionStatus.COMPLETE_BILLED;
+        inspection.status = InspectionStatus.COMPLETED_BILLED;
 
         // Associate the invoice with the inspection
         inspection.invoice = invoice;
@@ -848,7 +936,7 @@ export class InspectionService {
 
     // Mark the inspection as Complete Not Billed
     if (invoice.quickbooks_invoice_id) {
-      inspection.status = InspectionStatus.COMPLETE_NOT_BILLED;
+      inspection.status = InspectionStatus.COMPLETED_NOT_BILLED;
       inspection.invoice = invoice;
       await this.inspectionRepository.save(inspection);
     } else {

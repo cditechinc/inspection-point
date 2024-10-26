@@ -1,113 +1,4 @@
-// import { MigrationInterface, QueryRunner } from 'typeorm';
 
-// export class InspectionModuleMigration20240804123456
-//   implements MigrationInterface
-// {
-//   name = 'InspectionModuleMigration20240804123456';
-
-//   public async up(queryRunner: QueryRunner): Promise<void> {
-//     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
-
-//     await queryRunner.query(`
-//       DO $$
-//       BEGIN
-//         IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'inspection_status_enum') THEN
-//           CREATE TYPE inspection_status_enum AS ENUM (
-//             'Not-Done',
-//             'Started Not Finished',
-//             'Past-Due',
-//             'Complete Billed',
-//             'Complete Not-Billed',
-//             'On-Hold',
-//             'Canceled'
-//           );
-//         END IF;
-//       END $$;
-//     `);
-
-//     await queryRunner.query(`
-//       CREATE TABLE IF NOT EXISTS "inspections" (
-//         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-//         "client_id" uuid REFERENCES "clients"("id") ON DELETE CASCADE,
-//         "customer_id" uuid REFERENCES "users"("id") ON DELETE CASCADE,
-//         "asset_id" uuid REFERENCES "assets"("id") ON DELETE CASCADE,
-//         "assigned_to" uuid REFERENCES "users"("id") ON DELETE SET NULL,
-//         "status" inspection_status_enum NOT NULL DEFAULT 'Not-Done',
-//         "scheduled_date" TIMESTAMP,
-//         "completed_date" TIMESTAMP,
-//         "route" jsonb,
-//         "is_reocurring" boolean DEFAULT FALSE, 
-//         "inspection_interval" TIMESTAMP, 
-//         "reocurrence_end_date" TIMESTAMP, 
-//         "pdf_file_path" varchar(255),
-//         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-//       );
-//     `);
-
-//     await queryRunner.query(`
-//       CREATE INDEX IF NOT EXISTS "idx_inspections_client_id" ON "inspections" ("client_id");
-//     `);
-
-//     await queryRunner.query(`
-//       CREATE INDEX IF NOT EXISTS "idx_inspections_customer_id" ON "inspections" ("customer_id");
-//     `);
-
-//     await queryRunner.query(`
-//       CREATE INDEX IF NOT EXISTS "idx_inspections_asset_id" ON "inspections" ("asset_id");
-//     `);
-
-//     await queryRunner.query(`
-//       CREATE INDEX IF NOT EXISTS "idx_inspections_assigned_to" ON "inspections" ("assigned_to");
-//     `);
-
-//     await queryRunner.query(`
-//       CREATE TABLE IF NOT EXISTS "checklists" (
-//         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-//         "inspection_id" uuid REFERENCES "inspections"("id") ON DELETE CASCADE,
-//         "structure_score" varchar(10),
-//         "panel_score" varchar(10),
-//         "pipes_score" varchar(10),
-//         "alarm_score" varchar(10),
-//         "alarm_light_score" varchar(10),
-//         "wires_score" varchar(10),
-//         "breakers_score" varchar(10),
-//         "contactors_score" varchar(10),
-//         "thermals_score" varchar(10),
-//         "float_scores" jsonb,
-//         "pump_scores" jsonb,
-//         "overall_score" varchar(10),
-//         "cleaning" boolean DEFAULT FALSE,
-//         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-//       );
-//     `);
-
-//     await queryRunner.query(`
-//       CREATE INDEX IF NOT EXISTS "idx_checklists_inspection_id" ON "checklists" ("inspection_id");
-//     `);
-//   }
-
-//   public async down(queryRunner: QueryRunner): Promise<void> {
-//     await queryRunner.query(
-//       `DROP INDEX IF EXISTS "idx_checklists_inspection_id";`,
-//     );
-//     await queryRunner.query(`DROP TABLE IF EXISTS "checklists";`);
-
-//     await queryRunner.query(
-//       `DROP INDEX IF EXISTS "idx_inspections_assigned_to";`,
-//     );
-//     await queryRunner.query(`DROP INDEX IF EXISTS "idx_inspections_asset_id";`);
-//     await queryRunner.query(
-//       `DROP INDEX IF EXISTS "idx_inspections_customer_id";`,
-//     );
-//     await queryRunner.query(
-//       `DROP INDEX IF EXISTS "idx_inspections_client_id";`,
-//     );
-//     await queryRunner.query(`DROP TABLE IF EXISTS "inspections";`);
-//     await queryRunner.query(`DROP TYPE IF EXISTS "inspection_status_enum";`);
-//   }
-// }
 
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
@@ -120,23 +11,44 @@ export class InspectionModuleMigration20240804123456
     // Create UUID extension if not exists
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
-    // Create inspection_status_enum type if not exists
+    // Drop existing inspection_status_enum if it exists
     await queryRunner.query(`
       DO $$
       BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'inspection_status_enum') THEN
-          CREATE TYPE inspection_status_enum AS ENUM (
-            'Not-Done',
-            'Started Not Finished',
-            'Past-Due',
-            'Complete Billed',
-            'Complete Not-Billed',
-            'On-Hold',
-            'Canceled'
-          );
+        IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'inspection_status_enum') THEN
+          DROP TYPE inspection_status_enum;
         END IF;
       END $$;
     `);
+
+    // Create inspection_status_enum type with updated values
+    await queryRunner.query(`
+      CREATE TYPE inspection_status_enum AS ENUM (
+        'Not-Complete',
+        'In-Progress',
+        'Past-Due',
+        'Completed Billed',
+        'Completed Not-Billed',
+        'On-Hold',
+        'Canceled',
+        'Delayed'
+      );
+    `);
+
+    // Create inspection_interval_enum type
+    await queryRunner.query(`
+      CREATE TYPE inspection_interval_enum AS ENUM (
+        'Daily',
+        'Bi-Monthly',
+        'Monthly',
+        'Quarterly',
+        'Bi-Annual',
+        'Annual',
+        'Tri-Annual',
+        'One-Time'
+      );
+    `);
+
 
     // Create inspections table (unchanged)
     await queryRunner.query(`
@@ -146,12 +58,12 @@ export class InspectionModuleMigration20240804123456
         "customer_id" uuid REFERENCES "users"("id") ON DELETE CASCADE,
         "asset_id" uuid REFERENCES "assets"("id") ON DELETE CASCADE,
         "assigned_to" uuid REFERENCES "users"("id") ON DELETE SET NULL,
-        "status" inspection_status_enum NOT NULL DEFAULT 'Not-Done',
-        "scheduled_date" TIMESTAMP,
+        "status" inspection_status_enum NOT NULL DEFAULT 'Not-Complete',
+        "scheduled_date" TIMESTAMP NOT NULL,
         "completed_date" TIMESTAMP,
         "route" jsonb,
         "is_reocurring" boolean DEFAULT FALSE, 
-        "inspection_interval" TIMESTAMP, 
+        "inspection_interval" inspection_interval_enum, 
         "reocurrence_end_date" TIMESTAMP, 
         "pdf_file_path" varchar(255),
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -288,6 +200,9 @@ export class InspectionModuleMigration20240804123456
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_inspections_client_id";`);
     await queryRunner.query(`DROP TABLE IF EXISTS "inspections";`);
 
+
+    // Drop inspection_interval_enum type
+    await queryRunner.query(`DROP TYPE IF EXISTS "inspection_interval_enum";`);
     // Drop inspection_status_enum type
     await queryRunner.query(`DROP TYPE IF EXISTS "inspection_status_enum";`);
   }

@@ -19,14 +19,16 @@ import { Services } from '../../invoice/entities/services.entity';
 import { InspectionChecklist } from './../../checklist/entities/inspection-checklist.entity';
 
 export enum InspectionStatus {
-  NOT_DONE = 'Not-Done',
-  STARTED_NOT_FINISHED = 'Started Not Finished',
+  NOT_COMPLETE = 'Not-Complete',
+  IN_PROGRESS = 'In-Progress',
   PAST_DUE = 'Past-Due',
-  COMPLETE_BILLED = 'Complete Billed',
-  COMPLETE_NOT_BILLED = 'Complete Not-Billed',
+  COMPLETED_BILLED = 'Completed Billed',
+  COMPLETED_NOT_BILLED = 'Complete Not-Billed',
   ON_HOLD = 'On-Hold',
   CANCELED = 'Canceled',
+  DELAYED = 'Delayed',
 }
+
 
 export enum IntervalType {
   DAILY = 'Daily',
@@ -35,8 +37,10 @@ export enum IntervalType {
   QUARTERLY = 'Quarterly',
   BI_ANNUAL = 'Bi-Annual',
   ANNUAL = 'Annual',
+  TRI_ANNUAL = 'Tri-Annual',
   ONE_TIME = 'One-Time',
 }
+
 
 @Entity('inspections')
 export class Inspection {
@@ -66,8 +70,6 @@ export class Inspection {
   @JoinColumn({ name: 'assigned_to' })
   assignedTo: User;
 
-  @Column('boolean', { default: false })
-  isReocurring: boolean;
 
   @Column({
     type: 'enum',
@@ -100,7 +102,7 @@ export class Inspection {
   @Column({
     type: 'enum',
     enum: InspectionStatus,
-    default: InspectionStatus.NOT_DONE,
+    default: InspectionStatus.NOT_COMPLETE,
   })
   status: InspectionStatus;
 

@@ -55,10 +55,39 @@ export class CustomerService {
     return customer;
   }
 
-  async update(id: string, updateCustomerDto: Partial<CreateCustomerDto>, clientId: string): Promise<Customer> {
-    await this.customerRepository.update({ id, client: { id: clientId } }, updateCustomerDto);
-    return this.findOne(id, clientId);
+  async update(id: string, updateCustomerDto: Partial<CreateCustomerDto>, clientId: string, files: Express.Multer.File[]): Promise<Customer> {
+    try {
+      // If files are provided, upload the photos to S3
+      let photoUrls: string[] = [];
+      if (files && files.length > 0) {
+        photoUrls = await Promise.all(
+          files.map(file =>
+            this.awsService.uploadFile(clientId, 'customer', 'image', file.buffer, file.originalname),
+          ),
+        );
+      }
+  
+      // Find the customer to update
+      const existingCustomer = await this.findOne(id, clientId);
+      if (!existingCustomer) {
+        throw new NotFoundException(`Customer with ID ${id} not found`);
+      }
+  
+      // Update the customer details and append new photos to existing photos if they exist
+      const updatedCustomer = {
+        ...existingCustomer,
+        ...updateCustomerDto,
+        photos: photoUrls.length > 0 ? [...existingCustomer.photos, ...photoUrls] : existingCustomer.photos,
+      };
+  
+      await this.customerRepository.save(updatedCustomer);
+      return updatedCustomer;
+    } catch (error) {
+      console.error('Error updating customer with photos:', error);
+      throw new InternalServerErrorException('Failed to update customer with photos.');
+    }
   }
+  
 
   async remove(id: string, clientId: string): Promise<void> {
     await this.customerRepository.delete({ id, client: { id: clientId } });
