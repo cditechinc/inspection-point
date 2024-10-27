@@ -6,6 +6,7 @@ import {
     OneToMany,
     CreateDateColumn,
     UpdateDateColumn,
+    JoinColumn,
   } from 'typeorm';
   import { Inspection } from './../../inspection/entities/inspection.entity';
   import { ChecklistTemplate } from './checklist-template.entity';
@@ -19,9 +20,11 @@ import {
     @ManyToOne(() => Inspection, (inspection) => inspection.checklists, {
       onDelete: 'CASCADE',
     })
+    @JoinColumn({ name: 'inspection_id' })
     inspection: Inspection;
   
     @ManyToOne(() => ChecklistTemplate)
+    @JoinColumn({ name: 'template_id' })
     template: ChecklistTemplate;
   
     @OneToMany(() => InspectionChecklistAnswer, (answer) => answer.inspectionChecklist, {

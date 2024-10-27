@@ -5,6 +5,7 @@ import {
     ManyToOne,
     CreateDateColumn,
     UpdateDateColumn,
+    JoinColumn,
   } from 'typeorm';
   import { InspectionChecklist } from './inspection-checklist.entity';
   import { ChecklistQuestion } from './checklist-question.entity';
@@ -17,9 +18,11 @@ import {
     @ManyToOne(() => InspectionChecklist, (checklist) => checklist.answers, {
       onDelete: 'CASCADE',
     })
+    @JoinColumn({ name: 'inspection_checklist_id' })
     inspectionChecklist: InspectionChecklist;
   
     @ManyToOne(() => ChecklistQuestion)
+    @JoinColumn({ name: 'question_id' })
     question: ChecklistQuestion;
   
     @Column('text', { nullable: true })
