@@ -340,8 +340,6 @@ export class InspectionService {
     if (updateInspectionDto.checklists) {
       const updatedChecklists = [];
   
-      // **Optimization 1: Bulk Fetching Inspection Checklists**
-  
       // Collect checklist IDs from DTO
       const checklistIds = updateInspectionDto.checklists
         .filter(c => c.id)
@@ -358,8 +356,6 @@ export class InspectionService {
       existingInspectionChecklists.forEach(ic => {
         inspectionChecklistMap.set(ic.id, ic);
       });
-  
-      // **Optimization 2: Bulk Fetching Templates**
   
       // Collect template IDs from DTO
       const templateIds = updateInspectionDto.checklists.map(c => c.templateId);
@@ -398,8 +394,7 @@ export class InspectionService {
           });
         }
   
-        // **Optimization 3: Batch Processing Answers**
-  
+        // Process answers
         if (checklistDto.answers && checklistDto.answers.length > 0) {
           // Collect question IDs from answers
           const questionIds = checklistDto.answers.map(a => a.questionId);
@@ -441,6 +436,7 @@ export class InspectionService {
             if (answer) {
               // Update existing answer
               answer.answer = answerDto.answer;
+              answersToSave.push(answer);
             } else {
               // Create new answer
               answer = this.inspectionChecklistAnswerRepository.create({
@@ -449,9 +445,8 @@ export class InspectionService {
                 answer: answerDto.answer,
               });
               inspectionChecklist.answers.push(answer);
+              answersToSave.push(answer);
             }
-  
-            answersToSave.push(answer);
           }
   
           // Save all answers in batch
@@ -482,7 +477,6 @@ export class InspectionService {
     return this.inspectionRepository.save(inspection);
   }
   
-
 
   async reSendInvoice(inspectionId: string): Promise<void> {
     const inspection = await this.findOne(inspectionId);
@@ -521,8 +515,6 @@ export class InspectionService {
       throw new InternalServerErrorException('Failed to resend invoice');
     }
   }
-  
-  
 
   async completeAndBillInspection(inspectionId: string): Promise<any> {
     const inspection = await this.findOne(inspectionId);
