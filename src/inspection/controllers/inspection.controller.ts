@@ -35,13 +35,14 @@ export class InspectionController {
     @Body() createInspectionDto: any,
     @UploadedFiles() files: { photos?: Express.Multer.File[] },
   ) {
-
     if (typeof createInspectionDto.route === 'string') {
       createInspectionDto.route = JSON.parse(createInspectionDto.route);
     }
-  
+
     if (typeof createInspectionDto.checklists === 'string') {
-      createInspectionDto.checklists = JSON.parse(createInspectionDto.checklists);
+      createInspectionDto.checklists = JSON.parse(
+        createInspectionDto.checklists,
+      );
     }
     console.log('Request body:', createInspectionDto); // Log the parsed body
     console.log('Files:', files);
@@ -78,7 +79,10 @@ export class InspectionController {
     @Param('id') inspectionId: string,
     @Body() { serviceFee }: { serviceFee: number },
   ) {
-    return this.inspectionService.submitAndBillCustomer(inspectionId, serviceFee);
+    return this.inspectionService.submitAndBillCustomer(
+      inspectionId,
+      serviceFee,
+    );
   }
 
   // @Roles(Role.Client)
@@ -125,6 +129,30 @@ export class InspectionController {
       inspectionId,
       invoiceId,
     );
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Patch(':id/delay')
+  delayInspection(@Param('id', ParseUUIDPipe) id: string) {
+    return this.inspectionService.delayInspection(id);
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Patch(':id/cancel')
+  cancelInspection(@Param('id', ParseUUIDPipe) id: string) {
+    return this.inspectionService.cancelInspection(id);
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Patch(':id/hold')
+  holdInspection(@Param('id', ParseUUIDPipe) id: string) {
+    return this.inspectionService.holdInspection(id);
+  }
+
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Patch(':id/begin')
+  beginInspection(@Param('id', ParseUUIDPipe) id: string) {
+    return this.inspectionService.beginInspection(id);
   }
 
   @Roles(Role.ClientAdmin, Role.Client)

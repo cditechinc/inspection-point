@@ -301,182 +301,7 @@ export class InspectionService {
     }
     return inspection;
   }
-
-  // async update(
-  //   id: string,
-  //   updateInspectionDto: UpdateInspectionDTO,
-  // ): Promise<Inspection> {
-  //   const inspection = await this.findOne(id);
   
-  //   // Update assigned user if provided
-  //   if (updateInspectionDto.assignedTo) {
-  //     const assignedToUser = await this.userRepository.findOne({
-  //       where: { id: updateInspectionDto.assignedTo },
-  //     });
-  
-  //     if (!assignedToUser) {
-  //       throw new NotFoundException(
-  //         `User with ID ${updateInspectionDto.assignedTo} not found`,
-  //       );
-  //     }
-  
-  //     inspection.assignedTo = assignedToUser;
-  //   }
-  
-  //   // Update invoice association if provided
-  //   if (updateInspectionDto.invoiceId) {
-  //     const invoice = await this.invoiceService.findInvoiceById(
-  //       updateInspectionDto.invoiceId,
-  //     );
-  //     if (!invoice) {
-  //       throw new NotFoundException(
-  //         `Invoice with ID ${updateInspectionDto.invoiceId} not found`,
-  //       );
-  //     }
-  //     inspection.invoice = invoice;
-  //   }
-  
-  //   // Handle checklists and answers during update
-  //   if (updateInspectionDto.checklists) {
-  //     const updatedChecklists = [];
-  
-  //     // Collect checklist IDs from DTO
-  //     const checklistIds = updateInspectionDto.checklists
-  //       .filter(c => c.id)
-  //       .map(c => c.id);
-  
-  //     // Fetch existing inspection checklists in bulk
-  //     const existingInspectionChecklists = await this.inspectionChecklistRepository.find({
-  //       where: { id: In(checklistIds) },
-  //       relations: ['answers', 'answers.question'],
-  //     });
-  
-  //     // Map inspection checklists by ID for quick access
-  //     const inspectionChecklistMap = new Map<string, InspectionChecklist>();
-  //     existingInspectionChecklists.forEach(ic => {
-  //       inspectionChecklistMap.set(ic.id, ic);
-  //     });
-  
-  //     // Collect template IDs from DTO
-  //     const templateIds = updateInspectionDto.checklists.map(c => c.templateId);
-  
-  //     // Fetch templates in bulk
-  //     const templates = await this.checklistTemplateRepository.find({
-  //       where: { id: In(templateIds) },
-  //     });
-  
-  //     // Map templates by ID for quick access
-  //     const templateMap = new Map<string, ChecklistTemplate>();
-  //     templates.forEach(template => {
-  //       templateMap.set(template.id, template);
-  //     });
-  
-  //     // Process each checklist DTO
-  //     for (const checklistDto of updateInspectionDto.checklists) {
-  //       let inspectionChecklist: InspectionChecklist;
-  
-  //       if (checklistDto.id && inspectionChecklistMap.has(checklistDto.id)) {
-  //         // Existing checklist
-  //         inspectionChecklist = inspectionChecklistMap.get(checklistDto.id);
-  //       } else {
-  //         // Create a new checklist
-  //         const template = templateMap.get(checklistDto.templateId);
-  //         if (!template) {
-  //           throw new NotFoundException(
-  //             `Checklist Template with ID ${checklistDto.templateId} not found`,
-  //           );
-  //         }
-  
-  //         inspectionChecklist = this.inspectionChecklistRepository.create({
-  //           inspection,
-  //           template,
-  //           answers: [],
-  //         });
-  //       }
-  
-  //       // Process answers
-  //       if (checklistDto.answers && checklistDto.answers.length > 0) {
-  //         // Collect question IDs from answers
-  //         const questionIds = checklistDto.answers.map(a => a.questionId);
-  
-  //         // Fetch all questions in bulk
-  //         const questions = await this.checklistQuestionRepository.find({
-  //           where: { id: In(questionIds) },
-  //         });
-  
-  //         // Map questions by ID
-  //         const questionMap = new Map<string, ChecklistQuestion>();
-  //         questions.forEach(question => {
-  //           questionMap.set(question.id, question);
-  //         });
-  
-  //         // Map existing answers by question ID
-  //         const existingAnswersMap = new Map<string, InspectionChecklistAnswer>();
-  //         if (inspectionChecklist.answers) {
-  //           inspectionChecklist.answers.forEach(answer => {
-  //             existingAnswersMap.set(answer.question.id, answer);
-  //           });
-  //         } else {
-  //           inspectionChecklist.answers = [];
-  //         }
-  
-  //         // Prepare answers for batch save
-  //         const answersToSave: InspectionChecklistAnswer[] = [];
-  
-  //         for (const answerDto of checklistDto.answers) {
-  //           const question = questionMap.get(answerDto.questionId);
-  //           if (!question) {
-  //             throw new NotFoundException(
-  //               `Question with ID ${answerDto.questionId} not found`,
-  //             );
-  //           }
-  
-  //           let answer = existingAnswersMap.get(answerDto.questionId);
-  
-  //           if (answer) {
-  //             // Update existing answer
-  //             answer.answer = answerDto.answer;
-  //             answersToSave.push(answer);
-  //           } else {
-  //             // Create new answer
-  //             answer = this.inspectionChecklistAnswerRepository.create({
-  //               inspectionChecklist,
-  //               question,
-  //               answer: answerDto.answer,
-  //             });
-  //             inspectionChecklist.answers.push(answer);
-  //             answersToSave.push(answer);
-  //           }
-  //         }
-  
-  //         // Save all answers in batch
-  //         await this.inspectionChecklistAnswerRepository.save(answersToSave);
-  //       }
-  
-  //       // Save the inspection checklist
-  //       const savedInspectionChecklist = await this.inspectionChecklistRepository.save(inspectionChecklist);
-  //       updatedChecklists.push(savedInspectionChecklist);
-  //     }
-  
-  //     inspection.checklists = updatedChecklists;
-  //   }
-  
-  //   // Merge other properties and save the inspection
-  //   const { assignedTo, checklists, invoiceId, ...rest } = updateInspectionDto;
-  
-  //   // Filter out undefined values from rest
-  //   const filteredRest = Object.fromEntries(
-  //     Object.entries(rest).filter(([_, v]) => v !== undefined),
-  //   );
-  
-  //   this.inspectionRepository.merge(inspection, filteredRest);
-  
-  //   // Update inspection status based on new data
-  //   await this.updateInspectionStatus(inspection);
-  
-  //   return this.inspectionRepository.save(inspection);
-  // }
-
   async update(
     id: string,
     updateInspectionDto: UpdateInspectionDTO,
@@ -960,12 +785,65 @@ export class InspectionService {
     const inspection = await this.findOne(inspectionId);
 
     if (!inspection) {
-      throw new NotFoundException(
-        `Inspection with ID ${inspectionId} not found`,
-      );
+      throw new NotFoundException(`Inspection with ID ${inspectionId} not found`);
+    }
+
+    if (inspection.status !== InspectionStatus.NOT_COMPLETE && inspection.status !== InspectionStatus.DELAYED && inspection.status !== InspectionStatus.ON_HOLD) {
+      throw new BadRequestException('Inspection cannot be started from the current status.');
     }
 
     inspection.status = InspectionStatus.IN_PROGRESS;
+    await this.inspectionRepository.save(inspection);
+
+    return inspection;
+  }
+
+  async delayInspection(inspectionId: string): Promise<Inspection> {
+    const inspection = await this.findOne(inspectionId);
+
+    if (!inspection) {
+      throw new NotFoundException(`Inspection with ID ${inspectionId} not found`);
+    }
+
+    if (inspection.status === InspectionStatus.COMPLETED_BILLED || inspection.status === InspectionStatus.COMPLETED_NOT_BILLED) {
+      throw new BadRequestException('Cannot delay a completed inspection.');
+    }
+
+    inspection.status = InspectionStatus.DELAYED;
+    await this.inspectionRepository.save(inspection);
+
+    return inspection;
+  }
+
+  async cancelInspection(inspectionId: string): Promise<Inspection> {
+    const inspection = await this.findOne(inspectionId);
+
+    if (!inspection) {
+      throw new NotFoundException(`Inspection with ID ${inspectionId} not found`);
+    }
+
+    if (inspection.status === InspectionStatus.COMPLETED_BILLED || inspection.status === InspectionStatus.COMPLETED_NOT_BILLED) {
+      throw new BadRequestException('Cannot cancel a completed inspection.');
+    }
+
+    inspection.status = InspectionStatus.CANCELED;
+    await this.inspectionRepository.save(inspection);
+
+    return inspection;
+  }
+
+  async holdInspection(inspectionId: string): Promise<Inspection> {
+    const inspection = await this.findOne(inspectionId);
+
+    if (!inspection) {
+      throw new NotFoundException(`Inspection with ID ${inspectionId} not found`);
+    }
+
+    if (inspection.status === InspectionStatus.COMPLETED_BILLED || inspection.status === InspectionStatus.COMPLETED_NOT_BILLED) {
+      throw new BadRequestException('Cannot put a completed inspection on hold.');
+    }
+
+    inspection.status = InspectionStatus.ON_HOLD;
     await this.inspectionRepository.save(inspection);
 
     return inspection;
