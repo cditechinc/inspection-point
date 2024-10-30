@@ -115,7 +115,7 @@ export class InspectionController {
     @Param('id', ParseUUIDPipe) inspectionId: string,
     @Body() { serviceFee }: { serviceFee: number },
   ) {
-    return this.inspectionService.submitAndDontBillCustomer(inspectionId);
+    return this.inspectionService.submitAndDontBillCustomer(inspectionId, serviceFee);
   }
 
   @Roles(Role.ClientAdmin, Role.Client)

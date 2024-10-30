@@ -1010,49 +1010,140 @@ export class InspectionService {
     }
   }
 
-  async submitAndDontBillCustomer(inspectionId: string) {
+  // async submitAndDontBillCustomer(inspectionId: string) {
+  //   const inspection = await this.inspectionRepository.findOne({
+  //     where: { id: inspectionId },
+  //     relations: ['client', 'customer', 'serviceFee'],
+  //   });
+
+  //   if (!inspection) {
+  //     throw new NotFoundException('Inspection not found');
+  //   }
+
+  //   // Ensure the service fee is associated with the inspection
+  //   const serviceFee = inspection.serviceFee;
+  //   if (!serviceFee) {
+  //     throw new BadRequestException(
+  //       'Service fee not associated with this inspection',
+  //     );
+  //   }
+
+  //   // Fetch the PDF report from the S3 bucket
+  //   const pdfReportPath = await this.pdfService.fetchPdfReport(inspection.id);
+
+  //   if (!pdfReportPath) {
+  //     throw new NotFoundException('PDF report not found in S3 bucket');
+  //   }
+
+  //   // Prepare the invoice data but don't send it (sendInvoice flag is set to false)
+  //   const invoiceData: CreateInvoiceDto = {
+  //     clientId: inspection.client.id,
+  //     customerId: inspection.customer.id,
+  //     quickbooksCustomerId: inspection.customer.quickbooksCustomerId,
+  //     inspectionId,
+  //     amountDue: serviceFee.price,
+  //     dueDate: new Date().toISOString(), // Set a due date
+  //     pdfReportPath: pdfReportPath.toString(),
+  //     imagePaths: [], // No images for this invoice
+  //   };
+
+  //   // Create the invoice in QuickBooks using the InvoiceService without sending the email
+  //   const invoice = await this.invoiceService.createInvoice(
+  //     inspectionId,
+  //     invoiceData,
+  //   );
+
+  //   // Mark the inspection as Complete Not Billed
+  //   if (invoice.quickbooks_invoice_id) {
+  //     inspection.status = InspectionStatus.COMPLETED_NOT_BILLED;
+  //     inspection.invoice = invoice;
+  //     await this.inspectionRepository.save(inspection);
+  //   } else {
+  //     throw new BadRequestException('Failed to create invoice in QuickBooks');
+  //   }
+
+  //   return invoice;
+  // }
+
+  async submitAndDontBillCustomer(inspectionId: string, serviceFeeAmount: number) {
+    // Fetch the inspection by its ID, including relations with client, customer, and serviceFee
     const inspection = await this.inspectionRepository.findOne({
       where: { id: inspectionId },
       relations: ['client', 'customer', 'serviceFee'],
     });
-
+  
+    // Check if the inspection exists
     if (!inspection) {
       throw new NotFoundException('Inspection not found');
     }
-
-    // Ensure the service fee is associated with the inspection
-    const serviceFee = inspection.serviceFee;
-    if (!serviceFee) {
-      throw new BadRequestException(
-        'Service fee not associated with this inspection',
+  
+    const clientId = inspection.client.id;
+  
+    // Create or fetch the ServiceFee using ServicesService
+    let serviceFeeEntity = await this.serviceFeeRepository.findOne({
+      where: {
+        price: serviceFeeAmount,
+        client: { id: clientId },
+      },
+    });
+  
+    if (!serviceFeeEntity) {
+      const createServiceFeeDto = {
+        name: `Service Fee for Inspection ${inspectionId}`,
+        description: `Service fee for inspection ${inspectionId}`,
+        price: serviceFeeAmount,
+        isTaxable: false, // Set according to your needs
+        billingIo: '', // Set if applicable
+      };
+  
+      // Create the service fee using ServicesService
+      serviceFeeEntity = await this.servicesService.createServiceFee(
+        clientId,
+        createServiceFeeDto,
       );
     }
-
+  
+    // Associate the service fee with the inspection
+    inspection.serviceFee = serviceFeeEntity;
+    await this.inspectionRepository.save(inspection);
+  
+    // Proceed with the rest of your function
+    const quickbooksCustomerId = inspection.customer.quickbooksCustomerId;
+    const localCustomerId = inspection.customer.id;
+    if (!quickbooksCustomerId) {
+      throw new InternalServerErrorException(
+        'QuickBooks Customer ID is missing',
+      );
+    }
+  
     // Fetch the PDF report from the S3 bucket
     const pdfReportPath = await this.pdfService.fetchPdfReport(inspection.id);
-
+  
     if (!pdfReportPath) {
       throw new NotFoundException('PDF report not found in S3 bucket');
     }
-
+  
+    // Use the service fee price as the amount due
+    const amountDue = serviceFeeEntity.price;
+  
     // Prepare the invoice data but don't send it (sendInvoice flag is set to false)
     const invoiceData: CreateInvoiceDto = {
       clientId: inspection.client.id,
       customerId: inspection.customer.id,
       quickbooksCustomerId: inspection.customer.quickbooksCustomerId,
       inspectionId,
-      amountDue: serviceFee.price,
+      amountDue: amountDue,
       dueDate: new Date().toISOString(), // Set a due date
       pdfReportPath: pdfReportPath.toString(),
       imagePaths: [], // No images for this invoice
     };
-
+  
     // Create the invoice in QuickBooks using the InvoiceService without sending the email
     const invoice = await this.invoiceService.createInvoice(
       inspectionId,
       invoiceData,
     );
-
+  
     // Mark the inspection as Complete Not Billed
     if (invoice.quickbooks_invoice_id) {
       inspection.status = InspectionStatus.COMPLETED_NOT_BILLED;
@@ -1061,9 +1152,10 @@ export class InspectionService {
     } else {
       throw new BadRequestException('Failed to create invoice in QuickBooks');
     }
-
+  
     return invoice;
   }
+  
 
   // Retrieve inspections for a specific client
   async getClientInspectionHistory(clientId: string): Promise<any> {
