@@ -27,6 +27,13 @@ export class AssetsController {
     return this.assetsService.create(createAssetDto, files?.photos || []);
   }
 
+
+  @Get('storm-drains')
+  @Roles(Role.Client, Role.ClientAdmin)
+  async getStormDrainsWithConnections() {
+    return this.assetsService.findStormDrainsWithConnections();
+  }
+
   @Get()
   @Roles(Role.Client, Role.ClientAdmin)
   findAll() {

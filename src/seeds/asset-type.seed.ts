@@ -32,6 +32,10 @@ export class AssetTypeSeed {
         description:
           'A treatment plant digester is a component of a wastewater treatment plant where sludge is decomposed by anaerobic bacteria.',
       },
+      {
+        name: 'Storm Drain',
+        description: 'An underground system for draining rainwater, connected via pipes to other storm drains.',
+      },
     ];
 
     for (const assetType of assetTypes) {

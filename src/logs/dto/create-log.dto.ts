@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsString, IsOptional, IsJSON } from 'class-validator';
 
 export class CreateLogDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   action: string;
 

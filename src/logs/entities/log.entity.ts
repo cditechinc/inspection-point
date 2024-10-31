@@ -6,7 +6,7 @@ export class Logs {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 100, default: 'UNKNOWN_ACTION' })
+  @Column({ type: 'varchar', length: 100, nullable: true, default: 'Unknown Actions' })
   action: string;  
 
   @CreateDateColumn()

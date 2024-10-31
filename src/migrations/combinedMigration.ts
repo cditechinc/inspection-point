@@ -239,7 +239,7 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "logs" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-        "action" character varying,
+        "action" character varying DEFAULT 'Unknown Actions',
         "timestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "details" jsonb,
         "user_id" uuid,
