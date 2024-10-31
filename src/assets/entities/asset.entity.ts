@@ -35,15 +35,6 @@ export class Asset {
   @ManyToOne(() => AssetType)
   assetType: AssetType;
 
-  @Column({ nullable: true })
-  location: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  latitude: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  longitude: string;
-
   @Column({
     type: 'enum',
     enum: ['active', 'inactive', 'maintenance'],
@@ -51,45 +42,9 @@ export class Asset {
   })
   status: string;
 
-  @Column({ nullable: true })
-  inspectionInterval: string;
-
-  @Column({ nullable: true })
-  qrCode: string;
-
-  @Column({ nullable: true })
-  nfcCode: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  pipeDia: string;
-
-  @Column({ nullable: true })
-  smart: string;
-
-  @Column({ nullable: true })
-  size: string;
-
-  @Column({ nullable: true })
-  material: string;
-
-  @Column({ nullable: true })
-  deleteProtect: string;
-
-  @Column({ nullable: true })
-  duty: string;
-
-  @Column({ nullable: true })
-  rails: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  float: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  pumps: string;
-
-  @Column({ nullable: true })
-  power: string;
-
+  @Column({ type: 'jsonb', nullable: true })
+  properties: Record<string, any>;
+ 
   @Expose()
   @OneToMany(() => Photo, (photo) => photo.asset)
   @Type(() => Photo)

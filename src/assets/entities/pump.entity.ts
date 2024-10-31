@@ -12,9 +12,9 @@ export class Pump {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @ManyToOne(() => Asset, asset => asset.pumps, { onDelete: 'CASCADE' })
-  @Index()
-  asset: Asset;
+  // @ManyToOne(() => Asset, asset => asset.pumps, { onDelete: 'CASCADE' })
+  // @Index()
+  // asset: Asset;
 
   @ManyToOne(() => PumpBrand, brand => brand.pumps, { onDelete: 'SET NULL' })
   @Index()

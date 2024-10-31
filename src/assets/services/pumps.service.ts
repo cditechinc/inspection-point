@@ -9,6 +9,7 @@ import { PumpBrand } from './../entities/pump-brand.entity';
 import { Photo } from './../entities/photo.entity';
 import { AwsService } from './../../aws/aws.service';
 import * as multer from 'multer';
+import { AssetPump } from '../entities/asset-pump.entity';
 
 @Injectable()
 export class PumpsService {
@@ -19,6 +20,8 @@ export class PumpsService {
     private photosRepository: Repository<Photo>,
     @InjectRepository(Asset)
     private assetsRepository: Repository<Asset>,
+    @InjectRepository(AssetPump)
+    private assetPumpsRepository: Repository<AssetPump>,
     @InjectRepository(PumpBrand)
     private pumpBrandsRepository: Repository<PumpBrand>,
     private readonly awsService: AwsService,
@@ -28,13 +31,7 @@ export class PumpsService {
     createPumpDto: CreatePumpDto,
     files: Express.Multer.File[],
   ): Promise<Pump> {
-    const asset = await this.assetsRepository.findOne({
-      where: { id: createPumpDto.assetId },
-      relations: ['client'],
-    });
-    if (!asset) {
-      throw new NotFoundException(`Asset #${createPumpDto.assetId} not found`);
-    }
+    
 
     const brand = createPumpDto.brandId
       ? await this.pumpBrandsRepository.findOne({
@@ -46,7 +43,6 @@ export class PumpsService {
     }
 
     const pump = this.pumpsRepository.create({
-      asset,
       brand,
       name: createPumpDto.name,
       avgAmps: createPumpDto.avgAmps,
@@ -57,6 +53,20 @@ export class PumpsService {
       installedDate: createPumpDto.installedDate,
     });
     const savedPump = await this.pumpsRepository.save(pump);
+
+    // Link the pump to the asset via AssetPump
+  if (createPumpDto.assetId) {
+    const asset = await this.assetsRepository.findOne({
+      where: { id: createPumpDto.assetId },
+      relations: ['client'],
+    });
+    if (!asset) {
+      throw new NotFoundException(`Asset #${createPumpDto.assetId} not found`);
+    }
+
+    // Create AssetPump entry
+    await this.createAssetPumpAssociation(asset, savedPump);
+  }
 
     if (files && files.length > 0) {
       await this.addPhotosToPump(savedPump, files);
@@ -87,44 +97,58 @@ export class PumpsService {
     updatePumpDto: UpdatePumpDto,
     files: Express.Multer.File[],
   ): Promise<Pump> {
-    const pump = await this.pumpsRepository.preload({
-      id,
-      ...updatePumpDto,
-    });
+    const pump = await this.pumpsRepository.findOne({ where: { id } });
     if (!pump) {
       throw new NotFoundException(`Pump #${id} not found`);
     }
-
-    if (updatePumpDto.assetId) {
-      const asset = await this.assetsRepository.findOne({
-        where: { id: updatePumpDto.assetId },
-      });
-      if (!asset) {
-        throw new NotFoundException(
-          `Asset #${updatePumpDto.assetId} not found`,
-        );
-      }
-      pump.asset = asset;
-    }
-
+  
+    // Update pump properties
+    Object.assign(pump, {
+      name: updatePumpDto.name || pump.name,
+      avgAmps: updatePumpDto.avgAmps ?? pump.avgAmps,
+      maxAmps: updatePumpDto.maxAmps ?? pump.maxAmps,
+      hp: updatePumpDto.hp ?? pump.hp,
+      serial: updatePumpDto.serial || pump.serial,
+      warranty: updatePumpDto.warranty || pump.warranty,
+      installedDate: updatePumpDto.installedDate || pump.installedDate,
+    });
+  
+    // Update brand if provided
     if (updatePumpDto.brandId) {
       const brand = await this.pumpBrandsRepository.findOne({
         where: { id: updatePumpDto.brandId },
       });
       if (!brand) {
-        throw new NotFoundException(
-          `Brand #${updatePumpDto.brandId} not found`,
-        );
+        throw new NotFoundException(`Brand #${updatePumpDto.brandId} not found`);
       }
       pump.brand = brand;
     }
-
-    if (files && files.length > 0) {
-      await this.addPhotosToPump(pump, files);
+  
+    // Save the updated pump
+    const savedPump = await this.pumpsRepository.save(pump);
+  
+    // Update AssetPump association if assetId is provided
+    if (updatePumpDto.assetId) {
+      const asset = await this.assetsRepository.findOne({
+        where: { id: updatePumpDto.assetId },
+        relations: ['client'],
+      });
+      if (!asset) {
+        throw new NotFoundException(`Asset #${updatePumpDto.assetId} not found`);
+      }
+  
+      // Update AssetPump association
+      await this.updateAssetPumpAssociation(asset, savedPump);
     }
-
-    return this.pumpsRepository.save(pump);
+  
+    // Handle file uploads
+    if (files && files.length > 0) {
+      await this.addPhotosToPump(savedPump, files);
+    }
+  
+    return savedPump;
   }
+  
 
   async remove(id: string): Promise<void> {
     const pump = await this.findOne(id);
@@ -132,10 +156,23 @@ export class PumpsService {
   }
 
   private async addPhotosToPump(pump: Pump, files: Express.Multer.File[]) {
+    // Retrieve the associated assets to get the client ID
+    const assetPumps = await this.assetPumpsRepository.find({
+      where: { pump: { id: pump.id } },
+      relations: ['asset', 'asset.client'],
+    });
+  
+    if (assetPumps.length === 0) {
+      throw new NotFoundException(`No associated assets found for Pump #${pump.id}`);
+    }
+  
+    // Assuming you want to use the first associated asset's client ID
+    const clientId = assetPumps[0].asset.client.id;
+  
     const photos: Photo[] = pump.photos || [];
     for (const file of files) {
       const url = await this.awsService.uploadFile(
-        pump.asset.client.id,
+        clientId,
         'pump',
         'image',
         file.buffer,
@@ -148,4 +185,22 @@ export class PumpsService {
     pump.photos = photos;
     await this.pumpsRepository.save(pump);
   }
+  
+
+  private async createAssetPumpAssociation(asset: Asset, pump: Pump) {
+    const assetPump = this.assetPumpsRepository.create({
+      asset,
+      pump,
+    });
+    await this.assetPumpsRepository.save(assetPump);
+  }
+  
+  private async updateAssetPumpAssociation(asset: Asset, pump: Pump) {
+    // Remove existing associations
+    await this.assetPumpsRepository.delete({ pump: { id: pump.id } });
+  
+    // Create new association
+    await this.createAssetPumpAssociation(asset, pump);
+  }
+  
 }

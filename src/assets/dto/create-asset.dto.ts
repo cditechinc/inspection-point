@@ -1,3 +1,5 @@
+import { BadRequestException } from '@nestjs/common';
+import { Transform, Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsString,
@@ -7,6 +9,8 @@ import {
   IsUUID,
   IsArray,
   IsNumberString,
+  ValidateNested,
+  IsObject
 } from 'class-validator';
 
 export class CreateAssetDto {
@@ -25,79 +29,27 @@ export class CreateAssetDto {
   assetType?: string;
 
   @IsOptional()
-  @IsString()
-  location?: string;
-
-  @IsOptional()
-  @IsString()
-  latitude?: string;
-
-  @IsOptional()
-  @IsString()
-  longitude?: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
   @IsEnum(['active', 'inactive', 'maintenance'])
   status?: 'active' | 'inactive' | 'maintenance';
 
   @IsOptional()
-  @IsString()
-  inspectionInterval?: string;
-
-  @IsOptional()
-  @IsString()
-  qrCode?: string;
-
-  @IsOptional()
-  @IsString()
-  nfcCode?: string;
-
-  @IsOptional()
-  @IsString()
-  pipeDia?: string;
-
-  @IsOptional()
-  @IsString()
-  pumps?: string;
-
-  @IsOptional()
-  @IsString()
-  smart?: string;
-
-  @IsOptional()
-  @IsString()
-  size?: string;
-
-  @IsOptional()
-  @IsString()
-  float?: string;
-
-  @IsOptional()
-  @IsString()
-  duty?: string;
-
-  @IsOptional()
-  @IsString()
-  rails?: string;
-
-  @IsOptional()
-  @IsString()
-  material?: string;
-
-  @IsOptional()
-  @IsString()
-  deleteProtect?: string;
+  @IsObject()
+  @Type(() => Object)
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        throw new BadRequestException('Invalid JSON format for properties');
+      }
+    }
+    return value;
+  })
+  properties?: Record<string, any>;
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   photos?: string[];
 
-  @IsOptional()
-  @IsString()
-  power?: string;
 }

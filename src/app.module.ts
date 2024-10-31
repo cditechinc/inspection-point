@@ -42,6 +42,7 @@ import { InspectionChecklist } from './checklist/entities/inspection-checklist.e
 import { InspectionChecklistAnswer } from './checklist/entities/inspection-checklist-answer.entity';
 import { ChecklistModule } from './checklist/checklist.module';
 import { LogsModule } from './logs/logs.module';
+import { Logs } from './logs/entities/log.entity';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { LogsModule } from './logs/logs.module';
           UserSession,
           UserIP,
           Log,
+          Logs,
           Asset,
           Photo,
           Pump,

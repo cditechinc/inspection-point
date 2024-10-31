@@ -21,6 +21,7 @@ import { QuickBooksStrategy } from './strategies/quickbooks.strategy';
 import { QuickBooksOAuthService } from './quickbooks-oauth.service';
 import { UserGroupModule } from './../user-groups/user-group.module';
 import { PermissionsGuard } from './guards/permissions.guard';
+import { Logs } from './../logs/entities/log.entity';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { PermissionsGuard } from './guards/permissions.guard';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([User, UserSession, UserIP, Log]),
+    TypeOrmModule.forFeature([User, UserSession, UserIP, Log, Logs]),
     forwardRef(() => ClientModule),
     AwsModule,
     forwardRef(() => UserGroupModule),

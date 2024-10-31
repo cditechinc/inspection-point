@@ -11,7 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 import { UserIP } from '../user/entities/user-ip.entity';
 import { UserSession } from '../user/entities/user-session.entity';
-import { Log } from '../logs/entities/log.entity';
+import { Logs } from '../logs/entities/log.entity';
 import { ClientService } from '../client/client.service';
 import { Client } from '../client/entities/client.entity';
 import { JwtPayload } from './interface/jwt-payload.interface';
@@ -29,8 +29,8 @@ export class AuthService {
     private userIPRepository: Repository<UserIP>,
     @InjectRepository(UserSession)
     private userSessionRepository: Repository<UserSession>,
-    @InjectRepository(Log)
-    private logRepository: Repository<Log>,
+    @InjectRepository(Logs)
+    private logRepository: Repository<Logs>,
     private readonly userGroupPermissionService: UserGroupPermissionService,
     private readonly userGroupService: UserGroupService,
   ) {}
@@ -220,7 +220,7 @@ export class AuthService {
     const user = await this.userService.findById(userId);
   
     
-    const logEntry: DeepPartial<Log> = {
+    const logEntry: DeepPartial<Logs> = {
       action,
       logLevel: 'INFO', 
       details,
@@ -237,7 +237,7 @@ export class AuthService {
     const user = await this.userService.findById(clientUserId);
   
     // Create the log entry using a DeepPartial to ensure compatibility
-    const logEntry: DeepPartial<Log> = {
+    const logEntry: DeepPartial<Logs> = {
       action,
       logLevel: 'INFO', // Adjust the log level if needed
       details,

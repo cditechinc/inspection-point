@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Log } from './../entities/log.entity';
+import { Logs } from './../entities/log.entity';
 import { CreateLogDto } from './../dto/create-log.dto';
 import { FilterLogsDto } from './../dto/filter-logs.dto';
 import { User } from './../../user/entities/user.entity';
@@ -9,11 +9,11 @@ import { User } from './../../user/entities/user.entity';
 @Injectable()
 export class LogsService {
   constructor(
-    @InjectRepository(Log)
-    private logsRepository: Repository<Log>,
+    @InjectRepository(Logs)
+    private logsRepository: Repository<Logs>,
   ) {}
 
-  async createLog(user: User, createLogDto: CreateLogDto): Promise<Log> {
+  async createLog(user: User, createLogDto: CreateLogDto): Promise<Logs> {
     const log = this.logsRepository.create({
       ...createLogDto,
       user,
@@ -22,7 +22,7 @@ export class LogsService {
     return await this.logsRepository.save(log);
   }
 
-  async getLogs(filterLogsDto: FilterLogsDto): Promise<Log[]> {
+  async getLogs(filterLogsDto: FilterLogsDto): Promise<Logs[]> {
     const { userId, action, logLevel, startDate, endDate } = filterLogsDto;
     const query = this.logsRepository
       .createQueryBuilder('log')
@@ -47,7 +47,7 @@ export class LogsService {
     return await query.getMany();
   }
 
-  async getLogById(id: string): Promise<Log> {
+  async getLogById(id: string): Promise<Logs> {
     return await this.logsRepository.findOne({
       where: { id },
       relations: ['user'],

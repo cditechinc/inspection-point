@@ -6,6 +6,7 @@ import { Asset } from './entities/asset.entity';
 import { Photo } from './entities/photo.entity';
 import { Pump } from './entities/pump.entity';
 import { PumpBrand } from './entities/pump-brand.entity';
+import {AssetPump} from './entities/asset-pump.entity';
 import { AssetType } from './entities/asset-type.entity';
 import { Client } from '../client/entities/client.entity';
 import { User } from '../user/entities/user.entity';
@@ -32,7 +33,8 @@ import { UserGroupModule } from './../user-groups/user-group.module';
       AssetType,
       Client,
       User,
-      Customer
+      Customer,
+      AssetPump
     ]),
     AwsModule,
     forwardRef(() => AuthModule),
