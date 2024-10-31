@@ -18,6 +18,6 @@ export class Logs {
   @Column({ type: 'varchar', length: 50, default: 'INFO' })
   logLevel: string;  // For distinguishing between INFO, WARN, ERROR logs
 
-  @ManyToOne(() => User, (user) => user.logs)
+  @ManyToOne(() => User, (user) => user.logs, { nullable: true })
   user: User;  // The user who triggered the action
 }
