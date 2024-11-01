@@ -30,22 +30,25 @@ import { ChecklistTemplate } from './checklist/entities/checklist-template.entit
 import { ChecklistQuestion } from './checklist/entities/checklist-question.entity';
 import { InspectionChecklist } from './checklist/entities/inspection-checklist.entity';
 import { InspectionChecklistAnswer } from './checklist/entities/inspection-checklist-answer.entity';
+import { Package } from './packages/entities/package.entity';
+import { AddPackagesTable20241101123456 } from './migrations/packagesModule';
 
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   
-  host: process.env.DATABASE_HOST || '172.31.23.247',
-  port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
-  username: process.env.DATABASE_USER || 'utilitypointuser',
-  password: process.env.DATABASE_PASSWORD || 'UtilityPointApp',
-  database: process.env.DATABASE_NAME || 'utilitypoint',
-
-  // host: process.env.DATABASE_HOST || 'localhost',
+  // host: process.env.DATABASE_HOST || '172.31.23.247',
   // port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
-  // username: process.env.DATABASE_USER || 'postgres',
-  // password: process.env.DATABASE_PASSWORD || 'postgres',
-  // database: process.env.DATABASE_NAME || 'utilityPoint',
+  // username: process.env.DATABASE_USER || 'utilitypointuser',
+  // password: process.env.DATABASE_PASSWORD || 'UtilityPointApp',
+  // database: process.env.DATABASE_NAME || 'utilitypoint',
+
+  host: process.env.DATABASE_HOST || 'localhost',
+  port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
+  username: process.env.DATABASE_USER || 'postgres',
+  password: process.env.DATABASE_PASSWORD || 'postgres',
+  database: process.env.DATABASE_NAME || 'utilityPoint',
+  
   entities: [
     Client,
     Customer,
@@ -68,6 +71,7 @@ const dataSourceOptions: DataSourceOptions = {
     UserGroupPermission,
     Permission,
     Company,
+    Package,
     ChecklistTemplate,
     ChecklistQuestion,
     InspectionChecklist,
@@ -76,6 +80,7 @@ const dataSourceOptions: DataSourceOptions = {
   migrations: [
     CompanyMigration20240721123456,
     CombinedMigration20240722162333,
+    AddPackagesTable20241101123456,
     InspectionModuleMigration20240804123456,
     AddInvoicesTableWithQuickBooksFields20240901123456,
     AddSecurityGroupsAndPermissions20240905123456,

@@ -43,6 +43,8 @@ import { InspectionChecklistAnswer } from './checklist/entities/inspection-check
 import { ChecklistModule } from './checklist/checklist.module';
 import { LogsModule } from './logs/logs.module';
 import { Logs } from './logs/entities/log.entity';
+import { Package } from './packages/entities/package.entity';
+import { PackageModule } from './packages/package.module';
 
 @Module({
   imports: [
@@ -79,6 +81,7 @@ import { Logs } from './logs/entities/log.entity';
           UserGroupPermission,
           Permission,
           Company,
+          Package,
           ChecklistTemplate,
           ChecklistQuestion,
           InspectionChecklist,
@@ -99,6 +102,7 @@ import { Logs } from './logs/entities/log.entity';
     UserGroupModule,
     PermissionModule,
     CompanyModule,
+    PackageModule,
     ChecklistModule,
     LogsModule,
   ],

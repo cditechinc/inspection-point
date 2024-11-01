@@ -16,6 +16,7 @@
     "migration:run": "npm run typeorm -- migration:run -d ./src/data-source",
     "migration:generate": "npm run typeorm -- migration:generate -d ./src/data-source",
     "seed:asset-types": "ts-node ./cli.ts seed:asset-types",
+    "seed:packages": "ts-node ./cli.ts seed:packages",
     "seed:checklist-templates": "ts-node ./cli.ts seed:checklist-templates",
     "typeorm:revert": "typeorm migration:revert -d src/ormconfig.ts",
     "debug:test": "ts-node -r tsconfig-paths/register -r dotenv/config src/test-module-resolution.ts",

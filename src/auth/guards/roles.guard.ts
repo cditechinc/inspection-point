@@ -99,6 +99,8 @@ export class RolesGuard implements CanActivate {
       requiredPermission = 'manage_inspection-checklists';
     } else if (route.includes('logs')) {
       requiredPermission = 'manage_logs';
+    } else if (route.includes('packages')) {
+      requiredPermission = 'manage_packages';
     }
     
 

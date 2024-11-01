@@ -18,4 +18,5 @@ export enum Resource {
     CHECKLIST_TEMPLATES = 'checklist-templates',
     INSPECTION_CHECKLISTS = 'inspection-checklists',
     LOGS = 'logs',
+    PACKAGES = 'packages',
   }

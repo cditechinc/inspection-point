@@ -23,6 +23,7 @@ export class CompanyMigration20240721123456 implements MigrationInterface {
         "email" character varying,
         "phone2" character varying,
         "payment_method" character varying,
+        "package_id" uuid REFERENCES "packages"("id") ON DELETE SET NULL,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

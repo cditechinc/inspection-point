@@ -78,6 +78,7 @@ export class CreateInspectionDTO {
   completedDate?: Date;
 
   @IsArray()
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => Route)
   route: Route[];
@@ -85,6 +86,7 @@ export class CreateInspectionDTO {
   @IsEnum(IntervalType)
   inspectionInterval?: IntervalType;
 
+  @IsOptional()
   @ValidateIf((o) => o.inspectionInterval !== IntervalType.ONE_TIME)
   @IsDate()
   @Type(() => Date)

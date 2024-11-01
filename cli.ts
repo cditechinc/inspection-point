@@ -7,6 +7,8 @@ import { ChecklistTemplateSeed } from './src/seeds/checklist-template.seed';
 import { ChecklistTemplate } from './src/checklist/entities/checklist-template.entity';
 import { ChecklistQuestion } from './src/checklist/entities/checklist-question.entity';
 import { AssetType } from './src/assets/entities/asset-type.entity';
+import { Package } from './src/packages/entities/package.entity';
+import { PackageSeed } from './src/seeds/package.seed';
 
 const AppDataSource = new DataSource(dataSourceOptions);
 
@@ -36,7 +38,17 @@ AppDataSource.initialize()
       await checklistTemplateSeed.run();
       console.log('Checklist template has been seeded successfully!');
       process.exit(0);
-    } else {
+    } else if (command === 'seed:packages') {
+      // Run the package seeder
+      console.log('Seeding packages...');
+      const packageSeed = new PackageSeed(
+        AppDataSource.getRepository(Package),
+      );
+      await packageSeed.run();
+      console.log('Packages have been seeded successfully!');
+      process.exit(0);
+    }
+     else {
       // Run TypeORM commands as usual
       execSync(`typeorm-ts-node-commonjs ${command}`, {
         stdio: 'inherit',
