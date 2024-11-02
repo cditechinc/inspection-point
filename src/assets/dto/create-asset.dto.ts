@@ -33,6 +33,14 @@ export class CreateAssetDto {
   status?: 'active' | 'inactive' | 'maintenance';
 
   @IsOptional()
+  @IsString()
+  latitude?: string;
+
+  @IsOptional()
+  @IsString()
+  longitude?: string;
+
+  @IsOptional()
   @IsObject()
   @Type(() => Object)
   @Transform(({ value }) => {

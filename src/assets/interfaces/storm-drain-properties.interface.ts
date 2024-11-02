@@ -5,8 +5,6 @@ export interface StormDrainProperties {
     waterIntrusion: boolean;
     damaged: boolean;
     internalPipeDia: string; // In inches
-    latitude: string; // Coordinate
-    longitude: string; // Coordinate
     qrCode: string;
     nfcId: string;
     drainDimensions: string; // Format: 'Depth*Width*Length' in feet

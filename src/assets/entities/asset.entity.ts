@@ -42,6 +42,12 @@ export class Asset {
   })
   status: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  latitude: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  longitude: string;
+
   @Column({ type: 'jsonb', nullable: true })
   properties: Record<string, any>;
  

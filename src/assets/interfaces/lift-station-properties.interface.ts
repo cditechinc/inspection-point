@@ -9,8 +9,6 @@ export interface LiftStationProperties {
     float?: string; // Float (text)
     pumps?: string; // Pumps (text)
     power?: string; // Power (text)
-    latitude?: string; // Latitude coordinate
-    longitude?: string; // Longitude coordinate
     qrCode?: string; // QR Code identifier
     nfcId?: string; // NFC ID
     inspectionInterval?: 'Weekly' | 'Monthly' | 'Bi-Monthly' | 'Quarterly' | 'Yearly' | 'On-Demand' | 'Not Serviced';

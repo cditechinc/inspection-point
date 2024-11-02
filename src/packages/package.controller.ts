@@ -23,7 +23,7 @@ import {
   
     
   
-    // @Roles(Role.ClientAdmin)
+    @Roles(Role.ClientAdmin)
     @Get()
     findAll() {
       return this.packageService.findAll();

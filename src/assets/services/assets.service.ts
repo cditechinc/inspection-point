@@ -80,6 +80,8 @@ export class AssetsService {
       client: client,
       customer: customer,
       properties: createAssetDto.properties,
+      latitude: createAssetDto.latitude,
+      longitude: createAssetDto.longitude,
     });
 
     const savedAsset = await this.assetsRepository.save(asset);
@@ -169,6 +171,8 @@ export class AssetsService {
       name: updateAssetDto.name || asset.name,
       status: updateAssetDto.status || asset.status,
       properties: updateAssetDto.properties || asset.properties,
+      latitude: updateAssetDto.latitude || asset.latitude,
+      longitude: updateAssetDto.longitude || asset.longitude,
     });
 
     const savedAsset = await this.assetsRepository.save(asset);
@@ -205,51 +209,52 @@ export class AssetsService {
       where: { assetType: { name: 'Storm Drain' } },
       relations: ['assetType'],
     });
-  
+
     // Build a map for quick access
     const stormDrainMap = new Map<string, Asset>();
     stormDrains.forEach((stormDrain) => {
       stormDrainMap.set(stormDrain.id, stormDrain);
     });
-  
+
     // Prepare the response
     const response = stormDrains.map((stormDrain) => {
       const properties = stormDrain.properties as StormDrainProperties;
-  
+
       // Get connected storm drains with their coordinates
-      const connectedStormDrains = properties.connectedStormDrainAssetIds?.map((id) => {
-        const connectedAsset = stormDrainMap.get(id);
-        if (connectedAsset) {
-          const connectedProperties = connectedAsset.properties as StormDrainProperties;
-          return {
-            id: connectedAsset.id,
-            latitude: connectedProperties.latitude,
-            longitude: connectedProperties.longitude,
-          };
-        } else {
-          // Handle missing connected asset
-          return {
-            id,
-            latitude: null,
-            longitude: null,
-            error: 'Connected asset not found',
-          };
-        }
-      }) || [];
-  
+      const connectedStormDrains =
+        properties.connectedStormDrainAssetIds?.map((id) => {
+          const connectedAsset = stormDrainMap.get(id);
+          if (connectedAsset) {
+            const connectedProperties =
+              connectedAsset.properties as StormDrainProperties;
+            return {
+              id: connectedAsset.id,
+              latitude: connectedAsset.latitude,
+              longitude: connectedAsset.longitude,
+            };
+          } else {
+            // Handle missing connected asset
+            return {
+              id,
+              latitude: null,
+              longitude: null,
+              error: 'Connected asset not found',
+            };
+          }
+        }) || [];
+
       return {
         id: stormDrain.id,
         name: stormDrain.name,
-        latitude: properties.latitude,
-        longitude: properties.longitude,
+        latitude: stormDrain.latitude,
+        longitude: stormDrain.longitude,
         connectedAssetLineColor: properties.connectedAssetLineColor,
         connectedStormDrains,
       };
     });
-  
+
     return response;
   }
-  
 
   // Method to validate properties based on asset type
   private validateProperties(
@@ -364,19 +369,6 @@ export class AssetsService {
       }
     }
 
-    // Validate latitude
-    if (properties.latitude !== undefined) {
-      if (typeof properties.latitude !== 'string') {
-        throw new BadRequestException('Latitude must be a string.');
-      }
-    }
-
-    // Validate longitude
-    if (properties.longitude !== undefined) {
-      if (typeof properties.longitude !== 'string') {
-        throw new BadRequestException('Longitude must be a string.');
-      }
-    }
 
     // Validate qrCode
     if (properties.qrCode !== undefined) {
@@ -463,23 +455,6 @@ export class AssetsService {
       }
     }
 
-    // Validate latitude
-    if (!properties.latitude) {
-      throw new BadRequestException(
-        'Latitude is required for Grease Trap assets.',
-      );
-    } else if (typeof properties.latitude !== 'string') {
-      throw new BadRequestException('Latitude must be a string.');
-    }
-
-    // Validate longitude
-    if (!properties.longitude) {
-      throw new BadRequestException(
-        'Longitude is required for Grease Trap assets.',
-      );
-    } else if (typeof properties.longitude !== 'string') {
-      throw new BadRequestException('Longitude must be a string.');
-    }
 
     // Validate qrCode
     if (!properties.qrCode) {
@@ -655,19 +630,6 @@ export class AssetsService {
       }
     }
 
-    // Validate latitude
-    if (!properties.latitude) {
-      throw new BadRequestException('Latitude is required.');
-    } else if (typeof properties.latitude !== 'string') {
-      throw new BadRequestException('Latitude must be a string.');
-    }
-
-    // Validate longitude
-    if (!properties.longitude) {
-      throw new BadRequestException('Longitude is required.');
-    } else if (typeof properties.longitude !== 'string') {
-      throw new BadRequestException('Longitude must be a string.');
-    }
 
     // Validate qrCode
     if (!properties.qrCode) {
@@ -818,23 +780,6 @@ export class AssetsService {
       }
     }
 
-    // Validate latitude
-    if (!properties.latitude) {
-      throw new BadRequestException(
-        'Latitude is required for Lint Trap assets.',
-      );
-    } else if (typeof properties.latitude !== 'string') {
-      throw new BadRequestException('Latitude must be a string.');
-    }
-
-    // Validate longitude
-    if (!properties.longitude) {
-      throw new BadRequestException(
-        'Longitude is required for Lint Trap assets.',
-      );
-    } else if (typeof properties.longitude !== 'string') {
-      throw new BadRequestException('Longitude must be a string.');
-    }
 
     // Validate qrCode
     if (!properties.qrCode) {
@@ -973,14 +918,7 @@ export class AssetsService {
       throw new BadRequestException('Internal Pipe Diameter must be a string.');
     }
 
-    // Validate latitude and longitude
-    if (!properties.latitude || typeof properties.latitude !== 'string') {
-      throw new BadRequestException('Latitude must be a string.');
-    }
-    if (!properties.longitude || typeof properties.longitude !== 'string') {
-      throw new BadRequestException('Longitude must be a string.');
-    }
-
+    
     // Validate qrCode
     if (!properties.qrCode || typeof properties.qrCode !== 'string') {
       throw new BadRequestException('QR Code must be a string.');

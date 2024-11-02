@@ -6,8 +6,6 @@ export interface TreatmentPlantDigesterProperties {
     suctionRequired: boolean;
     digesterDimensions: string; // Format: '000 x 000 x 000'
     primaryTreatmentPlantAssetId?: string; // UUID of the primary treatment plant asset
-    latitude: string;
-    longitude: string;
     qrCode: string;
     nfcId: string;
     condition: 'Good' | 'Fair' | 'Rough' | 'Bad' | 'Failing' | 'Other';
