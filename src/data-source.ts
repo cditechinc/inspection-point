@@ -4,7 +4,6 @@ import { Client } from './client/entities/client.entity';
 import { User } from './user/entities/user.entity';
 import { UserIP } from './user/entities/user-ip.entity';
 import { UserSession } from './user/entities/user-session.entity';
-import { Log } from './user/entities/log.entity';
 import { Customer } from './customer/entities/customer.entity';
 import { Asset } from './assets/entities/asset.entity';
 import { Photo } from './assets/entities/photo.entity';
@@ -32,6 +31,7 @@ import { InspectionChecklist } from './checklist/entities/inspection-checklist.e
 import { InspectionChecklistAnswer } from './checklist/entities/inspection-checklist-answer.entity';
 import { Package } from './packages/entities/package.entity';
 import { AddPackagesTable20241101123456 } from './migrations/packagesModule';
+import { Logs } from './logs/entities/log.entity';
 
 
 const dataSourceOptions: DataSourceOptions = {
@@ -55,7 +55,7 @@ const dataSourceOptions: DataSourceOptions = {
     User,
     UserIP,
     UserSession,
-    Log,
+    Logs,
     Asset,
     Photo,
     Pump,

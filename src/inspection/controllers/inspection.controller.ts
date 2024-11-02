@@ -35,10 +35,7 @@ export class InspectionController {
     @Body() createInspectionDto: any,
     @UploadedFiles() files: { photos?: Express.Multer.File[] },
   ) {
-    if (typeof createInspectionDto.route === 'string') {
-      createInspectionDto.route = JSON.parse(createInspectionDto.route);
-    }
-
+    
     if (typeof createInspectionDto.checklists === 'string') {
       createInspectionDto.checklists = JSON.parse(
         createInspectionDto.checklists,

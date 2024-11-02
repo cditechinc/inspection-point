@@ -21,13 +21,6 @@ import { Type } from 'class-transformer';
 import { InspectionStatus, IntervalType } from '../entities/inspection.entity';
 import { SubmitInspectionChecklistDTO } from './../../checklist/dto/submit-inspection-checklist.dto';
 
-class Route {
-  @IsDecimal()
-  latitude: number;
-
-  @IsDecimal()
-  longitude: number;
-}
 
 export function IsFifteenthDay(validationOptions?: ValidationOptions) {
   return function (object: Object, propertyName: string) {
@@ -77,12 +70,6 @@ export class CreateInspectionDTO {
   @Type(() => Date)
   completedDate?: Date;
 
-  @IsArray()
-  @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => Route)
-  route: Route[];
-
   @IsEnum(IntervalType)
   inspectionInterval?: IntervalType;
 
@@ -122,10 +109,6 @@ export class UpdateInspectionDTO {
   @IsDate()
   completedDate?: Date;
 
-  @IsOptional()
-  @IsArray()
-  route?: any[];
-
   @IsEnum(IntervalType)
   @IsOptional()
   inspectionInterval?: IntervalType;
@@ -159,7 +142,6 @@ export class InspectionDTO {
   scheduledDate: Date;
   serviceFeeId: string;
   completedDate: Date;
-  route: any[];
   inspectionInterval: number;
   reocurrenceEndDate: Date;
   checklists: SubmitInspectionChecklistDTO[];

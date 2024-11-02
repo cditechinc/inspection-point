@@ -493,7 +493,6 @@ export class InspectionService {
   
     return this.inspectionRepository.save(inspection);
   }
-  
 
   async reSendInvoice(inspectionId: string): Promise<void> {
     const inspection = await this.findOne(inspectionId);

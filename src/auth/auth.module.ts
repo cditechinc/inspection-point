@@ -7,7 +7,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from '../user/entities/user.entity';
 import { UserSession } from '../user/entities/user-session.entity';
 import { UserIP } from '../user/entities/user-ip.entity';
-import { Log } from '../user/entities/log.entity';
 import { UserService } from '../user/user.service';
 import { ClientService } from '../client/client.service';
 import { AuthService } from './auth.service';
@@ -34,7 +33,7 @@ import { Logs } from './../logs/entities/log.entity';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([User, UserSession, UserIP, Log, Logs]),
+    TypeOrmModule.forFeature([User, UserSession, UserIP, Logs]),
     forwardRef(() => ClientModule),
     AwsModule,
     forwardRef(() => UserGroupModule),

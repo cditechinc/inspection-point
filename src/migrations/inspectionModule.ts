@@ -61,7 +61,6 @@ export class InspectionModuleMigration20240804123456
         "status" inspection_status_enum NOT NULL DEFAULT 'Not-Complete',
         "scheduled_date" TIMESTAMP NOT NULL,
         "completed_date" TIMESTAMP,
-        "route" jsonb,
         "is_reocurring" boolean DEFAULT FALSE, 
         "inspection_interval" inspection_interval_enum, 
         "reocurrence_end_date" TIMESTAMP, 

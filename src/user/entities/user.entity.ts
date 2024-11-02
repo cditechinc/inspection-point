@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { UserSession } from './user-session.entity';
 import { UserIP } from './user-ip.entity';
-import { Log } from './log.entity';
+import { Logs } from './../../logs/entities/log.entity';
 import { Client } from '../../client/entities/client.entity';
 
 import { Asset } from './../../assets/entities/asset.entity';
@@ -112,8 +112,8 @@ export class User {
   @OneToMany(() => UserIP, ip => ip.user)
   ips: UserIP[];
 
-  @OneToMany(() => Log, log => log.user)
-  logs: Log[];
+  @OneToMany(() => Logs, log => log.user)
+  logs: Logs[];
 
   @OneToMany(() => Inspection, (inspection) => inspection.customer)
   customerInspections: Inspection[];

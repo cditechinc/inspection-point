@@ -115,9 +115,6 @@ export class Inspection {
   @Column('timestamp', { nullable: true })
   completedDate: Date;
 
-  @Column('jsonb')
-  route: any;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

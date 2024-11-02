@@ -7,7 +7,6 @@ import { CustomConfigModule } from './config/config.module';
 import { User } from './user/entities/user.entity';
 import { UserSession } from './user/entities/user-session.entity';
 import { UserIP } from './user/entities/user-ip.entity';
-import { Log } from './user/entities/log.entity';
 import { ClientModule } from './client/client.module';
 import { Client } from './client/entities/client.entity';
 import { Customer } from './customer/entities/customer.entity';
@@ -64,7 +63,6 @@ import { PackageModule } from './packages/package.module';
           Customer,
           UserSession,
           UserIP,
-          Log,
           Logs,
           Asset,
           Photo,
