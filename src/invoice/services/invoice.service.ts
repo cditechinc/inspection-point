@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   forwardRef,
+  HttpException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -153,16 +154,14 @@ export class InvoiceService {
         throw new Error('Failed to create invoice in QuickBooks');
       }
     } catch (error) {
-      console.error(
-        `QuickBooks API error: ${JSON.stringify(
-          error.response?.data || error.message,
-          null,
-          2,
-        )}`,
-      );
-      throw new InternalServerErrorException(
-        `QuickBooks API error: ${error.message}`,
-      );
+      console.error('Error creating invoice in QuickBooks:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException(
+          `QuickBooks API error: ${error.message}`,
+        );
+      }
     }
   }
 
@@ -402,9 +401,13 @@ export class InvoiceService {
         'Error sending invoice:',
         error.response?.data || error.message,
       );
-      throw new InternalServerErrorException(
-        'Failed to send invoice in QuickBooks',
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException(
+          `QuickBooks API error: ${error.message}`,
+        );
+      }
     }
   }
 
@@ -424,13 +427,13 @@ export class InvoiceService {
     const url = `${baseUrl}/v3/company/${realmId}/upload`;
 
     const formData = new FormData();
-  formData.append('file_content_0', fileBuffer, {
-    filename: fileName,
-    contentType: mimeType,
-  });
-  formData.append('file_name_0', fileName);
-  formData.append('content_type_0', mimeType);
-  formData.append('entity', JSON.stringify({}));
+    formData.append('file_content_0', fileBuffer, {
+      filename: fileName,
+      contentType: mimeType,
+    });
+    formData.append('file_name_0', fileName);
+    formData.append('content_type_0', mimeType);
+    formData.append('entity', JSON.stringify({}));
 
     const accessToken = client.getToken().access_token;
 
@@ -459,7 +462,13 @@ export class InvoiceService {
         'Error uploading attachment:',
         error.response?.data || error.message,
       );
-      throw new InternalServerErrorException('Failed to upload attachment');
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException(
+          `QuickBooks API error: ${error.message}`,
+        );
+      }
     }
   }
 
@@ -520,9 +529,13 @@ export class InvoiceService {
         'Error linking attachment:',
         error.response?.data || error.message,
       );
-      throw new InternalServerErrorException(
-        'Failed to link attachment to invoice',
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException(
+          `QuickBooks API error: ${error.message}`,
+        );
+      }
     }
   }
 }

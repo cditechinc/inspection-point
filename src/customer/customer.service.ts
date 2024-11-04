@@ -1,5 +1,5 @@
 // src/customer/customer.service.ts
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Customer } from './entities/customer.entity';
@@ -39,7 +39,11 @@ export class CustomerService {
       return this.customerRepository.save(customer);
     } catch (error) {
       console.error('Error creating customer with photos:', error);
-      throw new InternalServerErrorException('Failed to create customer with photos.');
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException('Failed to create customer with photos.');
+      }
     }
   }
 
@@ -84,7 +88,11 @@ export class CustomerService {
       return updatedCustomer;
     } catch (error) {
       console.error('Error updating customer with photos:', error);
-      throw new InternalServerErrorException('Failed to update customer with photos.');
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException('Failed to update customer with photos.');
+      }
     }
   }
   
@@ -94,7 +102,7 @@ export class CustomerService {
   }
 
   private async createCustomerInQuickBooks(createCustomerDto: CreateCustomerDto, clientId: string) {
-    try {
+    
       return await this.quickBooksOAuthService.createCustomer(clientId, {
         DisplayName: createCustomerDto.name,
         PrimaryEmailAddr: { Address: createCustomerDto.email },
@@ -103,9 +111,6 @@ export class CustomerService {
         ShipAddr: { Line1: createCustomerDto.service_address },
         // Add other QuickBooks-specific fields if necessary
       });
-    } catch (error) {
-      console.error('Error creating customer in QuickBooks:', error);
-      throw new InternalServerErrorException('Failed to create customer in QuickBooks');
+    
     }
-  }
 }
