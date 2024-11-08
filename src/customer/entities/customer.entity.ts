@@ -1,9 +1,18 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { Client } from '../../client/entities/client.entity';
 import { Photo } from './../../assets/entities/photo.entity';
 import { Asset } from './../../assets/entities/asset.entity';
 import { Inspection } from './../../inspection/entities/inspection.entity';
 import { Invoice } from './../../invoice/entities/invoice.entity';
+import { Task } from './../../task-management/entities/task.entity';
 
 @Entity('customers')
 export class Customer {
@@ -47,28 +56,33 @@ export class Customer {
   quickbooksCustomerId: string;
 
   @Column({ nullable: true })
-  previousProvider: string; 
+  previousProvider: string;
 
   @Column('text', { array: true, nullable: true })
-  photos: string[]; 
+  photos: string[];
 
   @Column({ nullable: true })
   billingContactEmail: string;
 
-  @ManyToOne(() => Client, client => client.customers, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Client, (client) => client.customers, {
+    onDelete: 'CASCADE',
+  })
   client: Client;
 
-  @OneToMany(() => Photo, photo => photo.customer)
+  @OneToMany(() => Photo, (photo) => photo.customer)
   photosRelation: Photo[];
 
-  @OneToMany(() => Asset, asset => asset.customer)
+  @OneToMany(() => Asset, (asset) => asset.customer)
   assets: Asset[];
 
   @OneToMany(() => Inspection, (inspection) => inspection.customer)
   inspections: Inspection[];
 
-  @OneToMany(() => Invoice, invoice => invoice.customer)
+  @OneToMany(() => Invoice, (invoice) => invoice.customer)
   invoices: Invoice[];
+
+  @OneToMany(() => Task, (task) => task.customer)
+  tasks: Task[];
 
   @CreateDateColumn()
   created_at: Date;

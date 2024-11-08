@@ -9,6 +9,7 @@ import { Client } from '../../client/entities/client.entity';
 import { Customer } from '../../customer/entities/customer.entity';
 import { Inspection } from '../../inspection/entities/inspection.entity';
 import { InvoiceItem } from './invoice-item.entity';
+import { Task } from './../../task-management/entities/task.entity';
 
 @Entity('invoices')
 export class Invoice {
@@ -64,6 +65,9 @@ export class Invoice {
     cascade: true,
   })
   invoiceItems: InvoiceItem[];
+
+  @OneToMany(() => Task, (task) => task.invoice)
+  tasks: Task[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;

@@ -88,6 +88,20 @@ export class PermissionsGuard implements CanActivate {
       requiredPermission = 'manage_logs';
     } else if (route.includes('packages')) {
       requiredPermission = 'manage_packages';
+    } else if (route.includes('tasks')) {
+      requiredPermission = 'manage_tasks';
+    } else if (route.includes('task-statuses')) {
+      requiredPermission = 'manage_task-statuses';
+    } else if (route.includes('task-types')) {
+      requiredPermission = 'manage_task-types';
+    } else if (route.includes('task-files')) {
+      requiredPermission = 'manage_task-files';
+    } else if (route.includes('client-task-settings')) {
+      requiredPermission = 'manage_client-task-settings';
+    } else if (route.includes('task-settings')) {
+      requiredPermission = 'manage_task-settings';
+    } else if (route.includes('task-status-history')) {
+      requiredPermission = 'manage_task-status-history';
     }
     // Add more cases as needed
 

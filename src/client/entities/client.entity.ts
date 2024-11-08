@@ -1,4 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Customer } from '../../customer/entities/customer.entity';
 import { Asset } from './../../assets/entities/asset.entity';
@@ -8,7 +17,7 @@ import { Invoice } from './../../invoice/entities/invoice.entity';
 import { UserGroup } from './../../user-groups/entities/user-group.entity';
 import { Company } from './../../company/entities/company.entity';
 import { Services } from '../../invoice/entities/services.entity';
-
+import { Task } from './../../task-management/entities/task.entity';
 
 @Entity('clients')
 export class Client {
@@ -16,10 +25,10 @@ export class Client {
   id: string;
 
   @Column({ nullable: true })
-  first_name: string; 
+  first_name: string;
 
   @Column({ nullable: true })
-  last_name: string; 
+  last_name: string;
 
   @Column({ unique: true })
   email: string;
@@ -60,20 +69,20 @@ export class Client {
 
   @Column({ nullable: true })
   quickbooksTokenExpiresIn: Date;
-  
+
   @Column({ nullable: true })
   quickbooksState: string;
-  
+
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => User, user => user.client)
+  @OneToMany(() => User, (user) => user.client)
   users: User[];
 
-  @OneToMany(() => Customer, customer => customer.client)
+  @OneToMany(() => Customer, (customer) => customer.client)
   customers: Customer[];
 
   @OneToMany(() => UserGroup, (userGroup) => userGroup.client)
@@ -83,16 +92,16 @@ export class Client {
   @JoinColumn()
   user: User;
 
-  @OneToMany(() => Asset, asset => asset.client)
+  @OneToMany(() => Asset, (asset) => asset.client)
   assets: Asset[];
 
-  @OneToMany(() => Photo, photo => photo.client)
+  @OneToMany(() => Photo, (photo) => photo.client)
   photos: Photo[];
 
   @OneToMany(() => Inspection, (inspection) => inspection.client)
   inspections: Inspection[];
 
-  @OneToMany(() => Invoice, invoice => invoice.client)
+  @OneToMany(() => Invoice, (invoice) => invoice.client)
   invoices: Invoice[];
 
   @OneToOne(() => Company, (company) => company.client, { cascade: true })
@@ -100,4 +109,7 @@ export class Client {
 
   @OneToMany(() => Services, (serviceFee) => serviceFee.client)
   serviceFees: Services[];
+
+  @OneToMany(() => Task, (task) => task.client)
+  tasks: Task[];
 }

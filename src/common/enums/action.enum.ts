@@ -4,5 +4,8 @@ export enum Action {
     CREATE = 'create',
     DELETE = 'delete',
     GENERATE = 'generate',
+    ASSIGN = 'assign',
+    UNASSIGN = 'unassign',
+    
     // Add more actions as needed
   }

@@ -19,4 +19,12 @@ export enum Resource {
     INSPECTION_CHECKLISTS = 'inspection-checklists',
     LOGS = 'logs',
     PACKAGES = 'packages',
+    TASKS = 'tasks',
+    TASK_STATUSES = 'task-statuses',
+    TASK_TYPES = 'task-types',
+    TASK_FILES = 'task-files',
+    CLIENT_TASK_SETTINGS = 'client-task-settings',
+    TASK_SETTINGS = 'task-settings',
+    TASK_STATUS_HISTORY = 'task-status-history',
+    
   }

@@ -32,6 +32,13 @@ import { InspectionChecklistAnswer } from './checklist/entities/inspection-check
 import { Package } from './packages/entities/package.entity';
 import { AddPackagesTable20241101123456 } from './migrations/packagesModule';
 import { Logs } from './logs/entities/log.entity';
+import { Task } from './task-management/entities/task.entity';
+import { TaskStatus } from './task-management/entities/task-status.entity';
+import { TaskStatusHistory } from './task-management/entities/task-status-history.entity';
+import { TaskType } from './task-management/entities/task-type.entity';
+import { TaskFile } from './task-management/entities/task-file.entity';
+import { ClientTaskSettings } from './task-management/entities/client-task-settings.entity';
+import { TaskManagementModule20250101123456 } from './migrations/taskManagementModule';
 
 
 const dataSourceOptions: DataSourceOptions = {
@@ -55,6 +62,14 @@ const dataSourceOptions: DataSourceOptions = {
     User,
     UserIP,
     UserSession,
+    ///Task Management///
+    Task,
+    TaskStatus,
+    TaskStatusHistory,
+    TaskType,
+    TaskFile,
+    ClientTaskSettings,
+    ////////////////////
     Logs,
     Asset,
     Photo,
@@ -84,6 +99,7 @@ const dataSourceOptions: DataSourceOptions = {
     InspectionModuleMigration20240804123456,
     AddInvoicesTableWithQuickBooksFields20240901123456,
     AddSecurityGroupsAndPermissions20240905123456,
+    TaskManagementModule20250101123456,
   ],
   synchronize: false,
   logging: true,

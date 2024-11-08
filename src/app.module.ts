@@ -44,6 +44,13 @@ import { LogsModule } from './logs/logs.module';
 import { Logs } from './logs/entities/log.entity';
 import { Package } from './packages/entities/package.entity';
 import { PackageModule } from './packages/package.module';
+import { Task } from './task-management/entities/task.entity';
+import { TaskStatus } from './task-management/entities/task-status.entity';
+import { TaskStatusHistory } from './task-management/entities/task-status-history.entity';
+import { TaskType } from './task-management/entities/task-type.entity';
+import { TaskFile } from './task-management/entities/task-file.entity';
+import { ClientTaskSettings } from './task-management/entities/client-task-settings.entity';
+import { TaskManagementModule } from './task-management/task-management.module';
 
 @Module({
   imports: [
@@ -59,6 +66,12 @@ import { PackageModule } from './packages/package.module';
         database: configService.get<string>('DATABASE_NAME'),
         entities: [
           User,
+          Task,
+          TaskStatus,
+          TaskStatusHistory,
+          TaskType,
+          TaskFile,
+          ClientTaskSettings,
           Client,
           Customer,
           UserSession,
@@ -91,6 +104,7 @@ import { PackageModule } from './packages/package.module';
     }),
     AuthModule,
     UserModule,
+    TaskManagementModule,
     ClientModule,
     CustomerModule,
     AssetsModule,
