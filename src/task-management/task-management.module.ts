@@ -20,6 +20,7 @@ import { UserModule } from './../user/user.module';
 import { AssetsModule } from './../assets/assets.module';
 import { Asset } from './../assets/entities/asset.entity';
 import { UserGroupModule } from './../user-groups/user-group.module';
+import { TaskStatusHistoryService } from './services/task-status-history.service';
 
 @Module({
   imports: [
@@ -42,12 +43,14 @@ import { UserGroupModule } from './../user-groups/user-group.module';
     TaskStatusController,
     TaskTypeController,
     ClientTaskSettingsController,
+    TaskStatusController,
   ],
   providers: [
     TaskService,
     TaskStatusService,
     TaskTypeService,
     ClientTaskSettingsService,
+    TaskStatusHistoryService
   ],
 })
 export class TaskManagementModule {}

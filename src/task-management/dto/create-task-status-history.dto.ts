@@ -1,17 +1,21 @@
-import { IsNotEmpty, IsUUID, IsOptional, IsString } from 'class-validator';
+import { IsUUID, IsOptional, IsString } from 'class-validator';
 
 export class CreateTaskStatusHistoryDto {
   @IsUUID()
-  @IsNotEmpty()
-  taskStatusId: string;
+  taskId: string;
 
   @IsUUID()
-  @IsNotEmpty()
-  taskId: string;
+  clientId: string;
+
+  @IsUUID()
+  statusId: string;
+
+  @IsUUID()
+  userId: string;
 
   @IsString()
   @IsOptional()
-  location?: string; // GPS coordinates in 'POINT' format
+  location?: string;
 
   @IsString()
   @IsOptional()

@@ -14,6 +14,7 @@ import { User } from '../../user/entities/user.entity';
 import { Asset } from '../../assets/entities/asset.entity';
 import { TaskType } from '../entities/task-type.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { TaskStatusHistoryService } from './task-status-history.service';
 
 @Injectable()
 export class TaskService {
@@ -38,6 +39,8 @@ export class TaskService {
 
     @InjectRepository(TaskType)
     private readonly taskTypeRepository: Repository<TaskType>,
+
+    private readonly taskStatusHistoryService: TaskStatusHistoryService,
 
     // Inject other services and repositories as needed
   ) {}
@@ -215,16 +218,15 @@ export class TaskService {
     task.taskStatus = newStatus;
     await this.taskRepository.save(task);
 
-    // Add to status history
-    const statusHistory = this.taskStatusHistoryRepository.create({
-      task,
-      client: { id: clientId },
-      taskStatus: newStatus,
-      createdByUser: { id: userId },
+    // Add to status history using the service
+    await this.taskStatusHistoryService.createStatusHistory({
+      taskId,
+      clientId,
+      statusId,
+      userId,
       location,
       delayedReason,
     });
-    await this.taskStatusHistoryRepository.save(statusHistory);
 
     return task;
   }
