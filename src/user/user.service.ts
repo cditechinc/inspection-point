@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOneOptions, Repository } from 'typeorm';
+import { EntityManager, FindOneOptions, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UserSession } from './entities/user-session.entity';
 import { CreateUserDto } from '../auth/dto/create-user.dto';
@@ -8,6 +8,7 @@ import { UserGroupMembership } from './../user-groups/entities/user-group-member
 import * as bcrypt from 'bcrypt';
 import { CreateAssociatedUserDto } from './dto/create-associated-user.dto';
 import { UpdateAssociatedUserDto } from './dto/update-associated-user.dto';
+import { UserGroup } from './../user-groups/entities/user-group.entity';
 
 @Injectable()
 export class UserService {
@@ -50,9 +51,11 @@ export class UserService {
     return this.usersRepository.find();
   }
 
-  async create(userDto: CreateUserDto): Promise<User> {
-    const user = this.usersRepository.create(userDto);
-    return this.usersRepository.save(user);
+  async create(userDto: CreateUserDto, manager?: EntityManager): Promise<User> {
+    const user = manager
+      ? manager.create(User, userDto)
+      : this.usersRepository.create(userDto);
+    return manager ? manager.save(user) : this.usersRepository.save(user);
   }
 
   async update(id: string, updateData: Partial<User>): Promise<User> {
@@ -86,23 +89,63 @@ export class UserService {
   }
 
   // Prevent reassignment of protected users
-  async assignUserToGroup(userId: string, groupId: string): Promise<void> {
-    const user = await this.findById(userId);
+  // async assignUserToGroup(userId: string, groupId: string): Promise<void> {
+  //   const user = await this.findById(userId);
 
+  //   // Skip protected user check if this is the initial assignment during registration
+  //   const isNewUser =
+  //     !user.groupMemberships || user.groupMemberships.length === 0;
+
+  //   if (user.isProtectedUser && !isNewUser) {
+  //     throw new BadRequestException('Cannot reassign a protected user');
+  //   }
+
+  //   // Logic to assign user to group
+  //   const membership = this.userGroupMembershipRepository.create({
+  //     user: user,
+  //     userGroup: { id: groupId },
+  //   });
+  //   await this.userGroupMembershipRepository.save(membership);
+  // }
+
+  async assignUserToGroup(
+    userId: string,
+    groupId: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    // Use the provided manager or default to the repository
+    const userRepository = manager
+      ? manager.getRepository(User)
+      : this.usersRepository;
+  
+    const user = await userRepository.findOne({
+      where: { id: userId },
+      relations: ['groupMemberships'],
+    });
+  
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+  
     // Skip protected user check if this is the initial assignment during registration
     const isNewUser =
       !user.groupMemberships || user.groupMemberships.length === 0;
-
+  
     if (user.isProtectedUser && !isNewUser) {
       throw new BadRequestException('Cannot reassign a protected user');
     }
-
+  
+    // Use the provided manager or default to the repository
+    const userGroupMembershipRepository = manager
+      ? manager.getRepository(UserGroupMembership)
+      : this.userGroupMembershipRepository;
+  
     // Logic to assign user to group
-    const membership = this.userGroupMembershipRepository.create({
+    const membership = userGroupMembershipRepository.create({
       user: user,
-      userGroup: { id: groupId },
+      userGroup: { id: groupId } as UserGroup,
     });
-    await this.userGroupMembershipRepository.save(membership);
+    await userGroupMembershipRepository.save(membership);
   }
 
   async createForClientAdmin(

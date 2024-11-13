@@ -1,6 +1,16 @@
 // src/entities/task-status.entity.ts
 
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Unique } from 'typeorm';
+import { Client } from './../../client/entities/client.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Unique,
+  ManyToOne,
+  Index,
+} from 'typeorm';
 
 @Entity('task_statuses')
 @Unique(['name'])
@@ -19,6 +29,11 @@ export class TaskStatus {
 
   @Column({ default: false })
   isDefault: boolean; // If true, cannot be edited or deleted
+  
+  @ManyToOne(() => Client, (client) => client.taskStatuses, {
+    onDelete: 'CASCADE',
+  })
+  client: Client;
 
   @CreateDateColumn()
   createdAt: Date;

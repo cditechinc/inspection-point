@@ -18,6 +18,9 @@ import { UserGroup } from './../../user-groups/entities/user-group.entity';
 import { Company } from './../../company/entities/company.entity';
 import { Services } from '../../invoice/entities/services.entity';
 import { Task } from './../../task-management/entities/task.entity';
+import { ClientTaskSettings } from './../../task-management/entities/client-task-settings.entity';
+import { TaskType } from './../../task-management/entities/task-type.entity';
+import { TaskStatus } from './../../task-management/entities/task-status.entity';
 
 @Entity('clients')
 export class Client {
@@ -112,4 +115,14 @@ export class Client {
 
   @OneToMany(() => Task, (task) => task.client)
   tasks: Task[];
+
+  @OneToOne(() => ClientTaskSettings, (taskSettings) => taskSettings.client, { cascade: true })
+  @JoinColumn()
+  taskSettings: ClientTaskSettings;
+
+  @OneToMany(() => TaskType, (taskType) => taskType.client, { cascade: true })
+  taskTypes: TaskType[];
+
+  @OneToMany(() => TaskStatus, (taskStatus) => taskStatus.client, { cascade: true })
+  taskStatuses: TaskStatus[];
 }

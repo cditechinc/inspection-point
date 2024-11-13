@@ -8,8 +8,7 @@ export class ClientTaskSettings {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToOne(() => Client, { onDelete: 'CASCADE' })
-  @JoinColumn()
+  @OneToOne(() => Client, (client) => client.taskSettings, { onDelete: 'CASCADE' })
   client: Client;
 
   @Column({ default: false })

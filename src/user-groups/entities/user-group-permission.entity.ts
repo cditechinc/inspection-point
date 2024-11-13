@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Unique } from 'typeorm';
 import { UserGroup } from './user-group.entity';
 
 @Entity('user_group_permissions')
+@Unique(['userGroup', 'permissionName'])
 export class UserGroupPermission {
   @PrimaryGeneratedColumn('uuid')
   id: string;

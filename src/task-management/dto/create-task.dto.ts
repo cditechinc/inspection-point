@@ -49,6 +49,7 @@ import {
     assetIds: string[];
   
     @IsArray()
+    @IsOptional()
     @IsUUID('all', { each: true })
     assignedUserIds: string[];
   

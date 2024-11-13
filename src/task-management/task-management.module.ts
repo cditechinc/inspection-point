@@ -21,6 +21,7 @@ import { AssetsModule } from './../assets/assets.module';
 import { Asset } from './../assets/entities/asset.entity';
 import { UserGroupModule } from './../user-groups/user-group.module';
 import { TaskStatusHistoryService } from './services/task-status-history.service';
+import { TaskStatusHistoryController } from './controllers/task-status-history.controller';
 
 @Module({
   imports: [
@@ -43,7 +44,7 @@ import { TaskStatusHistoryService } from './services/task-status-history.service
     TaskStatusController,
     TaskTypeController,
     ClientTaskSettingsController,
-    TaskStatusController,
+    TaskStatusHistoryController,
   ],
   providers: [
     TaskService,

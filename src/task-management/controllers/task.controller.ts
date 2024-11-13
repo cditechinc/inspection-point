@@ -11,19 +11,22 @@ import {
   Req,
   UseGuards,
   BadRequestException,
+  Patch,
 } from '@nestjs/common';
 import { TaskService } from '../services/task.service';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from './../../auth/guards/roles.guard';
+import { Role } from './../../auth/role.enum';
+import { Roles } from './../../auth/decorators/roles.decorator';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('tasks')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
+  @Roles(Role.ClientAdmin, Role.Client)
   @Post()
   async create(@Body() createTaskDto: CreateTaskDto, @Req() req) {
     const clientId = req.user.clientId;
@@ -32,19 +35,22 @@ export class TaskController {
     return this.taskService.create(createTaskDto, clientId, userId);
   }
 
+  @Roles(Role.ClientAdmin, Role.Client)
   @Get()
   async findAll(@Req() req) {
     const clientId = req.user.clientId;
     return this.taskService.findAll(clientId);
   }
 
+  @Roles(Role.ClientAdmin, Role.Client)
   @Get(':id')
   async findOne(@Param('id') id: string, @Req() req) {
     const clientId = req.user.clientId;
     return this.taskService.findOne(id, clientId);
   }
 
-  @Put(':id')
+  @Roles(Role.ClientAdmin, Role.Client)
+  @Patch(':id')
   async update(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
@@ -54,12 +60,14 @@ export class TaskController {
     return this.taskService.update(id, updateTaskDto, clientId);
   }
 
+  @Roles(Role.ClientAdmin, Role.Client)
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() req) {
     const clientId = req.user.clientId;
     return this.taskService.remove(id, clientId);
   }
 
+  @Roles(Role.ClientAdmin, Role.Client)
   @Post(':id/status')
   async changeStatus(
     @Param('id') id: string,

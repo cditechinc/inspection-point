@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { UserGroup } from './../entities/user-group.entity';
 import { CreateUserGroupDto } from './../dto/create-user-group.dto';
 import { UpdateUserGroupDto } from './../dto/update-user-group.dto';
@@ -17,9 +17,15 @@ export class UserGroupService {
   ) {}
 
   // Create a new user group
-  async create(clientId: string, createUserGroupDto: CreateUserGroupDto): Promise<UserGroup> {
-    const group = this.userGroupRepository.create({ ...createUserGroupDto, client: { id: clientId } });
-    return await this.userGroupRepository.save(group);
+  async create(
+    clientId: string,
+    createUserGroupDto: CreateUserGroupDto,
+    manager?: EntityManager,
+  ): Promise<UserGroup> {
+    const group = manager
+      ? manager.create(UserGroup, { ...createUserGroupDto, client: { id: clientId } })
+      : this.userGroupRepository.create({ ...createUserGroupDto, client: { id: clientId } });
+    return manager ? manager.save(group) : this.userGroupRepository.save(group);
   }
 
    // Fetch all groups a user belongs to
