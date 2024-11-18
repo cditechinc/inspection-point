@@ -134,14 +134,14 @@ export class TaskService {
   async findAll(clientId: string): Promise<Task[]> {
     return this.taskRepository.find({
       where: { client: { id: clientId } },
-      relations: ['taskType', 'taskStatus', 'assets', 'assignedUsers'],
+      relations: ['taskType', 'taskStatus', 'assets', 'assignedUsers', 'customer', 'client'],
     });
   }
 
   async findOne(taskId: string, clientId: string): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { id: taskId, client: { id: clientId } },
-      relations: ['taskType', 'taskStatus', 'assets', 'assignedUsers'],
+      relations: ['taskType', 'taskStatus', 'assets', 'assignedUsers', 'customer', 'client'],
     });
     if (!task) {
       throw new NotFoundException('Task not found');

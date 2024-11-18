@@ -44,8 +44,6 @@ export class UserService {
       relations: ['client', 'groupMemberships', 'groupMemberships.userGroup'],
     });
   }
-  
-  
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
