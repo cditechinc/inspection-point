@@ -39,19 +39,10 @@ export class Company {
   billing_address: string;
 
   @Column({ nullable: true })
-  city: string;
+  companyContact: string; // New field
 
   @Column({ nullable: true })
-  state: string;
-
-  @Column({ nullable: true })
-  zipcode: string;
-
-  @Column({ nullable: true })
-  phone: string;
-
-  @Column({ nullable: true })
-  phone2: string;
+  billingContact: string; // New field
 
   @Column({ nullable: true })
   email: string;

@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 
 @Entity('task_statuses')
-@Unique(['name'])
+@Unique(['name', 'client'])
 export class TaskStatus {
   @PrimaryGeneratedColumn('uuid')
   id: string;

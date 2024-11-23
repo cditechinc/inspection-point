@@ -18,6 +18,7 @@ import { Company } from './../company/entities/company.entity';
 import { TaskStatus } from './../task-management/entities/task-status.entity';
 import { TaskType } from './../task-management/entities/task-type.entity';
 import { ClientTaskSettings } from './../task-management/entities/client-task-settings.entity';
+import { Photo } from './../assets/entities/photo.entity';
 
 @Injectable()
 export class ClientService {
@@ -137,7 +138,10 @@ export class ClientService {
   //   }
   // }
 
-  async create(registerClientDto: RegisterClientDto): Promise<Client> {
+  async create(
+    registerClientDto: RegisterClientDto,
+    photos?: Express.Multer.File[],
+  ): Promise<Client> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -199,6 +203,8 @@ export class ClientService {
         industry: registerClientDto.industry,
         website: registerClientDto.website,
         payment_method: registerClientDto.payment_method,
+        company_address: registerClientDto.company_address,
+        billing_address: registerClientDto.billing_address,
         client: client,
       };
 
@@ -225,9 +231,23 @@ export class ClientService {
         queryRunner.manager,
       );
 
-      // Step 10: Update the client with user info and save
-      client.user = user;
-      await queryRunner.manager.save(client);
+      // Step 10: Handle photos
+      if (photos && photos.length > 0) {
+        const photoEntities = [];
+        for (const photoData of photos) {
+          const filePath = await this.awsService.uploadClientPhoto(
+            client.id,
+            photoData.buffer,
+            photoData.originalname,
+          );
+          const photo = new Photo();
+          photo.url = filePath;
+          photo.client = client;
+          await queryRunner.manager.save(photo);
+          photoEntities.push(photo);
+        }
+        client.photos = photoEntities;
+      }
 
       // Step 11: Create folders for the client in AWS (if applicable)
       try {
@@ -236,6 +256,10 @@ export class ClientService {
         console.error('Error creating AWS folders:', awsError);
         throw new InternalServerErrorException('Error creating AWS folders');
       }
+
+      // Step 112: Update the client with user info and save
+      client.user = user;
+      await queryRunner.manager.save(client);
 
       await queryRunner.commitTransaction();
       return client;
@@ -250,14 +274,30 @@ export class ClientService {
 
   async findAll(): Promise<Client[]> {
     return this.clientsRepository.find({
-      relations: ['user', 'userGroups', 'company', 'taskSettings', 'taskTypes', 'taskStatuses'],
+      relations: [
+        'user',
+        'userGroups',
+        'company',
+        'taskSettings',
+        'taskTypes',
+        'taskStatuses',
+        'photos',
+      ],
     });
   }
 
   async findOne(id: string): Promise<Client> {
     const client = await this.clientsRepository.findOne({
       where: { id },
-      relations: ['user', 'userGroups', 'company', 'taskSettings', 'taskTypes', 'taskStatuses'],
+      relations: [
+        'user',
+        'userGroups',
+        'company',
+        'taskSettings',
+        'taskTypes',
+        'taskStatuses',
+        'photos',
+      ],
     });
     if (!client) {
       throw new NotFoundException('Client not found');

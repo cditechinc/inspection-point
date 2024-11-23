@@ -28,26 +28,6 @@ export class CreateCompanyDto {
 
   @IsOptional()
   @IsString()
-  city: string;
-
-  @IsOptional()
-  @IsString()
-  state: string;
-
-  @IsOptional()
-  @IsString()
-  zipcode: string;
-
-  @IsOptional()
-  @IsString()
-  phone: string;
-
-  @IsOptional()
-  @IsString()
-  phone2: string;
-
-  @IsOptional()
-  @IsString()
   email: string;
 
   @IsOptional()

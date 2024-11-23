@@ -10,6 +10,8 @@ import {
   Req,
   Res,
   Query,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { ClientService } from './client.service';
 import { RegisterClientDto } from './dto/register-client.dto';
@@ -19,6 +21,7 @@ import { AuthService } from './../auth/auth.service';
 import * as crypto from 'crypto';
 import { QuickBooksOAuthService } from './../auth/quickbooks-oauth.service';
 import { JwtAuthGuard } from './../auth/guards/jwt-auth.guard';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('clients')
 export class ClientController {
@@ -29,8 +32,9 @@ export class ClientController {
   ) {}
 
   @Post('register')
-  async create(@Body() registerClientDto: RegisterClientDto): Promise<Client> {
-    return this.clientService.create(registerClientDto);
+  @UseInterceptors(FilesInterceptor('photos'))
+  async create(@Body() registerClientDto: RegisterClientDto, @UploadedFiles() photos: Express.Multer.File[],): Promise<Client> {
+    return this.clientService.create(registerClientDto, photos);
   }
 
   @Get()

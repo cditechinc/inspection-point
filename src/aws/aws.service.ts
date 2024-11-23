@@ -47,6 +47,22 @@ export class AwsService {
     return filePath;
   }
 
+  async uploadClientPhoto(clientId: string, file: Buffer, originalName: string): Promise<string> {
+    const basePath = `clients/${clientId}/images`;
+    const fileName = this.generateFileName('image', originalName);
+    const filePath = `${basePath}/${fileName}`;
+  
+    await this.s3
+      .putObject({
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: filePath,
+        Body: file,
+      })
+      .promise();
+  
+    return filePath;
+  }
+
   private generateFileName(fileType: 'pdf' | 'image', originalName: string): string {
     const date = moment().format('MM-DD-YY');
     const randomInt = Math.floor(Math.random() * 1000);

@@ -1,7 +1,13 @@
-import { IsNotEmpty, IsEmail, IsOptional, IsString, IsDateString, IsBoolean } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsBoolean,
+} from 'class-validator';
 
 export class RegisterClientDto {
-  
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -24,11 +30,15 @@ export class RegisterClientDto {
 
   @IsNotEmpty()
   @IsString()
-  phone: string;
+  company_contact: string;
+
+  @IsOptional()
+  @IsString()
+  billingContact: string;
 
   @IsNotEmpty()
   @IsString()
-  address: string;
+  company_address: string;
 
   @IsOptional()
   @IsString()
@@ -81,4 +91,6 @@ export class RegisterClientDto {
   @IsOptional()
   @IsString()
   website: string;
+
+ 
 }
