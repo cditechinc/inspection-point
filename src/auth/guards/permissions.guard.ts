@@ -11,6 +11,7 @@ import {
 import { AuthService } from '../auth.service'; // Assuming you have a service to fetch user data
 import { UserGroupPermissionService } from './../../user-groups/services/user-group-permission.service';
 import { UserGroupService } from './../../user-groups/services/user-group.service';
+import e from 'express';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -102,6 +103,8 @@ export class PermissionsGuard implements CanActivate {
       requiredPermission = 'manage_task-settings';
     } else if (route.includes('task-status-history')) {
       requiredPermission = 'manage_task-status-history';
+    } else if (route.includes('sessions')) {
+      requiredPermission = 'manage_sessions';
     }
     // Add more cases as needed
 

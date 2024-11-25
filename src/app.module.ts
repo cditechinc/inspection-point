@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
@@ -51,6 +51,9 @@ import { TaskType } from './task-management/entities/task-type.entity';
 import { TaskFile } from './task-management/entities/task-file.entity';
 import { ClientTaskSettings } from './task-management/entities/client-task-settings.entity';
 import { TaskManagementModule } from './task-management/task-management.module';
+import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+import { ScheduleModule } from '@nestjs/schedule';
+import { IpGeolocationService } from './common/services/ip-geolocation.service';
 
 @Module({
   imports: [
@@ -102,6 +105,7 @@ import { TaskManagementModule } from './task-management/task-management.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UserModule,
     TaskManagementModule,
@@ -118,7 +122,11 @@ import { TaskManagementModule } from './task-management/task-management.module';
     ChecklistModule,
     LogsModule,
   ],
-  providers: [QuickBooksOAuthService], // Add the QuickBooks service as a provider
+  providers: [QuickBooksOAuthService, IpGeolocationService], // Add the QuickBooks service as a provider
   controllers: [QuickBooksController],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestContextMiddleware).forRoutes('*'); // Apply to all routes
+  }
+}

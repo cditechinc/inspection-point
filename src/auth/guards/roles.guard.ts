@@ -115,6 +115,8 @@ export class RolesGuard implements CanActivate {
       requiredPermission = 'manage_task-settings';
     } else if (route.includes('task-status-history')) {
       requiredPermission = 'manage_task-status-history';
+    } else if (route.includes('sessions')) {
+      requiredPermission = 'manage_sessions';
     }
     
 

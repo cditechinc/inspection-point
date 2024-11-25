@@ -1,10 +1,11 @@
 // auth.service.ts
 import { ForbiddenException, forwardRef, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../user/user.service';
+import { UserService } from './../user/services/user.service';
 import * as bcrypt from 'bcrypt';
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
+import * as useragent from 'useragent';
 import { User } from '../user/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,6 +18,7 @@ import { Client } from '../client/entities/client.entity';
 import { JwtPayload } from './interface/jwt-payload.interface';
 import { UserGroupPermissionService } from './../user-groups/services/user-group-permission.service';
 import { UserGroupService } from './../user-groups/services/user-group.service';
+import { IpGeolocationService } from './../common/services/ip-geolocation.service';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +35,7 @@ export class AuthService {
     private logRepository: Repository<Logs>,
     private readonly userGroupPermissionService: UserGroupPermissionService,
     private readonly userGroupService: UserGroupService,
+    private readonly ipGeolocationService: IpGeolocationService,
   ) {}
 
   async verifyPayload(payload: JwtPayload): Promise<User> {
@@ -77,10 +80,10 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
   
-
-  async login(user: User, ipAddress: string, gpsLocation?: string) {
+  async login(user: User, context: any) {
+    const { ipAddress, userAgent, gpsLocation } = context;
     const { accessToken, refreshToken } = await this.generateTokens(user);
-    const sessionToken = await this.createSession(user, ipAddress);
+    const sessionToken = await this.createSession(user, ipAddress, userAgent, gpsLocation);
 
     // Update the user's last login details
     await this.userService.update(user.id, {
@@ -93,13 +96,41 @@ export class AuthService {
     await this.recordUserIP(user.id, ipAddress);
 
     // Log the login action
-    await this.logAction(user.id, 'login', { ipAddress });
+    await this.logAction(user.id, 'user_login', { ipAddress, logLevel: 'INFO', details: `User login for email: ${user.email}` });
+
 
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
       session_token: sessionToken,
       user,
+    };
+  }
+
+  async loginClient(client: Client, context: any) {
+    const { ipAddress, userAgent, gpsLocation } = context;
+
+    const { accessToken, refreshToken } = await this.generateTokens(client);
+    const sessionToken = await this.createClientSession(client, ipAddress, userAgent, gpsLocation);
+
+    // Update the client's last login details
+    await this.userService.update(client.user.id, {
+      last_login: new Date(),
+      last_login_ip: ipAddress,
+      last_gps_location: gpsLocation,
+    });
+
+    // Record the client's IP address
+    await this.recordClientIP(client.user.id, ipAddress);
+
+    // Log the login action
+    await this.logClientAction(client.user.id, 'client_login', { ipAddress, logLevel: 'INFO', details: `Client login for email: ${client.user.email}` });
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      session_token: sessionToken,
+      client,
     };
   }
 
@@ -152,12 +183,24 @@ export class AuthService {
     });
   }
 
-  async createSession(user: User, ipAddress: string): Promise<string> {
+  // Modified createSession method to capture enhanced session details
+  async createSession(user: User, ipAddress: string, userAgent: string, gpsLocation?: string): Promise<string> {
     const sessionToken = this.jwtService.sign({ userId: user.id, ipAddress });
-    const expiresAt = new Date(new Date().getTime() + 60 * 60 * 1000); // 1 hour expiration
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1-hour expiration
+
+    const ipType = this.getIpType(ipAddress);
+    const deviceType = this.getDeviceType(userAgent);
+    const browserType = this.getBrowserType(userAgent);
+    const ipLocation = await this.getIpLocation(ipAddress);
+
     const session = this.userSessionRepository.create({
       user,
       ip_address: ipAddress,
+      ip_type: ipType,
+      device_type: deviceType,
+      browser_type: browserType,
+      gps_location: gpsLocation,
+      ip_location: ipLocation,
       session_token: sessionToken,
       expires_at: expiresAt,
     });
@@ -165,23 +208,73 @@ export class AuthService {
     return sessionToken;
   }
 
-  async createClientSession(
-    client: Client,
-    ipAddress: string,
-  ): Promise<string> {
-    const sessionToken = this.jwtService.sign({
-      clientId: client.id,
-      ipAddress,
-    });
-    const expiresAt = new Date(new Date().getTime() + 60 * 60 * 1000); // 1 hour expiration
+  // async createClientSession(
+  //   client: Client,
+  //   ipAddress: string,
+  // ): Promise<string> {
+  //   const sessionToken = this.jwtService.sign({
+  //     clientId: client.id,
+  //     ipAddress,
+  //   });
+  //   const expiresAt = new Date(new Date().getTime() + 60 * 60 * 1000); // 1 hour expiration
+  //   const session = this.userSessionRepository.create({
+  //     user: { id: client.user.id } as User, // Ensure UserSession can accommodate clients
+  //     ip_address: ipAddress,
+  //     session_token: sessionToken,
+  //     expires_at: expiresAt,
+  //   });
+  //   await this.userSessionRepository.save(session);
+  //   return sessionToken;
+  // }
+
+  // Modified createClientSession method to capture enhanced session details
+  async createClientSession(client: Client, ipAddress: string, userAgent: string, gpsLocation?: string): Promise<string> {
+    const sessionToken = this.jwtService.sign({ clientId: client.id, ipAddress });
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1-hour expiration
+
+    const ipType = this.getIpType(ipAddress);
+    const deviceType = this.getDeviceType(userAgent);
+    const browserType = this.getBrowserType(userAgent);
+    const ipLocation = await this.getIpLocation(ipAddress);
+
     const session = this.userSessionRepository.create({
-      user: { id: client.user.id } as User, // Ensure UserSession can accommodate clients
+      user: { id: client.user.id } as User,
       ip_address: ipAddress,
+      ip_type: ipType,
+      device_type: deviceType,
+      browser_type: browserType,
+      gps_location: gpsLocation,
+      ip_location: ipLocation,
       session_token: sessionToken,
       expires_at: expiresAt,
     });
     await this.userSessionRepository.save(session);
     return sessionToken;
+  }
+
+  // Helper method to determine IP type
+  getIpType(ipAddress: string): string {
+    return ipAddress.includes(':') ? 'IPv6' : 'IPv4';
+  }
+
+  // Helper method to determine device type from user agent
+  getDeviceType(userAgentString: string): string {
+    const agent = useragent.parse(userAgentString);
+    if (agent.device.family === 'Other') {
+      return 'Desktop';
+    }
+    return agent.device.family;
+  }
+
+  // Helper method to determine browser type from user agent
+  getBrowserType(userAgentString: string): string {
+    const agent = useragent.parse(userAgentString);
+    return agent.toAgent();
+  }
+
+  // Helper method to get IP location using a geolocation service
+  async getIpLocation(ipAddress: string): Promise<string> {
+    return await this.ipGeolocationService.getLocation(ipAddress);
   }
 
   async validateSession(token: string, ipAddress: string): Promise<User> {

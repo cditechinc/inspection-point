@@ -7,7 +7,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from '../user/entities/user.entity';
 import { UserSession } from '../user/entities/user-session.entity';
 import { UserIP } from '../user/entities/user-ip.entity';
-import { UserService } from '../user/user.service';
+import { UserService } from '../user/services/user.service';
 import { ClientService } from '../client/client.service';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -21,6 +21,7 @@ import { QuickBooksOAuthService } from './quickbooks-oauth.service';
 import { UserGroupModule } from './../user-groups/user-group.module';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { Logs } from './../logs/entities/log.entity';
+import { IpGeolocationService } from './../common/services/ip-geolocation.service';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { Logs } from './../logs/entities/log.entity';
     PermissionsGuard,
     QuickBooksStrategy,
     QuickBooksOAuthService,
+    IpGeolocationService
   ],
   controllers: [AuthController],
   exports: [AuthService, UserService, RolesGuard, JwtModule, QuickBooksOAuthService, PermissionsGuard],

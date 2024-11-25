@@ -8,7 +8,7 @@ import { DataSource, EntityManager, FindOneOptions, Repository } from 'typeorm';
 import { Client } from './entities/client.entity';
 import { RegisterClientDto } from './dto/register-client.dto';
 import { AwsService } from '../aws/aws.service';
-import { UserService } from '../user/user.service';
+import { UserService } from '../user/services/user.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './../auth/dto/create-user.dto';
 import { UserGroupService } from './../user-groups/services/user-group.service';

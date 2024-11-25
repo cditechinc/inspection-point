@@ -11,14 +11,14 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { User } from './entities/user.entity';
-import { JwtAuthGuard } from './../auth/guards/jwt-auth.guard';
-import { Roles } from './../auth/decorators/roles.decorator';
-import { Role } from './../auth/role.enum';
-import { CreateAssociatedUserDto } from './dto/create-associated-user.dto';
-import { UpdateAssociatedUserDto } from './dto/update-associated-user.dto';
-import { RolesGuard } from './../auth/guards/roles.guard';
+import { UserService } from './../services/user.service';
+import { User } from '../entities/user.entity';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { Role } from '../../auth/role.enum';
+import { CreateAssociatedUserDto } from '../dto/create-associated-user.dto';
+import { UpdateAssociatedUserDto } from '../dto/update-associated-user.dto';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')

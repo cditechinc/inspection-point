@@ -4,7 +4,6 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
   name = 'CombinedMigration20240722162333';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
     await queryRunner.query(`
@@ -122,15 +121,14 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "idx_assets_client_id" ON "assets" ("client_id");
     `);
-    
+
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "idx_assets_customer_id" ON "assets" ("customer_id");
     `);
-    
+
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "idx_assets_type" ON "assets" ("type");
     `);
-    
 
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "pump_brands" (
@@ -241,7 +239,13 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "action" character varying DEFAULT 'Unknown Actions',
         "timestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "ip_address" inet,
+        "gps_location" point,
+        "device_type" character varying,
+        "browser_type" character varying,
+        "ip_location" character varying,
         "details" jsonb,
+        "logLevel" character varying(50) DEFAULT 'INFO',
         "user_id" uuid,
         CONSTRAINT "FK_logs_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE
       );
@@ -261,6 +265,11 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
       CREATE TABLE IF NOT EXISTS "user_sessions" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "ip_address" inet NOT NULL,
+        "ip_type" character varying,
+        "device_type" character varying,
+        "browser_type" character varying,
+        "gps_location" point,
+        "ip_location" character varying,
         "session_token" character varying NOT NULL,
         "expires_at" TIMESTAMP,
         "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -268,8 +277,6 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
         CONSTRAINT "FK_user_sessions_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE
       );
     `);
-
-    
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -297,13 +304,13 @@ export class CombinedMigration20240722162333 implements MigrationInterface {
 
     await queryRunner.query(`DROP TABLE IF EXISTS "asset_types";`);
 
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_user_sessions_ip_address";`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_user_sessions_user_id";`);
     await queryRunner.query(`DROP TABLE IF EXISTS "user_sessions";`);
     await queryRunner.query(`DROP TABLE IF EXISTS "user_ips";`);
     await queryRunner.query(`DROP TABLE IF EXISTS "logs";`);
     await queryRunner.query(`DROP TABLE IF EXISTS "users";`);
     await queryRunner.query(`DROP TABLE IF EXISTS "customers";`);
     await queryRunner.query(`DROP TABLE IF EXISTS "clients";`);
-
-    
   }
 }

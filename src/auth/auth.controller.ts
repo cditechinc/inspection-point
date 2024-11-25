@@ -13,7 +13,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserService } from '../user/user.service';
+import { UserService } from '../user/services/user.service';
 import { ClientService } from '../client/client.service';
 import * as qrcode from 'qrcode';
 
@@ -31,22 +31,19 @@ export class AuthController {
   @Post('login')
   async login(@Request() req) {
     console.log('Logged In User:', req.user);
+    const user = req.user;
     const ipAddress = req.ip || req.connection.remoteAddress;
+    const userAgent = req.headers['user-agent'] || '';
     const gpsLocation = req.body.gpsLocation;
 
-    // Use the AuthService to handle login logic
-    const loginResponse = await this.authService.login(
-      req.user,
+    const context = {
       ipAddress,
+      userAgent,
       gpsLocation,
-    );
+    };
 
-    // Log the login action with log level set to INFO
-    await this.authService.logAction(req.user.id, 'user_login', {
-      ipAddress,
-      logLevel: 'INFO', // Set log level to INFO
-      details: `User login for email: ${req.user.email}`,
-    });
+    // Use the AuthService to handle login logic
+    const loginResponse = await this.authService.login(user, context);
 
     return loginResponse;
   }
@@ -74,37 +71,19 @@ export class AuthController {
     }
 
     const ipAddress = req.ip || req.connection.remoteAddress;
-    // Generate access and refresh tokens
-    const { accessToken, refreshToken } =
-      await this.authService.generateTokens(client);
-    const sessionToken = await this.authService.createClientSession(
-      client,
+    const userAgent = req.headers['user-agent'] || '';
+    const gpsLocation = body.gpsLocation;
+
+    const context = {
       ipAddress,
-    );
-
-    // Update the client's last login details
-    await this.userService.update(client.user.id, {
-      last_login: new Date(),
-      last_login_ip: ipAddress,
-      last_gps_location: body.gpsLocation,
-    });
-
-    // Record the client's IP address
-    await this.authService.recordClientIP(client.user.id, ipAddress);
-
-    // Log the login action with log level set to INFO
-    await this.authService.logClientAction(client.user.id, 'client_login', {
-      ipAddress,
-      logLevel: 'INFO', // Set log level to INFO
-      details: `Client login for email: ${client.user.email}`,
-    });
-
-    return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      session_token: sessionToken,
-      client,
+      userAgent,
+      gpsLocation,
     };
+
+    // Use the AuthService to handle login logic
+    const loginResponse = await this.authService.loginClient(client, context);
+
+    return loginResponse;
   }
 
   @UseGuards(JwtAuthGuard)

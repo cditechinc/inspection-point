@@ -20,4 +20,8 @@ export class FilterLogsDto {
   @IsOptional()
   @IsDate()
   endDate?: Date;
+
+  @IsOptional()
+  @IsString()
+  ipAddress?: string;
 }

@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, FindOneOptions, Repository } from 'typeorm';
-import { User } from './entities/user.entity';
-import { UserSession } from './entities/user-session.entity';
-import { CreateUserDto } from '../auth/dto/create-user.dto';
-import { UserGroupMembership } from './../user-groups/entities/user-group-membership.entity';
+import { User } from './../entities/user.entity';
+import { UserSession } from './../entities/user-session.entity';
+import { CreateUserDto } from './../../auth/dto/create-user.dto';
+import { UserGroupMembership } from './../../user-groups/entities/user-group-membership.entity';
 import * as bcrypt from 'bcrypt';
-import { CreateAssociatedUserDto } from './dto/create-associated-user.dto';
-import { UpdateAssociatedUserDto } from './dto/update-associated-user.dto';
-import { UserGroup } from './../user-groups/entities/user-group.entity';
+import { CreateAssociatedUserDto } from './../dto/create-associated-user.dto';
+import { UpdateAssociatedUserDto } from './../dto/update-associated-user.dto';
+import { UserGroup } from './../../user-groups/entities/user-group.entity';
 
 @Injectable()
 export class UserService {

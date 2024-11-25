@@ -9,6 +9,21 @@ export class UserSession {
   @Column()
   ip_address: string;
 
+  @Column({ nullable: true })
+  ip_type: string;
+
+  @Column({ nullable: true })
+  device_type: string;
+
+  @Column({ nullable: true })
+  browser_type: string;
+
+  @Column({ type: 'point', nullable: true })
+  gps_location: string;
+
+  @Column({ nullable: true })
+  ip_location: string;
+
   @Column()
   session_token: string;
 

@@ -23,11 +23,11 @@ export class LogsService {
   }
 
   async getLogs(filterLogsDto: FilterLogsDto): Promise<Logs[]> {
-    const { userId, action, logLevel, startDate, endDate } = filterLogsDto;
+    const { userId, action, logLevel, startDate, endDate, ipAddress } = filterLogsDto;
     const query = this.logsRepository
       .createQueryBuilder('log')
       .leftJoinAndSelect('log.user', 'user');
-
+  
     if (userId) {
       query.andWhere('user.id = :userId', { userId });
     }
@@ -37,15 +37,19 @@ export class LogsService {
     if (logLevel) {
       query.andWhere('log.logLevel = :logLevel', { logLevel });
     }
+    if (ipAddress) {
+      query.andWhere('log.ip_address = :ipAddress', { ipAddress });
+    }
     if (startDate && endDate) {
       query.andWhere('log.timestamp BETWEEN :startDate AND :endDate', {
         startDate,
         endDate,
       });
     }
-
+  
     return await query.getMany();
   }
+  
 
   async getLogById(id: string): Promise<Logs> {
     return await this.logsRepository.findOne({
