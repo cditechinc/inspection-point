@@ -58,25 +58,30 @@ export class AuthService {
 
   async signToken(userOrClient: User | Client): Promise<string> {
     let payload: JwtPayload;
-  
-    if (userOrClient instanceof User) {
+
+    if (this.isUser(userOrClient)) {
+      const user = userOrClient;
       payload = {
-        email: userOrClient.email,
-        sub: userOrClient.id,
-        role: userOrClient.role,
-        clientId: userOrClient.client?.id || null,
+        email: user.email,
+        sub: user.id,
+        role: user.role,
+        clientId: user.client?.id || null,
         iat: Math.floor(Date.now() / 1000),
       };
-    } else if (userOrClient instanceof Client) {
+    } else if (this.isClient(userOrClient)) {
+      const client = userOrClient;
       payload = {
-        email: userOrClient.user.email,
-        sub: userOrClient.user.id,
-        role: userOrClient.user.role,
-        clientId: userOrClient.id,
+        email: client.user.email,
+        sub: client.user.id,
+        role: client.user.role,
+        clientId: client.id,
         iat: Math.floor(Date.now() / 1000),
       };
+    } else {
+      console.error('Invalid user or client object:', userOrClient);
+      throw new Error('Invalid user or client object');
     }
-  
+
     return this.jwtService.sign(payload);
   }
   
@@ -377,23 +382,28 @@ export class AuthService {
   // Sign a new refresh token (with a longer expiration time)
   async generateRefreshToken(userOrClient: User | Client): Promise<string> {
     let payload: JwtPayload;
-
-    if (userOrClient instanceof User) {
+  
+    if (this.isUser(userOrClient)) {
+      const user = userOrClient;
       payload = {
-        email: userOrClient.email,
-        sub: userOrClient.id,
-        role: userOrClient.role,
-        clientId: userOrClient.client?.id,
+        email: user.email,
+        sub: user.id,
+        role: user.role,
+        clientId: user.client?.id || null,
+      };
+    } else if (this.isClient(userOrClient)) {
+      const client = userOrClient;
+      payload = {
+        email: client.user.email,
+        sub: client.user.id,
+        role: client.user.role,
+        clientId: client.id,
       };
     } else {
-      payload = {
-        email: userOrClient.user.email,
-        sub: userOrClient.user.id,
-        role: userOrClient.user.role,
-        clientId: userOrClient.id,
-      };
+      console.error('Invalid user or client object in generateRefreshToken:', userOrClient);
+      throw new Error('Invalid user or client object in generateRefreshToken');
     }
-
+  
     // Set refresh token expiration time (e.g., 7 days)
     return this.jwtService.sign(payload, { expiresIn: '7d' });
   }
@@ -448,5 +458,13 @@ export class AuthService {
 
     return false; // User doesn't have the required permission
   }
-  
+
+  // Type Guard Functions
+  private isUser(obj: any): obj is User {
+    return obj && typeof obj.email === 'string' && !('user' in obj);
+  }
+
+  private isClient(obj: any): obj is Client {
+    return obj && obj.user && typeof obj.user.email === 'string';
+  }
 }
