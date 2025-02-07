@@ -1,10 +1,7 @@
-
-
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Role } from '../role.enum';
-import { AuthService } from '../auth.service'; // Inject authService for permission checks
 import { UserGroupPermissionService } from './../../user-groups/services/user-group-permission.service';
 import { UserGroupService } from './../../user-groups/services/user-group.service';
 
@@ -12,43 +9,41 @@ import { UserGroupService } from './../../user-groups/services/user-group.servic
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    // @Inject(forwardRef(() => AuthService))
-    // private readonly authService: AuthService,
     private readonly userGroupPermissionService: UserGroupPermissionService,
     private readonly userGroupService: UserGroupService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Get required roles from metadata.
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    const { user, route, method } = context.switchToHttp().getRequest();
+    // Extract the request, including the user and route information.
+    const request = context.switchToHttp().getRequest();
+    const { user, route, method } = request;
 
-    console.log('User Role:', user.role); // Log user role
-    console.log('Required Roles:', requiredRoles); // Log required roles
-
-    // Check if the user has the required role
-    const hasRole = requiredRoles.some((role) => user.role === role);
-    
-    if (!hasRole) {
-      throw new ForbiddenException('You do not have the required role to access this resource');
+    // If required roles are specified, check if the user has one.
+    if (requiredRoles && requiredRoles.length > 0) {
+      const hasRole = requiredRoles.some((role) => user.role === role);
+      if (!hasRole) {
+        throw new ForbiddenException('You do not have the required role to access this resource');
+      }
     }
 
-    // If the user has the required role, check the permissions
+    // Retrieve all user groups that the user is a member of.
     const userGroups = await this.userGroupService.getUserGroups(user.id);
 
-    // Aggregate all permissions from all groups
+    // Aggregate all permissions from the groups.
     const allPermissions = [];
     for (const group of userGroups) {
       const permissions = await this.userGroupPermissionService.getGroupPermissions(group.id);
       allPermissions.push(...permissions);
     }
 
-    // Check if the user has the required permission
+    // Check if the aggregated permissions grant access to the requested route.
     const hasPermission = this.hasRequiredPermission(allPermissions, route.path, method);
-
     if (!hasPermission) {
       throw new ForbiddenException('You do not have permission to access this resource');
     }
@@ -59,6 +54,7 @@ export class RolesGuard implements CanActivate {
   private hasRequiredPermission(permissions: any[], route: string, method: string): boolean {
     let requiredPermission = '';
 
+    // Determine the required permission based on the route's path.
     if (route.includes('customers')) {
       requiredPermission = 'manage_customers';
     } else if (route.includes('inspections')) {
@@ -117,10 +113,11 @@ export class RolesGuard implements CanActivate {
       requiredPermission = 'manage_task-status-history';
     } else if (route.includes('sessions')) {
       requiredPermission = 'manage_sessions';
+    } else if (route.includes('routes')) {
+      requiredPermission = 'manage_routes';
     }
-    
 
-    // Now check if the user has the required permission
+    // Based on the HTTP method, check that the matching permission flag is set.
     return permissions.some((permission) => {
       if (permission.permissionName === requiredPermission) {
         switch (method) {

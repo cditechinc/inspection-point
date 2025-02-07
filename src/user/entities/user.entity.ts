@@ -74,7 +74,7 @@ export class User {
   last_login_ip: string;
 
   @Column({ type: 'point', nullable: true })
-  last_gps_location: string;
+  last_gps_location: any;
 
   @Column({ nullable: true })
   title: string;

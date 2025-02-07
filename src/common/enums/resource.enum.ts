@@ -27,5 +27,5 @@ export enum Resource {
     CLIENT_TASK_SETTINGS = 'client-task-settings',
     TASK_SETTINGS = 'task-settings',
     TASK_STATUS_HISTORY = 'task-status-history',
-    
+    ROUTES = 'routes',
   }

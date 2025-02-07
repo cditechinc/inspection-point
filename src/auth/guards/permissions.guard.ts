@@ -105,6 +105,8 @@ export class PermissionsGuard implements CanActivate {
       requiredPermission = 'manage_task-status-history';
     } else if (route.includes('sessions')) {
       requiredPermission = 'manage_sessions';
+    } else if (route.includes('routes')) {
+      requiredPermission = 'manage_routes';
     }
     // Add more cases as needed
 

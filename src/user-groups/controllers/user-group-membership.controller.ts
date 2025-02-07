@@ -5,8 +5,7 @@ import {
     Param,
     Body,
     UseGuards,
-    Request,
-    BadRequestException,
+
   } from '@nestjs/common';
   import { UserGroupMembershipService } from './../services/user-group-membership.service';
   import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';

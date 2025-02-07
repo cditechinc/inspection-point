@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, FindOneOptions, Repository } from 'typeorm';
 import { User } from './../entities/user.entity';
@@ -38,10 +42,19 @@ export class UserService {
   async findAllByClientId(clientId: string): Promise<User[]> {
     return this.usersRepository.find({
       where: [
-        { client: { id: clientId } },  // Find users linked to this client
-        { created_by: clientId },  // OR find users created by this client
+        { client: { id: clientId } }, // Find users linked to this client
+        { created_by: clientId }, // OR find users created by this client
       ],
-      relations: ['client', 'groupMemberships', 'groupMemberships.userGroup'],
+      relations: [
+        'client',
+        'groupMemberships',
+        'groupMemberships.userGroup',
+        'groupMemberships.userGroup.permissions',
+        'assignedInspections',
+        'sessions',
+        'ips',
+        'assets',
+      ],
     });
   }
 
@@ -115,29 +128,29 @@ export class UserService {
     const userRepository = manager
       ? manager.getRepository(User)
       : this.usersRepository;
-  
+
     const user = await userRepository.findOne({
       where: { id: userId },
       relations: ['groupMemberships'],
     });
-  
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
-  
+
     // Skip protected user check if this is the initial assignment during registration
     const isNewUser =
       !user.groupMemberships || user.groupMemberships.length === 0;
-  
+
     if (user.isProtectedUser && !isNewUser) {
       throw new BadRequestException('Cannot reassign a protected user');
     }
-  
+
     // Use the provided manager or default to the repository
     const userGroupMembershipRepository = manager
       ? manager.getRepository(UserGroupMembership)
       : this.userGroupMembershipRepository;
-  
+
     // Logic to assign user to group
     const membership = userGroupMembershipRepository.create({
       user: user,
@@ -179,9 +192,14 @@ export class UserService {
     });
   }
 
-  async updateUser(userId: string, updateAssociatedUserDto: UpdateAssociatedUserDto): Promise<User> {
+  async updateUser(
+    userId: string,
+    updateAssociatedUserDto: UpdateAssociatedUserDto,
+  ): Promise<User> {
     // Fetch the user to ensure they exist
-    const user = await this.findById(userId, { relations: ['groupMemberships', 'client'] });
+    const user = await this.findById(userId, {
+      relations: ['groupMemberships', 'client'],
+    });
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -208,6 +226,8 @@ export class UserService {
     const updatedUser = await this.usersRepository.save(user);
 
     // Fetch the updated user with relations
-    return await this.findById(updatedUser.id, { relations: ['groupMemberships', 'groupMemberships.userGroup'] });
+    return await this.findById(updatedUser.id, {
+      relations: ['groupMemberships', 'groupMemberships.userGroup'],
+    });
   }
 }

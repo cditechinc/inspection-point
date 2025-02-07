@@ -54,6 +54,7 @@ import { TaskManagementModule } from './task-management/task-management.module';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { IpGeolocationService } from './common/services/ip-geolocation.service';
+import { RoutesModule } from './routes/routes.module';
 
 @Module({
   imports: [
@@ -121,6 +122,7 @@ import { IpGeolocationService } from './common/services/ip-geolocation.service';
     PackageModule,
     ChecklistModule,
     LogsModule,
+    RoutesModule
   ],
   providers: [QuickBooksOAuthService, IpGeolocationService], // Add the QuickBooks service as a provider
   controllers: [QuickBooksController],

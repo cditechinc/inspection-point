@@ -43,7 +43,7 @@ export class UserGroupService {
   async findAll(clientId: string): Promise<UserGroup[]> {
     return await this.userGroupRepository.find({
       where: { client: { id: clientId } },
-      relations: ['permissions'],
+      relations: ['permissions', 'memberships'],
     });
   }
 
