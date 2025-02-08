@@ -18,6 +18,7 @@ export class LogsService {
       ...createLogDto,
       user,
       timestamp: new Date(),
+      action: createLogDto.action || 'Unknown Actions',
     });
     return await this.logsRepository.save(log);
   }
